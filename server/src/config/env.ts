@@ -19,7 +19,7 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
 
   AFRIEX_API_KEY: z.string().min(1),
-  AFRIEX_API_BASE_URL: z.string().url(),
+  AFRIEX_ENVIRONMENT: z.enum(['staging', 'production']).optional().default('staging'),
   AFRIEX_WEBHOOK_PUBLIC_KEY: z.string().min(1),
 
   PAYOUT_SECRETS_ENCRYPTION_KEY: z.string().min(1),

@@ -1,7 +1,7 @@
 import { AfriexSDK, Environment, type TransactionWebhookPayload } from '@afriex/sdk';
 import { env } from '../../config/env';
 
-const environment = env.AFRIEX_API_BASE_URL?.includes('sandbox') ? Environment.STAGING : Environment.PRODUCTION;
+const environment = env.AFRIEX_ENVIRONMENT === 'staging' ? Environment.STAGING : Environment.PRODUCTION;
 
 export const afriex = new AfriexSDK({
   apiKey: env.AFRIEX_API_KEY,

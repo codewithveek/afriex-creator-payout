@@ -12,7 +12,6 @@ process.env.BETTER_AUTH_URL ??= 'http://localhost:4000';
 process.env.STRIPE_SECRET_KEY ??= 'sk_test_fake';
 process.env.STRIPE_WEBHOOK_SECRET ??= 'whsec_fake';
 process.env.AFRIEX_API_KEY ??= 'fake_key';
-process.env.AFRIEX_API_BASE_URL ??= 'https://api.afriex.com';
 process.env.AFRIEX_WEBHOOK_PUBLIC_KEY ??= 'fake_webhook_key';
 process.env.PAYOUT_SECRETS_ENCRYPTION_KEY ??= 'MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=';
 process.env.RESEND_API_KEY ??= 're_fake';
