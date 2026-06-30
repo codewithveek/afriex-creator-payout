@@ -47,7 +47,8 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.code(401).send({ error: { code: 'UNAUTHORIZED', message: 'Not signed in' } });
     }
 
-    const creator = await creatorsService.ensureCreatorRecord(session.user.id);
+    const body = request.body as { phone?: string; country?: string } | undefined;
+    const creator = await creatorsService.ensureCreatorRecord(session.user.id, body?.phone, body?.country);
     logger.info({ creatorId: creator.id, userId: session.user.id }, 'Creator record provisioned');
 
     return reply.code(201).send({ data: creator });

@@ -20,12 +20,14 @@ function getCountryCode(currency: string): string {
 export const payoutMethodsService = {
   async addPayoutMethod(creatorId: string, input: AddPayoutMethodServiceInput): Promise<PayoutMethod> {
     const { ciphertextBase64, ivBase64 } = encryptSecret(input.accountNumber);
-    const countryCode = getCountryCode(input.currency);
+
+    const creator = await creatorsRepository.findById(creatorId);
+    const countryCode = creator?.country || getCountryCode(input.currency);
 
     const afriexResult = await afriexClient.registerRecipient({
       fullName: input.fullName,
       email: input.email,
-      phone: input.phone || input.email,
+      phone: input.phone,
       countryCode,
       accountNumber: input.accountNumber,
       bankCode: input.bankCode,

@@ -15,6 +15,13 @@
       "when": 1782824072935,
       "tag": "0001_swift_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782826604541,
+      "tag": "0002_curly_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

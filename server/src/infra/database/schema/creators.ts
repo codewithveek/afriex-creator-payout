@@ -1,4 +1,4 @@
-import { pgTable, uuid, numeric, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, numeric, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { currencyEnum } from './enums';
 import { users } from './users';
@@ -32,6 +32,9 @@ export const creators = pgTable(
     // mandatory for any balance. Precision 14, scale 2 supports balances up
     // to ~999 billion units of the minor currency, which is more than ample
     // headroom and avoids ever having to widen this column.
+    phone: varchar('phone', { length: 20 }).notNull().default(''),
+    country: varchar('country', { length: 2 }).notNull().default('NG'),
+
     availableBalance: numeric('available_balance', { precision: 14, scale: 2 })
       .notNull()
       .default('0.00'),

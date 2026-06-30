@@ -18,7 +18,7 @@ export const payoutMethodsController = {
       ...request.body,
       fullName: user?.name ?? request.user!.email,
       email: request.user!.email,
-      phone: request.body.phone ?? '',
+      phone: creator.phone,
     });
     return reply.code(201).send({ data: method });
   },

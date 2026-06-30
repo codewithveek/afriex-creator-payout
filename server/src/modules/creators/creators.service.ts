@@ -3,6 +3,8 @@ import { NotFoundError } from '../../shared/errors';
 
 export type UpdateCreatorProfile = {
   payoutCurrency?: 'USD' | 'NGN' | 'GHS' | 'KES';
+  phone?: string;
+  country?: string;
 };
 
 export const creatorsService = {
@@ -13,10 +15,18 @@ export const creatorsService = {
    * unique-constraint catch, which keeps the happy path free of exception
    *-driven control flow.
    */
-  async ensureCreatorRecord(userId: string): Promise<Creator> {
+  async ensureCreatorRecord(userId: string, phone?: string, country?: string): Promise<Creator> {
     const existing = await creatorsRepository.findByUserId(userId);
-    if (existing) return existing;
-    return creatorsRepository.create(userId);
+    if (existing) {
+      if (phone && existing.phone !== phone) {
+        await creatorsRepository.update(existing.id, { phone });
+      }
+      if (country && existing.country !== country) {
+        await creatorsRepository.update(existing.id, { country });
+      }
+      return existing;
+    }
+    return creatorsRepository.create(userId, phone ?? '', country ?? 'NG');
   },
 
   async getByUserId(userId: string): Promise<Creator> {

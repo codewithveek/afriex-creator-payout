@@ -4,6 +4,11 @@ import { creatorsService } from '../creators/creators.service';
 import type { CreateProductInput, UpdateProductInput } from './products.schema';
 import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
+function sanitizeForPublic(product: Record<string, unknown>) {
+  const { fileUrl, fileName, fileSize, ...rest } = product;
+  return rest;
+}
+
 export const productsController = {
   async create(request: FastifyRequest<{ Body: CreateProductInput }>, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
@@ -21,7 +26,7 @@ export const productsController = {
   async listPublished(request: FastifyRequest, reply: FastifyReply) {
     const pag = parsePagination(request.query as Record<string, unknown>);
     const { rows, total } = await productsService.getPublished((pag.page - 1) * pag.pageSize, pag.pageSize);
-    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
+    return reply.code(200).send({ data: rows.map(sanitizeForPublic), meta: buildPaginationMeta(pag, total) });
   },
 
   async getById(
@@ -29,7 +34,7 @@ export const productsController = {
     reply: FastifyReply,
   ) {
     const product = await productsService.getById(request.params.id);
-    return reply.code(200).send({ data: product });
+    return reply.code(200).send({ data: sanitizeForPublic(product) });
   },
 
   async update(

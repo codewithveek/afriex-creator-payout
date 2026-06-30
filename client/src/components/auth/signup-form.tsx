@@ -6,11 +6,13 @@ import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { CountrySelect } from '@/components/ui/country-select'
 
 export function SignupForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [country, setCountry] = useState('NG')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -21,10 +23,17 @@ export function SignupForm() {
     const name = form.get('name') as string
     const email = form.get('email') as string
     const password = form.get('password') as string
+    const phone = form.get('phone') as string
+
+    if (!phone) {
+      setError('Phone number is required')
+      setLoading(false)
+      return
+    }
 
     try {
       await api.post('/api/auth/signup', { name, email, password })
-      await api.post('/api/onboarding/provision-creator')
+      await api.post('/api/onboarding/provision-creator', { phone, country })
       router.push('/dashboard')
       router.refresh()
     } catch (err) {
@@ -49,6 +58,15 @@ export function SignupForm() {
           )}
           <Input label="Full name" name="name" type="text" autoComplete="name" required />
           <Input label="Email" name="email" type="email" autoComplete="email" required />
+          <Input
+            label="Phone number"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+2348012345678"
+            required
+          />
+          <CountrySelect value={country} onChange={setCountry} required />
           <Input
             label="Password"
             name="password"

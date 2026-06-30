@@ -6,6 +6,8 @@ import { SettingsClient } from './client'
 interface CreatorProfile {
   id: string
   userId: string
+  phone: string
+  country: string
   availableBalance: string
   payoutCurrency: string
   payoutEligible: boolean

@@ -16,8 +16,8 @@ export const creatorsRepository = {
     return db.query.creators.findFirst({ where: eq(creators.userId, userId) });
   },
 
-  async create(userId: string): Promise<Creator> {
-    const [row] = await db.insert(creators).values({ userId }).returning();
+  async create(userId: string, phone: string, country: string): Promise<Creator> {
+    const [row] = await db.insert(creators).values({ userId, phone, country }).returning();
     return row!;
   },
 
@@ -69,7 +69,7 @@ export const creatorsRepository = {
       .where(eq(creators.id, creatorId));
   },
 
-  async update(creatorId: string, input: Partial<Pick<Creator, 'payoutCurrency'>>): Promise<Creator | undefined> {
+  async update(creatorId: string, input: Partial<Pick<Creator, 'payoutCurrency' | 'phone' | 'country'>>): Promise<Creator | undefined> {
     const [row] = await db
       .update(creators)
       .set({ ...input, updatedAt: new Date() })
