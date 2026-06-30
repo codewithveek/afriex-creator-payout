@@ -91,7 +91,7 @@ export class NoVerifiedPayoutMethodError extends DomainError {
 }
 
 export class DuplicateSaleError extends DomainError {
-  constructor(stripePaymentIntentId: string) {
-    super(`Sale already processed for payment intent ${stripePaymentIntentId}`, 'DUPLICATE_SALE');
+  constructor(paymentIntentId: string) {
+    super(`Sale already processed for payment intent ${paymentIntentId}`, 'DUPLICATE_SALE');
   }
 }

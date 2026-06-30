@@ -6,9 +6,9 @@ export type Sale = typeof sales.$inferSelect;
 export type NewSale = typeof sales.$inferInsert;
 
 export const salesRepository = {
-  async findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<Sale | undefined> {
+  async findByPaymentIntentId(paymentIntentId: string): Promise<Sale | undefined> {
     return db.query.sales.findFirst({
-      where: eq(sales.stripePaymentIntentId, stripePaymentIntentId),
+      where: eq(sales.paymentIntentId, paymentIntentId),
     });
   },
 

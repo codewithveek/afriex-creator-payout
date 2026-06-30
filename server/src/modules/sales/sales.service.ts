@@ -4,26 +4,26 @@ import { creatorsService } from '../creators/creators.service';
 import { logger } from '../../config/logger';
 
 interface ConfirmedPaymentEvent {
-  stripePaymentIntentId: string;
-  creatorUserId: string; // identifies which creator made the sale, passed via Stripe metadata
+  paymentIntentId: string;
+  creatorUserId: string;
   grossAmount: string;
   currency: 'USD' | 'NGN' | 'GHS' | 'KES';
 }
 
 export const salesService = {
   /**
-   * Handles a confirmed Stripe payment. Creates the sale row (guarded by
-   * the DB's unique constraint on stripePaymentIntentId, so a redelivered
-   * webhook is always safe to replay), then immediately hands off to
-   * EarningsService to credit the creator. If a sale already exists for
-   * this payment intent, this is a no-op replay and returns the existing
-   * sale without reprocessing earnings.
+   * Handles a confirmed payment from any provider. Creates the sale row
+   * (guarded by the DB's unique constraint on paymentIntentId, so a
+   * redelivered webhook is always safe to replay), then immediately hands
+   * off to EarningsService to credit the creator. If a sale already exists
+   * for this payment intent, this is a no-op replay and returns the
+   * existing sale without reprocessing earnings.
    */
   async recordConfirmedPayment(event: ConfirmedPaymentEvent): Promise<Sale> {
-    const existing = await salesRepository.findByStripePaymentIntentId(event.stripePaymentIntentId);
+    const existing = await salesRepository.findByPaymentIntentId(event.paymentIntentId);
     if (existing) {
       logger.info(
-        { stripePaymentIntentId: event.stripePaymentIntentId },
+        { paymentIntentId: event.paymentIntentId },
         'Webhook replay detected, sale already recorded',
       );
       return existing;
@@ -33,7 +33,7 @@ export const salesService = {
 
     const sale = await salesRepository.create({
       creatorId: creator.id,
-      stripePaymentIntentId: event.stripePaymentIntentId,
+      paymentIntentId: event.paymentIntentId,
       grossAmount: event.grossAmount,
       currency: event.currency,
       status: 'PAID',
@@ -44,7 +44,7 @@ export const salesService = {
     return sale;
   },
 
-  async findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<Sale | undefined> {
-    return salesRepository.findByStripePaymentIntentId(stripePaymentIntentId);
+  async findByPaymentIntentId(paymentIntentId: string): Promise<Sale | undefined> {
+    return salesRepository.findByPaymentIntentId(paymentIntentId);
   },
 };

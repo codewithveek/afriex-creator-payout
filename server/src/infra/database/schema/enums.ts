@@ -13,10 +13,10 @@ export const payoutMethodStatusEnum = pgEnum('payout_method_status', [
   'REVOKED',
 ]);
 
-// --- Sale lifecycle (from the collection layer / Stripe) ---
+// --- Sale lifecycle (from the payment provider) ---
 export const saleStatusEnum = pgEnum('sale_status', [
   'PENDING', // payment intent created, not yet confirmed
-  'PAID', // captured by Stripe, settled into the pool account
+  'PAID', // captured and settled
   'REFUNDED', // buyer refunded after payment — earnings must be reversed
   'FAILED', // payment never completed
 ]);

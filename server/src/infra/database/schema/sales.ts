@@ -4,9 +4,9 @@ import { saleStatusEnum, currencyEnum } from './enums';
 import { creators } from './creators';
 import { earnings } from './earnings';
 
-// One row per buyer purchase, created when the Stripe webhook fires. This is
-// the entry point of the whole earnings pipeline: Sale -> Earning ->
-// (eventually) Withdrawal.
+// One row per buyer purchase, created when the payment provider webhook
+// fires. This is the entry point of the whole earnings pipeline: Sale ->
+// Earning -> (eventually) Withdrawal.
 //
 // `grossAmount` is what the buyer paid — that's all a sale records about
 // money. The fee breakdown (platformFeePercent, platformFeeAmount, net
@@ -23,11 +23,11 @@ export const sales = pgTable(
       .notNull()
       .references(() => creators.id, { onDelete: 'restrict' }),
 
-    // Idempotency key from Stripe (the PaymentIntent or Charge ID). UNIQUE
-    // is what makes the webhook handler safely retryable — Stripe redelivers
-    // webhooks on timeout, and without this constraint a retried webhook
-    // would double-count the sale.
-    stripePaymentIntentId: varchar('stripe_payment_intent_id', { length: 255 }).notNull(),
+    // Idempotency key from the payment provider (PaymentIntent, Charge,
+    // transaction reference, etc.). UNIQUE is what makes the webhook handler
+    // safely retryable — providers redeliver webhooks on timeout, and without
+    // this constraint a retried webhook would double-count the sale.
+    paymentIntentId: varchar('payment_intent_id', { length: 255 }).notNull(),
 
     grossAmount: numeric('gross_amount', { precision: 14, scale: 2 }).notNull(),
     currency: currencyEnum('currency').notNull(),
@@ -38,7 +38,7 @@ export const sales = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('uq_sales_stripe_payment_intent').on(table.stripePaymentIntentId),
+    uniqueIndex('uq_sales_payment_intent').on(table.paymentIntentId),
     // Creator's sales history view: equality on creator, sorted by recency.
     index('idx_sales_creator_created').on(table.creatorId, table.createdAt),
     index('idx_sales_status').on(table.status),

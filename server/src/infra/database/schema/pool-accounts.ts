@@ -5,10 +5,10 @@ import { withdrawals } from './withdrawals';
 
 // One row per currency, per the locked decision: "one pool account per
 // currency". This is the real source of outbound creator disbursements —
-// Stripe settles buyer payments here (conceptually; the actual settlement
-// rail is Stripe -> bank -> Afriex top-up, modeled here as a balance, not a
-// literal real-time wire), and the disbursement worker draws down from
-// `balance` when paying a creator in that currency.
+// payment providers settle buyer payments here (conceptually; the actual
+// settlement rail is provider -> bank -> Afriex top-up, modeled here as a
+// balance, not a literal real-time wire), and the disbursement worker draws
+// down from `balance` when paying a creator in that currency.
 //
 // `currency` has a UNIQUE constraint, not just an index — there must never
 // be two pool accounts for the same currency, or the worker would not know

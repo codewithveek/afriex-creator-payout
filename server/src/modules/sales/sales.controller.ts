@@ -1,99 +1,93 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import Stripe from 'stripe';
+import { getPaymentProvider } from '../../infra/payment/factory';
 import { salesService } from './sales.service';
 import { salesRepository } from './sales.repository';
 import { earningsService } from '../earnings/earnings.service';
 import { creatorsService } from '../creators/creators.service';
-import { stripeClient } from '../../infra/stripe/stripe-client';
 import { env } from '../../config/env';
 import { logger } from '../../config/logger';
 import { ValidationError } from '../../shared/errors';
 import { ordersService } from '../orders/orders.service';
+import type { PaymentProviderName } from '../../infra/payment/types';
 
 export const salesController = {
   /**
-   * Stripe webhook entry point. Verifies the signature against the RAW
-   * request body (the router must register this route with a raw-body
-   * content-type parser — see sales.router.ts) before trusting anything in
-   * the payload. This is the only place Stripe's signing secret is used.
+   * Generic payment webhook entry point. Determines which provider the
+   * request came from via header inspection, then delegates to the
+   * corresponding PaymentProvider adapter for signature verification
+   * and event parsing. The router must register this route with a raw-body
+   * content-type parser (see sales.router.ts).
    */
-  async handleStripeWebhook(
+  async handlePaymentWebhook(
     request: FastifyRequest<{ Body: Buffer }>,
     reply: FastifyReply,
   ) {
-    const signature = request.headers['stripe-signature'];
-    if (!signature || typeof signature !== 'string') {
-      throw new ValidationError('Missing stripe-signature header');
-    }
+    const providerName = detectProviderFromRequest(request);
+    const provider = getPaymentProvider(providerName);
 
-    let event: Stripe.Event;
-    try {
-      event = stripeClient.webhooks.constructEvent(request.body, signature, env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-      logger.warn({ err }, 'Stripe webhook signature verification failed');
-      throw new ValidationError('Invalid webhook signature');
-    }
+    const signatureHeader = getProviderSignatureHeader(request, providerName);
+    const event = provider.constructEvent(request.body, signatureHeader);
 
-    switch (event.type) {
-      case 'payment_intent.succeeded': {
-        const intent = event.data.object as Stripe.PaymentIntent;
-        const creatorUserId = intent.metadata.creatorUserId;
-        if (!creatorUserId) {
-          logger.error({ paymentIntentId: intent.id }, 'payment_intent missing creatorUserId metadata');
-          break;
-        }
-
-        await salesService.recordConfirmedPayment({
-          stripePaymentIntentId: intent.id,
-          creatorUserId,
-          grossAmount: (intent.amount / 100).toFixed(2),
-          currency: intent.currency.toUpperCase() as 'USD' | 'NGN' | 'GHS' | 'KES',
-        });
-        break;
+    if (provider.isPaymentIntentEvent(event)) {
+      const transactionId = provider.getTransactionId(event);
+      const creatorUserId = provider.getMetadata(event).creatorUserId;
+      if (!creatorUserId || !transactionId) {
+        logger.error({ transactionId }, 'payment intent missing creatorUserId metadata');
+        return reply.code(200).send({ data: { received: true } });
       }
 
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const metadata = session.metadata;
-        if (metadata?.productId && metadata?.creatorId) {
-          await ordersService.completeOrder(session.id);
+      const amount = provider.getAmount(event);
+      const currency = provider.getCurrency(event);
+      if (!amount || !currency) {
+        logger.error({ transactionId }, 'payment intent missing amount or currency');
+        return reply.code(200).send({ data: { received: true } });
+      }
 
-          const creator = await creatorsService.getById(metadata.creatorId);
-          if (creator) {
+      await salesService.recordConfirmedPayment({
+        paymentIntentId: transactionId,
+        creatorUserId,
+        grossAmount: amount,
+        currency: currency as 'USD' | 'NGN' | 'GHS' | 'KES',
+      });
+    }
+
+    if (provider.isCheckoutCompletedEvent(event)) {
+      const metadata = provider.getMetadata(event);
+      if (metadata.productId && metadata.creatorId) {
+        const sessionId = provider.getTransactionId(event);
+        if (sessionId) {
+          await ordersService.completeOrder(sessionId);
+        }
+
+        const creator = await creatorsService.getById(metadata.creatorId);
+        if (creator) {
+          const amount = provider.getAmount(event);
+          const currency = provider.getCurrency(event);
+          if (amount && currency) {
+            const transactionId = provider.getTransactionId(event);
             await salesService.recordConfirmedPayment({
-              stripePaymentIntentId:
-                typeof session.payment_intent === 'string'
-                  ? session.payment_intent
-                  : session.payment_intent?.id || session.id,
+              paymentIntentId: transactionId ?? sessionId ?? 'unknown',
               creatorUserId: creator.userId,
-              grossAmount: ((session.amount_total ?? 0) / 100).toFixed(2),
-              currency: session.currency?.toUpperCase() as 'USD' | 'NGN' | 'GHS' | 'KES',
+              grossAmount: amount,
+              currency: currency as 'USD' | 'NGN' | 'GHS' | 'KES',
             });
           }
-
-          logger.info({ sessionId: session.id, productId: metadata.productId }, 'Checkout completed');
         }
-        break;
+
+        logger.info({ sessionId: metadata.productId, productId: metadata.productId }, 'Checkout completed');
       }
+    }
 
-      case 'charge.refunded': {
-        const charge = event.data.object as Stripe.Charge;
-        const paymentIntentId =
-          typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
-
-        if (paymentIntentId) {
-          const sale = await salesService.findByStripePaymentIntentId(paymentIntentId);
-          if (sale) {
-            await earningsService.reverseForRefund(sale.id);
-          } else {
-            logger.warn({ paymentIntentId }, 'Refund webhook received for unknown sale');
-          }
+    if (provider.isRefundEvent(event)) {
+      const transactionId = provider.getTransactionId(event);
+      if (transactionId) {
+        const sale = await salesService.findByPaymentIntentId(transactionId);
+        if (sale) {
+          await earningsService.reverseForRefund(sale.id);
+        } else {
+          logger.warn({ transactionId }, 'Refund webhook received for unknown sale');
         }
-        break;
       }
-
-      default:
-        logger.debug({ eventType: event.type }, 'Unhandled Stripe webhook event type');
     }
 
     return reply.code(200).send({ data: { received: true } });
@@ -105,3 +99,35 @@ export const salesController = {
     return reply.code(200).send({ data: sales });
   },
 };
+
+function detectProviderFromRequest(request: FastifyRequest<{ Body: Buffer }>): PaymentProviderName {
+  const configured = env.PAYMENT_PROVIDER as PaymentProviderName;
+  return configured;
+}
+
+function getProviderSignatureHeader(
+  request: FastifyRequest<{ Body: Buffer }>,
+  providerName: PaymentProviderName,
+): string {
+  if (providerName === 'stripe') {
+    const sig = request.headers['stripe-signature'];
+    if (!sig || typeof sig !== 'string') throw new ValidationError('Missing stripe-signature header');
+    return sig;
+  }
+  if (providerName === 'paystack') {
+    const sig = request.headers['x-paystack-signature'];
+    if (!sig || typeof sig !== 'string') throw new ValidationError('Missing x-paystack-signature header');
+    return sig;
+  }
+  if (providerName === 'flutterwave') {
+    const sig = request.headers['verif-hash'];
+    if (!sig || typeof sig !== 'string') throw new ValidationError('Missing verif-hash header');
+    return sig;
+  }
+  if (providerName === 'afriex-checkout') {
+    const sig = request.headers['x-afriex-signature'];
+    if (!sig || typeof sig !== 'string') throw new ValidationError('Missing x-afriex-signature header');
+    return sig;
+  }
+  throw new ValidationError(`Unknown payment provider: ${providerName}`);
+}

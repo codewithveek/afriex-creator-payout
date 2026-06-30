@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
+import { getPaymentProvider } from '../../infra/payment/factory';
 import { ordersRepository, type Order } from './orders.repository';
 import { productsService } from '../products/products.service';
-import { creatorsService } from '../creators/creators.service';
-import { stripeClient } from '../../infra/stripe/stripe-client';
 import { NotFoundError } from '../../shared/errors';
 import { logger } from '../../config/logger';
+import { env } from '../../config/env';
+import type { PaymentProviderName } from '../../infra/payment/types';
 
 export const ordersService = {
   async createCheckoutSession(input: {
@@ -15,33 +16,23 @@ export const ordersService = {
     cancelUrl: string;
   }): Promise<{ sessionId: string; sessionUrl: string }> {
     const product = await productsService.getPublishedById(input.productId);
+    const provider = getPaymentProvider(env.PAYMENT_PROVIDER as PaymentProviderName);
 
-    const session = await stripeClient.checkout.sessions.create({
-      mode: 'payment',
-      customer_email: input.customerEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: product.currency.toLowerCase(),
-            product_data: { name: product.name },
-            unit_amount: Math.round(Number.parseFloat(product.price) * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: input.successUrl,
-      cancel_url: input.cancelUrl,
+    const result = await provider.createCheckoutSession({
+      amount: product.price,
+      currency: product.currency,
+      customerEmail: input.customerEmail,
+      customerName: input.customerName,
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
       metadata: {
         productId: product.id,
         creatorId: product.creatorId,
         customerEmail: input.customerEmail,
         customerName: input.customerName,
+        productName: product.name,
       },
     });
-
-    if (!session.id || !session.url) {
-      throw new Error('Failed to create Stripe Checkout session');
-    }
 
     await ordersRepository.create({
       productId: product.id,
@@ -50,21 +41,21 @@ export const ordersService = {
       customerName: input.customerName,
       amount: product.price,
       currency: product.currency,
-      stripeSessionId: session.id,
+      paymentSessionId: result.sessionId,
     });
 
     logger.info(
-      { sessionId: session.id, productId: product.id, customerEmail: input.customerEmail },
+      { sessionId: result.sessionId, productId: product.id, customerEmail: input.customerEmail },
       'Checkout session created',
     );
 
-    return { sessionId: session.id, sessionUrl: session.url };
+    return { sessionId: result.sessionId, sessionUrl: result.sessionUrl };
   },
 
   async completeOrder(sessionId: string): Promise<void> {
-    const order = await ordersRepository.findByStripeSessionId(sessionId);
+    const order = await ordersRepository.findByPaymentSessionId(sessionId);
     if (!order) {
-      logger.warn({ sessionId }, 'No order found for completed Stripe session');
+      logger.warn({ sessionId }, 'No order found for completed payment session');
       return;
     }
 

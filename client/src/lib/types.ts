@@ -78,7 +78,7 @@ export interface Order {
   amount: string
   currency: string
   status: 'PENDING' | 'COMPLETED' | 'REFUNDED' | 'FAILED'
-  stripeSessionId: string
+  paymentSessionId: string
   downloadToken: string | null
   createdAt: string
   updatedAt: string

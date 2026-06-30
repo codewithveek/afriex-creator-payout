@@ -11,7 +11,7 @@ export const earningsService = {
   /**
    * Processes a PAID sale into a confirmed earning. This is the single
    * pivot point of the entire pipeline: Sale -> Earning -> creator balance
-   * + pool account balance. Called from the Stripe webhook handler once a
+   * + pool account balance. Called from the payment webhook handler once a
    * sale's status has been confirmed PAID.
    *
    * Idempotency: the DB's unique constraint on earnings.saleId is the real
@@ -25,7 +25,7 @@ export const earningsService = {
   async processSale(sale: Sale): Promise<Earning> {
     const existing = await earningsRepository.findBySaleId(sale.id);
     if (existing) {
-      throw new DuplicateSaleError(sale.stripePaymentIntentId);
+      throw new DuplicateSaleError(sale.paymentIntentId);
     }
 
     const fee = computeFee(sale.grossAmount, env.PLATFORM_FEE_PERCENT);

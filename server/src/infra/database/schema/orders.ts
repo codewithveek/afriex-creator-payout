@@ -26,7 +26,7 @@ export const orders = pgTable(
 
     status: orderStatusEnum('status').notNull().default('PENDING'),
 
-    stripeSessionId: varchar('stripe_session_id', { length: 255 }).notNull().unique(),
+    paymentSessionId: varchar('payment_session_id', { length: 255 }).notNull().unique(),
     downloadToken: varchar('download_token', { length: 64 }),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

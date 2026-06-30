@@ -5,7 +5,7 @@ import { authorize } from '../../shared/middleware/authorize';
 import { Role } from '../../shared/types';
 
 export async function salesRoutes(fastify: FastifyInstance) {
-  // Stripe webhook signature verification requires the EXACT raw request
+  // Payment webhook signature verification requires the EXACT raw request
   // body bytes, not the JSON-parsed object Fastify produces by default.
   // This content-type parser is scoped to this route only (registered
   // inside this plugin, not globally in app.ts) so every other route keeps
@@ -17,8 +17,8 @@ export async function salesRoutes(fastify: FastifyInstance) {
       (_request, body, done) => done(null, body),
     );
 
-    instance.post('/api/webhooks/stripe', {
-      handler: salesController.handleStripeWebhook,
+    instance.post('/api/webhooks/payment', {
+      handler: salesController.handlePaymentWebhook,
     });
   });
 

@@ -15,8 +15,8 @@ export const ordersRepository = {
     return db.query.orders.findFirst({ where: eq(orders.id, id) });
   },
 
-  async findByStripeSessionId(sessionId: string): Promise<Order | undefined> {
-    return db.query.orders.findFirst({ where: eq(orders.stripeSessionId, sessionId) });
+  async findByPaymentSessionId(sessionId: string): Promise<Order | undefined> {
+    return db.query.orders.findFirst({ where: eq(orders.paymentSessionId, sessionId) });
   },
 
   async findByCreatorId(creatorId: string): Promise<Order[]> {

@@ -16,9 +16,23 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   FRONTEND_URL: z.string().url().optional(),
 
-  STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  // Active payment provider — switched per-environment or per-business.
+  // Supported: stripe | paystack | flutterwave | afriex-checkout
+  PAYMENT_PROVIDER: z.enum(['stripe', 'paystack', 'flutterwave', 'afriex-checkout']).default('stripe'),
 
+  // Stripe keys — required only when PAYMENT_PROVIDER === 'stripe'
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Paystack keys — required only when PAYMENT_PROVIDER === 'paystack'
+  PAYSTACK_SECRET_KEY: z.string().optional(),
+  PAYSTACK_WEBHOOK_SECRET: z.string().optional(),
+
+  // Flutterwave keys — required only when PAYMENT_PROVIDER === 'flutterwave'
+  FLUTTERWAVE_SECRET_KEY: z.string().optional(),
+  FLUTTERWAVE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Afriex — always required for disbursement, also reused by afriex-checkout provider
   AFRIEX_API_KEY: z.string().min(1),
   AFRIEX_ENVIRONMENT: z.enum(['staging', 'production']).optional().default('staging'),
   AFRIEX_WEBHOOK_PUBLIC_KEY: z.string().min(1),
