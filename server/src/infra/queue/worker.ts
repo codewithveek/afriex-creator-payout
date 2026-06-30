@@ -2,23 +2,18 @@ import { Worker, type Job } from 'bullmq';
 import { redisConnection } from './redis-connection';
 import type { DisbursementJobPayload } from './disbursement-queue';
 import { registerScheduledSweep } from './scheduler';
-import './scheduler'; // side-effect import: starts the scheduler's own Worker
+import './scheduler';
 import { withdrawalsRepository } from '../../modules/withdrawals/withdrawals.repository';
 import { creatorsRepository } from '../../modules/creators/creators.repository';
 import { poolAccountsRepository } from '../../modules/pool-accounts/pool-accounts.repository';
 import { payoutMethodsRepository } from '../../modules/payout-methods/payout-methods.repository';
 import { afriexClient } from '../afriex/afriex-client';
+import { db } from '../../config/db';
+import { users, creators } from '../database/schema';
+import { eq } from 'drizzle-orm';
 import { logger } from '../../config/logger';
+import { sendWithdrawalCompleted, sendWithdrawalFailed } from '../email/email.service';
 
-// This worker is the only place that actually calls Afriex to move money.
-// It is intentionally separate from the request/response cycle (per the
-// architecture doc's principle: disbursement is always asynchronous) — the
-// withdrawals.service has already debited the creator's balance and
-// queued this job by the time it runs here.
-//
-// Run as its own process via `npm run worker:dev` / a separate deployment,
-// not inside the Fastify server process — a slow or stuck Afriex call must
-// never block the HTTP server's event loop or its other request handling.
 async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<void> {
   const { withdrawalId } = job.data;
 
@@ -55,13 +50,14 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
     await withdrawalsRepository.markProcessing(withdrawal.id, transfer.afriexTransactionId);
     await poolAccountsRepository.decrementBalance(poolAccount.id, withdrawal.amount);
 
-    // Some Afriex rails settle synchronously and return COMPLETED inline;
-    // others are async and confirm later via webhook (handled in
-    // infra/afriex/afriex-webhook.router.ts, which calls markPaid/markFailed
-    // directly). Only mark PAID here if Afriex told us it's already done.
     if (transfer.status === 'COMPLETED') {
       await withdrawalsRepository.markPaid(withdrawal.id);
       logger.info({ withdrawalId: withdrawal.id }, 'Disbursement completed synchronously');
+      await notifyUser(withdrawal.creatorId, {
+        amount: withdrawal.amount,
+        currency: withdrawal.currency,
+        status: 'COMPLETED',
+      });
     } else {
       logger.info({ withdrawalId: withdrawal.id }, 'Disbursement submitted, awaiting Afriex confirmation');
     }
@@ -69,15 +65,17 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
     const message = err instanceof Error ? err.message : 'Unknown error calling Afriex';
     logger.error({ err, withdrawalId: withdrawal.id }, 'Disbursement attempt failed');
 
-    // Let BullMQ's retry/backoff handle transient errors (it will re-invoke
-    // this function up to the queue's configured `attempts`). Only credit
-    // the balance back and mark FAILED once retries are exhausted —
-    // job.attemptsMade is 1-indexed and opts.attempts is the ceiling.
     const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
     if (isFinalAttempt) {
       await failWithdrawal(withdrawal, message);
+      await notifyUser(withdrawal.creatorId, {
+        amount: withdrawal.amount,
+        currency: withdrawal.currency,
+        status: 'FAILED',
+        reason: message,
+      });
     } else {
-      throw err; // re-throw so BullMQ schedules a retry
+      throw err;
     }
   }
 }
@@ -87,11 +85,31 @@ async function failWithdrawal(
   reason: string,
 ): Promise<void> {
   await withdrawalsRepository.markFailed(withdrawal.id, reason);
-  // Credit the creator's balance back — the optimistic debit made at
-  // withdrawal creation must be reversed since the money never actually
-  // left the pool account.
   await creatorsRepository.incrementBalance(withdrawal.creatorId, withdrawal.amount);
   logger.warn({ withdrawalId: withdrawal.id, reason }, 'Withdrawal failed, balance credited back');
+}
+
+async function notifyUser(
+  creatorId: string,
+  params: { amount: string; currency: string; status: string; reason?: string },
+): Promise<void> {
+  try {
+    const creator = await db.query.creators.findFirst({
+      where: (c, { eq: e }) => e(c.id, creatorId),
+      with: { user: true },
+    });
+    if (!creator?.user) return;
+
+    const user = { id: creator.user.id, email: creator.user.email, name: creator.user.name };
+
+    if (params.status === 'COMPLETED') {
+      await sendWithdrawalCompleted({ user, amount: params.amount, currency: params.currency });
+    } else if (params.status === 'FAILED' && params.reason) {
+      await sendWithdrawalFailed({ user, amount: params.amount, currency: params.currency, reason: params.reason });
+    }
+  } catch (err) {
+    logger.error({ err, creatorId }, 'Failed to send withdrawal notification email');
+  }
 }
 
 export const disbursementWorker = new Worker<DisbursementJobPayload>('disbursements', processDisbursement, {

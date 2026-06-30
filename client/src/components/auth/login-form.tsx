@@ -47,6 +47,11 @@ export function LoginForm() {
           )}
           <Input label="Email" name="email" type="email" autoComplete="email" required />
           <Input label="Password" name="password" type="password" autoComplete="current-password" required />
+          <div className="flex items-center justify-end">
+            <a href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+              Forgot password?
+            </a>
+          </div>
           <Button type="submit" loading={loading} className="w-full">
             Sign in
           </Button>

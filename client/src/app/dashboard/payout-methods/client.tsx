@@ -16,7 +16,7 @@ interface Props {
 
 export function PayoutMethodsClient({ initial }: Props) {
   const router = useRouter()
-  const [methods] = useState(initial)
+  const [methods, setMethods] = useState(initial)
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -41,6 +41,17 @@ export function PayoutMethodsClient({ initial }: Props) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to add payout method')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm('Delete this payout method?')) return
+
+    try {
+      await api.delete(`/api/payout-methods/${id}`)
+      setMethods((prev) => prev.filter((m) => m.id !== id))
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Failed to delete payout method')
     }
   }
 
@@ -110,9 +121,61 @@ export function PayoutMethodsClient({ initial }: Props) {
       )}
 
       {methods.length > 0 && (
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Add payout method'}
-        </Button>
+        <>
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : 'Add payout method'}
+          </Button>
+
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-gray-900">Saved Accounts</h2>
+            </CardHeader>
+            <CardContent className="p-0">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                    <th className="px-6 py-3 font-medium">Bank</th>
+                    <th className="px-6 py-3 font-medium">Currency</th>
+                    <th className="px-6 py-3 font-medium">Default</th>
+                    <th className="px-6 py-3 font-medium">Added</th>
+                    <th className="px-6 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {methods.map((method) => (
+                    <tr key={method.id} className="border-b border-gray-100 last:border-0">
+                      <td className="px-6 py-3 text-gray-900">
+                        {(method.details as { bankName?: string })?.bankName || '—'}
+                      </td>
+                      <td className="px-6 py-3 text-gray-700">{method.currency}</td>
+                      <td className="px-6 py-3">
+                        {method.isDefault ? (
+                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                            Default
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500">
+                        {new Date(method.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(method.id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </>
       )}
     </>
   )

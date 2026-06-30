@@ -13,6 +13,15 @@ async function getWithdrawals(cookie: string | null) {
   }
 }
 
+async function getBalance(cookie: string | null) {
+  try {
+    const res = await apiFetch<{ data: { availableBalance: string } }>('/api/creators/me', { cookie })
+    return res.data.availableBalance
+  } catch {
+    return null
+  }
+}
+
 const statusStyles: Record<string, string> = {
   PENDING: 'bg-yellow-50 text-yellow-700',
   PROCESSING: 'bg-blue-50 text-blue-700',
@@ -22,7 +31,10 @@ const statusStyles: Record<string, string> = {
 
 async function WithdrawalsContent() {
   const cookie = cookies().toString() || null
-  const { data: withdrawals } = await getWithdrawals(cookie)
+  const [balance, { data: withdrawals }] = await Promise.all([
+    getBalance(cookie),
+    getWithdrawals(cookie),
+  ])
 
   return (
     <div className="space-y-6">
@@ -31,7 +43,7 @@ async function WithdrawalsContent() {
           <h1 className="text-2xl font-semibold text-gray-900">Withdrawals</h1>
           <p className="mt-1 text-sm text-gray-500">Request and track your payouts</p>
         </div>
-        <WithdrawalsClient />
+        <WithdrawalsClient balance={balance} />
       </div>
 
       {withdrawals.length === 0 ? (

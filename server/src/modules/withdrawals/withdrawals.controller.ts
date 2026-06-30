@@ -1,11 +1,18 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { withdrawalsService } from './withdrawals.service';
 import { creatorsService } from '../creators/creators.service';
+import type { RequestWithdrawalInput } from './withdrawals.schema';
 
 export const withdrawalsController = {
-  async requestWithdrawal(request: FastifyRequest, reply: FastifyReply) {
+  async requestWithdrawal(
+    request: FastifyRequest<{ Body: RequestWithdrawalInput }>,
+    reply: FastifyReply,
+  ) {
     const creator = await creatorsService.getByUserId(request.user!.id);
-    const withdrawal = await withdrawalsService.requestOnDemandWithdrawal(creator.id);
+    const withdrawal = await withdrawalsService.requestOnDemandWithdrawal(
+      creator.id,
+      request.body.amount,
+    );
     return reply.code(202).send({ data: withdrawal });
   },
 

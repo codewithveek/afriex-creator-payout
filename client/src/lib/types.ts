@@ -53,6 +53,44 @@ export interface SaleRecord {
   createdAt: string
 }
 
+export interface Product {
+  id: string
+  creatorId: string
+  name: string
+  description: string | null
+  price: string
+  currency: string
+  fileUrl: string | null
+  fileName: string | null
+  fileSize: string | null
+  published: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Order {
+  id: string
+  productId: string
+  creatorId: string
+  customerId: string | null
+  customerEmail: string
+  customerName: string
+  amount: string
+  currency: string
+  status: 'PENDING' | 'COMPLETED' | 'REFUNDED' | 'FAILED'
+  stripeSessionId: string
+  downloadToken: string | null
+  createdAt: string
+  updatedAt: string
+  product?: Product
+}
+
+export interface Customer {
+  id: string
+  email: string
+  name: string
+}
+
 export interface ApiError {
   error: {
     code: string

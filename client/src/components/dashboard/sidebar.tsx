@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { LayoutDashboard, Wallet, Banknote, ArrowUpRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, Wallet, Banknote, ArrowUpRight, Package, Shield, LogOut } from 'lucide-react'
 import { api } from '@/lib/api-client'
 
 const navItems = [
@@ -11,9 +11,18 @@ const navItems = [
   { href: '/dashboard/earnings', label: 'Earnings', icon: Wallet },
   { href: '/dashboard/payout-methods', label: 'Payout Methods', icon: Banknote },
   { href: '/dashboard/withdrawals', label: 'Withdrawals', icon: ArrowUpRight },
+  { href: '/dashboard/products', label: 'Products', icon: Package },
 ]
 
-export function Sidebar() {
+const adminItems = [
+  { href: '/dashboard/admin', label: 'Admin', icon: Shield },
+]
+
+interface Props {
+  role: 'CREATOR' | 'ADMIN'
+}
+
+export function Sidebar({ role }: Props) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -55,6 +64,34 @@ export function Sidebar() {
             </Link>
           )
         })}
+        {role === 'ADMIN' && (
+          <>
+            <div className="pt-4 pb-2">
+              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Admin
+              </p>
+            </div>
+            {adminItems.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={clsx(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       <div className="border-t border-gray-200 p-4">

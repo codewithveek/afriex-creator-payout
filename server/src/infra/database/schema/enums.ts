@@ -46,6 +46,14 @@ export const withdrawalTriggerEnum = pgEnum('withdrawal_trigger', [
   'SCHEDULED',
 ]);
 
+// --- Order lifecycle ---
+export const orderStatusEnum = pgEnum('order_status', [
+  'PENDING',
+  'COMPLETED',
+  'REFUNDED',
+  'FAILED',
+]);
+
 // --- Supported currencies ---
 // Kept as an enum (not free text) because pool accounts, payout methods, and
 // balances are all currency-scoped and must agree on a fixed vocabulary.

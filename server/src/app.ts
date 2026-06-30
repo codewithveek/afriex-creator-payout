@@ -10,6 +10,10 @@ import { salesRoutes } from './modules/sales/sales.router';
 import { withdrawalsRoutes } from './modules/withdrawals/withdrawals.router';
 import { adminRoutes } from './modules/admin/admin.router';
 import { afriexWebhookRoutes } from './infra/afriex/afriex-webhook.router';
+import { productsRoutes } from './modules/products/products.router';
+import { ordersRoutes } from './modules/orders/orders.router';
+import { downloadRoutes } from './modules/orders/download.router';
+import { customersRoutes } from './modules/customers/customers.router';
 import { env } from './config/env';
 
 // Per the architecture guide: "app.ts — register plugins, modules — no
@@ -47,6 +51,10 @@ export async function buildApp() {
   await app.register(salesRoutes);
   await app.register(withdrawalsRoutes);
   await app.register(adminRoutes);
+  await app.register(productsRoutes);
+  await app.register(ordersRoutes);
+  await app.register(downloadRoutes);
+  await app.register(customersRoutes);
   await app.register(afriexWebhookRoutes);
 
   return app;

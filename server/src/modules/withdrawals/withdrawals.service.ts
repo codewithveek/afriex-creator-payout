@@ -16,16 +16,7 @@ import {
 const COOLDOWN_MS = env.WITHDRAWAL_COOLDOWN_HOURS * 60 * 60 * 1000;
 
 export const withdrawalsService = {
-  /**
-   * Creates an on-demand withdrawal for the creator's full available
-   * balance. Enforces, in order: a verified payout method exists, the
-   * balance clears the platform minimum, and the cooldown since the
-   * creator's last withdrawal has elapsed. The balance is debited
-   * optimistically at creation time (not when the worker later succeeds)
-   * so a creator cannot double-withdraw by firing two requests before the
-   * first one finishes — see schema comment on withdrawals.amount.
-   */
-  async requestOnDemandWithdrawal(creatorId: string): Promise<Withdrawal> {
+  async requestOnDemandWithdrawal(creatorId: string, amount?: string): Promise<Withdrawal> {
     const creator = await creatorsRepository.findById(creatorId);
     if (!creator) {
       throw new NotFoundError('Creator not found');
@@ -33,9 +24,25 @@ export const withdrawalsService = {
 
     this.assertCooldownElapsed(creator);
 
-    const minimumAmount = fromMinorUnits(env.WITHDRAWAL_MIN_AMOUNT_MINOR, creator.payoutCurrency);
-    if (!isAmountGte(creator.availableBalance, minimumAmount)) {
-      throw new BelowMinimumWithdrawalError(minimumAmount);
+    const withdrawalAmount = amount || creator.availableBalance;
+
+    if (!isPositiveAmount(withdrawalAmount)) {
+      throw new InsufficientBalanceError(creator.availableBalance, withdrawalAmount);
+    }
+
+    if (withdrawalAmount !== creator.availableBalance) {
+      const minimumAmount = fromMinorUnits(env.WITHDRAWAL_MIN_AMOUNT_MINOR, creator.payoutCurrency);
+      if (!isAmountGte(withdrawalAmount, minimumAmount)) {
+        throw new BelowMinimumWithdrawalError(minimumAmount);
+      }
+      if (!isAmountGte(creator.availableBalance, withdrawalAmount)) {
+        throw new InsufficientBalanceError(creator.availableBalance, withdrawalAmount);
+      }
+    } else {
+      const minimumAmount = fromMinorUnits(env.WITHDRAWAL_MIN_AMOUNT_MINOR, creator.payoutCurrency);
+      if (!isAmountGte(creator.availableBalance, minimumAmount)) {
+        throw new BelowMinimumWithdrawalError(minimumAmount);
+      }
     }
 
     const payoutMethod = await payoutMethodsService.getVerifiedMethodOrThrow(creatorId);
@@ -45,23 +52,13 @@ export const withdrawalsService = {
       creator,
       payoutMethodId: payoutMethod.id,
       poolAccountId: poolAccount.id,
-      amount: creator.availableBalance,
+      amount: withdrawalAmount,
       trigger: 'ON_DEMAND',
     });
 
     return withdrawal;
   },
 
-  /**
-   * Runs the scheduled sweep: every creator who is payout-eligible (has a
-   * VERIFIED payout method) and has a positive balance gets a withdrawal
-   * created and queued for their full balance. Called by the cron defined
-   * in infra/queue/scheduler.ts on the configured cadence. Does NOT apply
-   * the cooldown or minimum-amount checks — those exist specifically to
-   * stop a creator hammering the on-demand endpoint; the scheduled sweep is
-   * the platform's own cadence and is allowed to pay out any positive
-   * balance, however small.
-   */
   async runScheduledSweep(): Promise<{ queued: number; skipped: number }> {
     const eligibleCreators = await creatorsRepository.findEligibleForScheduledSweep();
     let queued = 0;
@@ -81,8 +78,6 @@ export const withdrawalsService = {
         });
         queued += 1;
       } catch (err) {
-        // One creator's missing pool account or revoked method must never
-        // abort the sweep for everyone else — log and continue.
         logger.error({ err, creatorId: creator.id }, 'Scheduled sweep failed for creator, skipping');
         skipped += 1;
       }
@@ -92,7 +87,6 @@ export const withdrawalsService = {
     return { queued, skipped };
   },
 
-  /** Shared by both trigger paths: create the row, debit the balance, queue the job. */
   async createAndQueue(params: {
     creator: Creator;
     payoutMethodId: string;

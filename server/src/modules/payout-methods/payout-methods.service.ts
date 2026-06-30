@@ -25,7 +25,7 @@ export const payoutMethodsService = {
     const afriexResult = await afriexClient.registerRecipient({
       fullName: input.fullName,
       email: input.email,
-      phone: input.email,
+      phone: input.phone || input.email,
       countryCode,
       accountNumber: input.accountNumber,
       bankCode: input.bankCode,

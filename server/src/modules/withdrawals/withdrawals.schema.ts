@@ -1,9 +1,7 @@
 import { z } from 'zod/v4';
 
-// On-demand withdrawal takes no body — it always withdraws the creator's
-// full available balance to their verified payout method. Kept as an empty
-// schema (rather than skipping validation) so the route's contract is
-// explicit and easy to extend later (e.g. a partial-amount withdrawal).
-export const RequestWithdrawalSchema = z.object({}).strict();
+export const RequestWithdrawalSchema = z.object({
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a valid number with up to 2 decimal places').optional(),
+});
 
 export type RequestWithdrawalInput = z.infer<typeof RequestWithdrawalSchema>;
