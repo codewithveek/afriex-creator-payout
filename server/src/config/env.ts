@@ -32,6 +32,13 @@ const envSchema = z.object({
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   FLUTTERWAVE_WEBHOOK_SECRET: z.string().optional(),
 
+  // Cloudflare R2 (for file uploads via FluxMedia)
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET: z.string().optional().default('afriex-creator-files'),
+  R2_PUBLIC_URL: z.string().url().optional(),
+
   // Afriex — always required for disbursement, also reused by afriex-checkout provider
   AFRIEX_API_KEY: z.string().min(1),
   AFRIEX_ENVIRONMENT: z.enum(['staging', 'production']).optional().default('staging'),

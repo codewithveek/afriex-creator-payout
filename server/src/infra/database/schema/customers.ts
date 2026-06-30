@@ -11,11 +11,15 @@ export const customers = pgTable(
     passwordHash: varchar('password_hash', { length: 255 }),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
 
+    sessionToken: varchar('session_token', { length: 64 }).unique(),
+    sessionExpiresAt: timestamp('session_expires_at', { withTimezone: true }),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('idx_customers_email').on(table.email),
+    index('idx_customers_session_token').on(table.sessionToken),
   ],
 );
 

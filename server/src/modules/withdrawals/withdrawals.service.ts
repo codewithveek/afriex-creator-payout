@@ -5,6 +5,9 @@ import { poolAccountsService } from '../pool-accounts/pool-accounts.service';
 import { enqueueDisbursement } from '../../infra/queue/disbursement-queue';
 import { fromMinorUnits, isAmountGte, isPositiveAmount } from '../../shared/utils/currency';
 import { env } from '../../config/env';
+import { db } from '../../config/db';
+import { users } from '../../infra/database/schema';
+import { eq } from 'drizzle-orm';
 import { logger } from '../../config/logger';
 import {
   BelowMinimumWithdrawalError,
@@ -112,6 +115,16 @@ export const withdrawalsService = {
     await creatorsRepository.setLastWithdrawalAt(params.creator.id, new Date());
 
     await enqueueDisbursement(withdrawal.id);
+
+    const user = await db.query.users.findFirst({ where: eq(users.id, params.creator.userId) });
+    if (user) {
+      const { sendWithdrawalConfirmation } = await import('../../infra/email/email.service');
+      await sendWithdrawalConfirmation({
+        user: { id: user.id, email: user.email, name: user.name },
+        amount: params.amount,
+        currency: params.creator.payoutCurrency,
+      });
+    }
 
     logger.info(
       { withdrawalId: withdrawal.id, creatorId: params.creator.id, amount: params.amount, trigger: params.trigger },

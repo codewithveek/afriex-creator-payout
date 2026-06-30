@@ -10,13 +10,13 @@ import type {
   PaymentWebhookEvent,
 } from '../types';
 
-interface CreateCheckoutSessionResponse {
+interface AfriexCheckoutResponse {
   data: {
     checkoutUrl: string;
   };
 }
 
-interface AfriexCheckoutWebhookPayload {
+interface AfriexWebhookPayload {
   event: string;
   data: {
     merchantReference: string;
@@ -34,7 +34,7 @@ export class AfriexCheckoutProvider implements PaymentProvider {
     env.AFRIEX_ENVIRONMENT === 'staging' ? 'https://sandbox.api.afriex.com' : 'https://api.afriex.com';
 
   async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<CheckoutSessionResponse> {
-    const merchantReference = `co-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const merchantReference = `co-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
     const res = await fetch(`${this.baseUrl}/api/v1/checkout-session`, {
       method: 'POST',
@@ -48,6 +48,7 @@ export class AfriexCheckoutProvider implements PaymentProvider {
         merchantReference,
         redirectUrl: params.successUrl,
         customer: {
+          phone: params.customerPhone ?? params.metadata.customerPhone ?? '+2340000000000',
           name: params.customerName,
           email: params.customerEmail,
           countryCode: params.metadata.countryCode ?? 'NG',
@@ -62,7 +63,7 @@ export class AfriexCheckoutProvider implements PaymentProvider {
       throw new Error(`Afriex Checkout API error: ${err}`);
     }
 
-    const json = (await res.json()) as CreateCheckoutSessionResponse;
+    const json = (await res.json()) as AfriexCheckoutResponse;
 
     return {
       sessionId: merchantReference,
@@ -80,17 +81,17 @@ export class AfriexCheckoutProvider implements PaymentProvider {
       throw new ValidationError('Invalid webhook signature');
     }
 
-    const payload = JSON.parse(body) as AfriexCheckoutWebhookPayload;
+    const payload = JSON.parse(body) as AfriexWebhookPayload;
     return { type: payload.event, raw: payload };
   }
 
   getTransactionId(event: PaymentWebhookEvent): string | null {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     return payload.data?.merchantReference ?? null;
   }
 
   getPaymentStatus(event: PaymentWebhookEvent): 'PAID' | 'PENDING' | 'FAILED' | 'REFUNDED' | null {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     if (event.type === 'CHECKOUT_SESSION.CREATED' && payload.data?.status === 'COMPLETED') return 'PAID';
     if (event.type === 'CHECKOUT_SESSION.CREATED' && payload.data?.status === 'FAILED') return 'FAILED';
     if (event.type === 'CHECKOUT_SESSION.CREATED' && payload.data?.status === 'PENDING') return 'PENDING';
@@ -98,23 +99,23 @@ export class AfriexCheckoutProvider implements PaymentProvider {
   }
 
   getAmount(event: PaymentWebhookEvent): string | null {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     if (!payload.data?.amount) return null;
     return (payload.data.amount / 100).toFixed(2);
   }
 
   getCurrency(event: PaymentWebhookEvent): string | null {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     return payload.data?.currency?.toUpperCase() ?? null;
   }
 
   getCustomerEmail(event: PaymentWebhookEvent): string | null {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     return payload.data?.customer?.email ?? null;
   }
 
   getMetadata(event: PaymentWebhookEvent): Record<string, string> {
-    const payload = event.raw as AfriexCheckoutWebhookPayload;
+    const payload = event.raw as AfriexWebhookPayload;
     return payload.data?.metadata ?? {};
   }
 

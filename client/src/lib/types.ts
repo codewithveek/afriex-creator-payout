@@ -89,6 +89,7 @@ export interface Customer {
   id: string
   email: string
   name: string
+  token?: string
 }
 
 export interface ApiError {

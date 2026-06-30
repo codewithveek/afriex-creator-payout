@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { customersService } from './customers.service';
 import type { CustomerSignupInput, CustomerLoginInput } from './customers.schema';
+import { ValidationError } from '../../shared/errors';
 
 export const customersController = {
   async signup(request: FastifyRequest<{ Body: CustomerSignupInput }>, reply: FastifyReply) {
@@ -9,16 +10,15 @@ export const customersController = {
   },
 
   async login(request: FastifyRequest<{ Body: CustomerLoginInput }>, reply: FastifyReply) {
-    const customer = await customersService.login(request.body);
-    return reply.code(200).send({ data: { id: customer.id, email: customer.email, name: customer.name } });
+    const result = await customersService.login(request.body);
+    return reply.code(200).send({
+      data: { id: result.id, email: result.email, name: result.name, token: result.token },
+    });
   },
 
   async myOrders(request: FastifyRequest, reply: FastifyReply) {
-    const customerEmail = request.headers['x-customer-email'] as string;
-    if (!customerEmail) {
-      return reply.code(401).send({ error: { code: 'UNAUTHORIZED', message: 'Customer email required' } });
-    }
-    const orders = await customersService.getOrders(customerEmail);
+    const customer = request.customer!;
+    const orders = await customersService.getOrders(customer.email);
     return reply.code(200).send({ data: orders });
   },
 };

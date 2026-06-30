@@ -3,6 +3,7 @@ export interface CreateCheckoutSessionParams {
   currency: string;
   customerEmail: string;
   customerName: string;
+  customerPhone?: string;
   successUrl: string;
   cancelUrl: string;
   metadata: Record<string, string>;

@@ -20,7 +20,33 @@ export function ProductsClient({ initial }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [uploadedFile, setUploadedFile] = useState<{ url: string; fileName: string; fileSize: string } | null>(null)
+
+  async function handleFileUpload(file: File) {
+    setUploading(true)
+    setError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/upload/product-file`,
+        { method: 'POST', credentials: 'include', body: formData },
+      )
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error?.message || 'Upload failed')
+      }
+      const json = await res.json()
+      setUploadedFile(json.data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -35,8 +61,12 @@ export function ProductsClient({ initial }: Props) {
         description: form.get('description'),
         price: form.get('price'),
         currency: form.get('currency'),
+        fileUrl: uploadedFile?.url || undefined,
+        fileName: uploadedFile?.fileName || undefined,
+        fileSize: uploadedFile?.fileSize || undefined,
       })
       setShowForm(false)
+      setUploadedFile(null)
       router.refresh()
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to create product')
@@ -77,7 +107,7 @@ export function ProductsClient({ initial }: Props) {
           <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
           <p className="mt-1 text-sm text-gray-500">Manage your digital products</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => { setShowForm(!showForm); setUploadedFile(null) }}>
           {showForm ? 'Cancel' : 'Add product'}
         </Button>
       </div>
@@ -121,6 +151,25 @@ export function ProductsClient({ initial }: Props) {
                   </select>
                 </div>
               </div>
+
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">Product File</label>
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleFileUpload(file)
+                  }}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {uploading && <p className="text-sm text-blue-600">Uploading...</p>}
+                {uploadedFile && (
+                  <p className="text-sm text-green-600">
+                    Uploaded: {uploadedFile.fileName} ({(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
+                  </p>
+                )}
+              </div>
+
               <Button type="submit" loading={loading}>
                 Create product
               </Button>
@@ -148,8 +197,8 @@ export function ProductsClient({ initial }: Props) {
                 <tr className="border-b border-gray-200 text-left text-gray-500">
                   <th className="px-6 py-3 font-medium">Name</th>
                   <th className="px-6 py-3 font-medium">Price</th>
+                  <th className="px-6 py-3 font-medium">File</th>
                   <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Sales</th>
                   <th className="px-6 py-3" />
                 </tr>
               </thead>
@@ -159,6 +208,15 @@ export function ProductsClient({ initial }: Props) {
                     <td className="px-6 py-3 font-medium text-gray-900">{product.name}</td>
                     <td className="px-6 py-3 text-gray-700">
                       ${Number.parseFloat(product.price).toFixed(2)} {product.currency}
+                    </td>
+                    <td className="px-6 py-3 text-gray-500">
+                      {product.fileUrl ? (
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                          Has file
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-3">
                       {product.published ? (
@@ -171,7 +229,6 @@ export function ProductsClient({ initial }: Props) {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">{(product as Product & { orderCount?: number }).orderCount ?? '—'}</td>
                     <td className="px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <Button

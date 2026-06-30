@@ -4,6 +4,7 @@ import { db } from '../../config/db';
 import { env } from '../../config/env';
 import * as schema from '../../infra/database/schema';
 import { logger } from '../../config/logger';
+import { sendWelcomeEmail } from '../../infra/email/email.service';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -83,8 +84,11 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (params: Record<string, unknown>) => {
-          const user = params.data as { id: string; email: string };
-          logger.info({ userId: user.id, email: user.email }, 'User created');
+          const user = params.data as { id: string; email: string; name?: string };
+          if (user.name) {
+            await sendWelcomeEmail({ id: user.id, email: user.email, name: user.name });
+          }
+          logger.info({ userId: user.id, email: user.email }, 'User created, welcome email sent');
         },
       },
       update: {

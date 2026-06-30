@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { customersController } from './customers.controller';
 import { CustomerSignupSchema, CustomerLoginSchema } from './customers.schema';
 import { validateBody } from '../../shared/middleware/validate';
+import { customerAuth } from '../../shared/middleware/customer-auth';
 
 export async function customersRoutes(fastify: FastifyInstance) {
   fastify.post('/api/customers/signup', {
@@ -15,6 +16,7 @@ export async function customersRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/api/customers/orders', {
+    preHandler: [customerAuth],
     handler: customersController.myOrders,
   });
 }

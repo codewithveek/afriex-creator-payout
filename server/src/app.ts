@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import { globalErrorHandler } from './shared/middleware/error-handler';
 import { authRoutes } from './modules/auth/auth.router';
 import { creatorsRoutes } from './modules/creators/creators.router';
@@ -14,6 +15,7 @@ import { productsRoutes } from './modules/products/products.router';
 import { ordersRoutes } from './modules/orders/orders.router';
 import { downloadRoutes } from './modules/orders/download.router';
 import { customersRoutes } from './modules/customers/customers.router';
+import { uploadRoutes } from './modules/uploads/uploads.router';
 import { env } from './config/env';
 
 // Per the architecture guide: "app.ts — register plugins, modules — no
@@ -40,6 +42,7 @@ export async function buildApp() {
   await app.register(helmet);
   await app.register(cors, { origin: env.NODE_ENV === 'production' ? false : true, credentials: true });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } }); // 100 MB max
 
   app.setErrorHandler(globalErrorHandler);
 
@@ -56,6 +59,7 @@ export async function buildApp() {
   await app.register(downloadRoutes);
   await app.register(customersRoutes);
   await app.register(afriexWebhookRoutes);
+  await app.register(uploadRoutes);
 
   return app;
 }

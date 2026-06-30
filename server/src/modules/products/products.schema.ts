@@ -5,6 +5,9 @@ export const CreateProductSchema = z.object({
   description: z.string().max(10000).optional(),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/),
   currency: z.enum(['USD', 'NGN', 'GHS', 'KES']).default('USD'),
+  fileUrl: z.string().url().optional(),
+  fileName: z.string().max(255).optional(),
+  fileSize: z.string().max(20).optional(),
 });
 
 export const UpdateProductSchema = z.object({
@@ -13,6 +16,9 @@ export const UpdateProductSchema = z.object({
   price: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
   currency: z.enum(['USD', 'NGN', 'GHS', 'KES']).optional(),
   published: z.boolean().optional(),
+  fileUrl: z.string().url().optional(),
+  fileName: z.string().max(255).optional(),
+  fileSize: z.string().max(20).optional(),
 });
 
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
