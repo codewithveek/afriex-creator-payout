@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { LayoutDashboard, Wallet, Banknote, ArrowUpRight, Package, Shield, LogOut } from 'lucide-react'
+import { LayoutDashboard, Wallet, Banknote, ArrowUpRight, Package, Settings, Shield, LogOut } from 'lucide-react'
 import { api } from '@/lib/api-client'
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/dashboard/payout-methods', label: 'Payout Methods', icon: Banknote },
   { href: '/dashboard/withdrawals', label: 'Withdrawals', icon: ArrowUpRight },
   { href: '/dashboard/products', label: 'Products', icon: Package },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 const adminItems = [

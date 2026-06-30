@@ -1,0 +1,88 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { api, ApiClientError } from '@/lib/api-client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+
+const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
+
+interface Props {
+  creator: {
+    payoutCurrency: string
+  }
+}
+
+export function SettingsClient({ creator }: Props) {
+  const router = useRouter()
+  const [payoutCurrency, setPayoutCurrency] = useState(creator.payoutCurrency)
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await api.patch('/api/creators/me', { payoutCurrency })
+      setSuccess('Settings saved')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Failed to save settings')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
+        <p className="mt-1 text-sm text-gray-500">Manage your payout preferences</p>
+      </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</div>
+      )}
+      {success && (
+        <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700" role="status">{success}</div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold text-gray-900">Payout Currency</h2>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700" htmlFor="payoutCurrency">
+                Default payout currency
+              </label>
+              <select
+                id="payoutCurrency"
+                value={payoutCurrency}
+                onChange={(e) => setPayoutCurrency(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {currencies.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                This determines the currency used for payouts. Ensure you have a payout method in this currency.
+              </p>
+            </div>
+
+            <Button type="submit" loading={loading}>
+              Save Settings
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

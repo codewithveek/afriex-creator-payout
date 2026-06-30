@@ -12,8 +12,8 @@ export const productsService = {
     });
   },
 
-  async listForCreator(creatorId: string): Promise<Product[]> {
-    return productsRepository.findByCreatorId(creatorId);
+  async listForCreator(creatorId: string, offset: number, limit: number) {
+    return productsRepository.findByCreatorId(creatorId, offset, limit);
   },
 
   async getById(productId: string): Promise<Product> {
@@ -22,8 +22,8 @@ export const productsService = {
     return product;
   },
 
-  async getPublished(): Promise<Product[]> {
-    return productsRepository.findPublished();
+  async getPublished(offset: number, limit: number) {
+    return productsRepository.findPublished(offset, limit);
   },
 
   async getPublishedById(productId: string): Promise<Product> {

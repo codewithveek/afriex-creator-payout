@@ -52,8 +52,8 @@ export const payoutMethodsService = {
     return payoutMethod;
   },
 
-  async listForCreator(creatorId: string): Promise<PayoutMethod[]> {
-    return payoutMethodsRepository.findByCreatorId(creatorId);
+  async listForCreator(creatorId: string, offset: number, limit: number) {
+    return payoutMethodsRepository.findByCreatorId(creatorId, offset, limit);
   },
 
   async getVerifiedMethodOrThrow(creatorId: string): Promise<PayoutMethod> {

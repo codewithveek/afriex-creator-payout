@@ -144,7 +144,7 @@ export const withdrawalsService = {
     }
   },
 
-  async listForCreator(creatorId: string): Promise<Withdrawal[]> {
-    return withdrawalsRepository.findByCreatorId(creatorId);
+  async listForCreator(creatorId: string, offset: number, limit: number) {
+    return withdrawalsRepository.findByCreatorId(creatorId, offset, limit);
   },
 };

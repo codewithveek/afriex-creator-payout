@@ -4,7 +4,7 @@ import { authorize } from '../../shared/middleware/authorize';
 import { Role } from '../../shared/types';
 import { mediaUploader } from '../../infra/media/media-uploader';
 import { logger } from '../../config/logger';
-import { NotFoundError } from '../../shared/errors';
+
 
 export async function uploadRoutes(fastify: FastifyInstance) {
   fastify.post('/api/upload/product-file', {
@@ -33,7 +33,7 @@ export async function uploadRoutes(fastify: FastifyInstance) {
           contentType: file.mimetype,
         });
 
-        logger.info({ filename: result.filename, size: result.size }, 'File uploaded');
+        logger.info({ fileId: result.id, size: result.size }, 'File uploaded');
 
         return reply.code(201).send({
           data: {

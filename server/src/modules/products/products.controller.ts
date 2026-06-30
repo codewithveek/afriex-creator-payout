@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { productsService } from './products.service';
 import { creatorsService } from '../creators/creators.service';
 import type { CreateProductInput, UpdateProductInput } from './products.schema';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
 export const productsController = {
   async create(request: FastifyRequest<{ Body: CreateProductInput }>, reply: FastifyReply) {
@@ -12,13 +13,15 @@ export const productsController = {
 
   async listMyProducts(request: FastifyRequest, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
-    const products = await productsService.listForCreator(creator.id);
-    return reply.code(200).send({ data: products });
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await productsService.listForCreator(creator.id, (pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
-  async listPublished(_request: FastifyRequest, reply: FastifyReply) {
-    const products = await productsService.getPublished();
-    return reply.code(200).send({ data: products });
+  async listPublished(request: FastifyRequest, reply: FastifyReply) {
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await productsService.getPublished((pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
   async getById(

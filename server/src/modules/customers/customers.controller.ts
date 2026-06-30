@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { customersService } from './customers.service';
 import type { CustomerSignupInput, CustomerLoginInput } from './customers.schema';
 import { ValidationError } from '../../shared/errors';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
 export const customersController = {
   async signup(request: FastifyRequest<{ Body: CustomerSignupInput }>, reply: FastifyReply) {
@@ -18,7 +19,8 @@ export const customersController = {
 
   async myOrders(request: FastifyRequest, reply: FastifyReply) {
     const customer = request.customer!;
-    const orders = await customersService.getOrders(customer.email);
-    return reply.code(200).send({ data: orders });
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await customersService.getOrders(customer.email, (pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 };

@@ -3,6 +3,8 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { globalErrorHandler } from './shared/middleware/error-handler';
 import { authRoutes } from './modules/auth/auth.router';
 import { creatorsRoutes } from './modules/creators/creators.router';
@@ -43,6 +45,18 @@ export async function buildApp() {
   await app.register(cors, { origin: env.NODE_ENV === 'production' ? false : true, credentials: true });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } }); // 100 MB max
+
+  await app.register(swagger, {
+    openapi: {
+      info: { title: 'Afriex Creator Payout API', version: '0.1.0', description: 'API for the Afriex Creator Payout Platform' },
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        },
+      },
+    },
+  });
+  await app.register(swaggerUi, { routePrefix: '/docs' });
 
   app.setErrorHandler(globalErrorHandler);
 

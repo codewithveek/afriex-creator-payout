@@ -15,19 +15,27 @@ export const productsRepository = {
     return db.query.products.findFirst({ where: eq(products.id, id) });
   },
 
-  async findByCreatorId(creatorId: string): Promise<Product[]> {
-    return db.query.products.findMany({
+  async findByCreatorId(creatorId: string, offset: number, limit: number): Promise<{ rows: Product[]; total: number }> {
+    const rows = await db.query.products.findMany({
       where: eq(products.creatorId, creatorId),
       orderBy: (p, { desc }) => [desc(p.createdAt)],
+      offset,
+      limit,
     });
+    const total = await db.$count(products, eq(products.creatorId, creatorId));
+    return { rows, total };
   },
 
-  async findPublished(): Promise<Product[]> {
-    return db.query.products.findMany({
+  async findPublished(offset: number, limit: number): Promise<{ rows: Product[]; total: number }> {
+    const rows = await db.query.products.findMany({
       where: eq(products.published, true),
       orderBy: (p, { desc }) => [desc(p.createdAt)],
       with: { creator: { columns: { id: true } } },
+      offset,
+      limit,
     });
+    const total = await db.$count(products, eq(products.published, true));
+    return { rows, total };
   },
 
   async findPublishedById(id: string): Promise<Product | undefined> {

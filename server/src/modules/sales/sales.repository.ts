@@ -21,7 +21,13 @@ export const salesRepository = {
     await db.update(sales).set({ status: 'REFUNDED', updatedAt: new Date() }).where(eq(sales.id, saleId));
   },
 
-  async findByCreatorId(creatorId: string): Promise<Sale[]> {
-    return db.query.sales.findMany({ where: eq(sales.creatorId, creatorId) });
+  async findByCreatorId(creatorId: string, offset: number, limit: number): Promise<{ rows: Sale[]; total: number }> {
+    const rows = await db.query.sales.findMany({
+      where: eq(sales.creatorId, creatorId),
+      offset,
+      limit,
+    });
+    const total = await db.$count(sales, eq(sales.creatorId, creatorId));
+    return { rows, total };
   },
 };

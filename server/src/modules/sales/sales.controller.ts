@@ -8,6 +8,7 @@ import { env } from '../../config/env';
 import { logger } from '../../config/logger';
 import { ValidationError } from '../../shared/errors';
 import { ordersService } from '../orders/orders.service';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 import type { PaymentProviderName } from '../../infra/payment/types';
 
 export const salesController = {
@@ -95,8 +96,9 @@ export const salesController = {
 
   async listMySales(request: FastifyRequest, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
-    const sales = await salesRepository.findByCreatorId(creator.id);
-    return reply.code(200).send({ data: sales });
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await salesRepository.findByCreatorId(creator.id, (pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 };
 

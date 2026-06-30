@@ -9,4 +9,9 @@ export async function creatorsRoutes(fastify: FastifyInstance) {
     preHandler: [authenticate, authorize(Role.CREATOR)],
     handler: creatorsController.getMyProfile,
   });
+
+  fastify.patch('/api/creators/me', {
+    preHandler: [authenticate, authorize(Role.CREATOR)],
+    handler: creatorsController.updateMyProfile,
+  });
 }

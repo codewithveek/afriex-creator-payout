@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { ordersService } from './orders.service';
 import { creatorsService } from '../creators/creators.service';
 import type { CreateCheckoutSessionInput } from './orders.schema';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
 export const ordersController = {
   async createCheckoutSession(
@@ -14,7 +15,8 @@ export const ordersController = {
 
   async listMyOrders(request: FastifyRequest, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
-    const orders = await ordersService.listForCreator(creator.id);
-    return reply.code(200).send({ data: orders });
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await ordersService.listForCreator(creator.id, (pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 };

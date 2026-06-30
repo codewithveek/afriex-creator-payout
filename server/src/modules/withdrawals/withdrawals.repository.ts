@@ -15,11 +15,15 @@ export const withdrawalsRepository = {
     return db.query.withdrawals.findFirst({ where: eq(withdrawals.id, id) });
   },
 
-  async findByCreatorId(creatorId: string): Promise<Withdrawal[]> {
-    return db.query.withdrawals.findMany({
+  async findByCreatorId(creatorId: string, offset: number, limit: number): Promise<{ rows: Withdrawal[]; total: number }> {
+    const rows = await db.query.withdrawals.findMany({
       where: eq(withdrawals.creatorId, creatorId),
       orderBy: (table, { desc }) => desc(table.createdAt),
+      offset,
+      limit,
     });
+    const total = await db.$count(withdrawals, eq(withdrawals.creatorId, creatorId));
+    return { rows, total };
   },
 
   async findByAfriexTransactionId(afriexTransactionId: string): Promise<Withdrawal | undefined> {

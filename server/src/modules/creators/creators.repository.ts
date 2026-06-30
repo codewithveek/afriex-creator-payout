@@ -69,6 +69,15 @@ export const creatorsRepository = {
       .where(eq(creators.id, creatorId));
   },
 
+  async update(creatorId: string, input: Partial<Pick<Creator, 'payoutCurrency'>>): Promise<Creator | undefined> {
+    const [row] = await db
+      .update(creators)
+      .set({ ...input, updatedAt: new Date() })
+      .where(eq(creators.id, creatorId))
+      .returning();
+    return row;
+  },
+
   /** Creators eligible for the scheduled disbursement sweep: payout-eligible with a positive balance. */
   async findEligibleForScheduledSweep(): Promise<Creator[]> {
     return db.query.creators.findMany({

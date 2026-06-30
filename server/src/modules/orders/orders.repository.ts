@@ -19,19 +19,27 @@ export const ordersRepository = {
     return db.query.orders.findFirst({ where: eq(orders.paymentSessionId, sessionId) });
   },
 
-  async findByCreatorId(creatorId: string): Promise<Order[]> {
-    return db.query.orders.findMany({
+  async findByCreatorId(creatorId: string, offset: number, limit: number): Promise<{ rows: Order[]; total: number }> {
+    const rows = await db.query.orders.findMany({
       where: eq(orders.creatorId, creatorId),
       orderBy: (o, { desc }) => [desc(o.createdAt)],
+      offset,
+      limit,
     });
+    const total = await db.$count(orders, eq(orders.creatorId, creatorId));
+    return { rows, total };
   },
 
-  async findByCustomerEmail(email: string): Promise<Order[]> {
-    return db.query.orders.findMany({
+  async findByCustomerEmail(email: string, offset: number, limit: number): Promise<{ rows: Order[]; total: number }> {
+    const rows = await db.query.orders.findMany({
       where: eq(orders.customerEmail, email),
       orderBy: (o, { desc }) => [desc(o.createdAt)],
       with: { product: true },
+      offset,
+      limit,
     });
+    const total = await db.$count(orders, eq(orders.customerEmail, email));
+    return { rows, total };
   },
 
   async markCompleted(id: string, downloadToken: string): Promise<void> {

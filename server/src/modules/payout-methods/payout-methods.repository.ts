@@ -15,8 +15,14 @@ export const payoutMethodsRepository = {
     return db.query.payoutMethods.findFirst({ where: eq(payoutMethods.id, id) });
   },
 
-  async findByCreatorId(creatorId: string): Promise<PayoutMethod[]> {
-    return db.query.payoutMethods.findMany({ where: eq(payoutMethods.creatorId, creatorId) });
+  async findByCreatorId(creatorId: string, offset: number, limit: number): Promise<{ rows: PayoutMethod[]; total: number }> {
+    const rows = await db.query.payoutMethods.findMany({
+      where: eq(payoutMethods.creatorId, creatorId),
+      offset,
+      limit,
+    });
+    const total = await db.$count(payoutMethods, eq(payoutMethods.creatorId, creatorId));
+    return { rows, total };
   },
 
   async findVerifiedByCreatorId(creatorId: string): Promise<PayoutMethod | undefined> {

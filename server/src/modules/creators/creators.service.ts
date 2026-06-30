@@ -1,6 +1,10 @@
 import { creatorsRepository, type Creator } from './creators.repository';
 import { NotFoundError } from '../../shared/errors';
 
+export type UpdateCreatorProfile = {
+  payoutCurrency?: 'USD' | 'NGN' | 'GHS' | 'KES';
+};
+
 export const creatorsService = {
   /**
    * Idempotently ensures a `creators` row exists for the given user.
@@ -25,5 +29,12 @@ export const creatorsService = {
     const creator = await creatorsRepository.findById(creatorId);
     if (!creator) throw new NotFoundError('Creator not found');
     return creator;
+  },
+
+  async updateProfile(userId: string, input: UpdateCreatorProfile): Promise<Creator> {
+    const creator = await this.getByUserId(userId);
+    const updated = await creatorsRepository.update(creator.id, input);
+    if (!updated) throw new NotFoundError('Creator not found');
+    return updated;
   },
 };

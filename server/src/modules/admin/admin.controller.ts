@@ -1,28 +1,33 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { adminService } from './admin.service';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
 // Rewritten to call the service layer instead of touching the DB directly,
 // per the architecture guide's layer contract: controllers parse the
 // request, call the service, and map to an HTTP response — nothing more.
 export const adminController = {
-  async listCreators(_request: FastifyRequest, reply: FastifyReply) {
-    const rows = await adminService.listCreators();
-    return reply.code(200).send({ data: rows });
+  async listCreators(request: FastifyRequest, reply: FastifyReply) {
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await adminService.listCreators((pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
-  async listWithdrawals(_request: FastifyRequest, reply: FastifyReply) {
-    const rows = await adminService.listWithdrawals();
-    return reply.code(200).send({ data: rows });
+  async listWithdrawals(request: FastifyRequest, reply: FastifyReply) {
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await adminService.listWithdrawals((pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
-  async listSales(_request: FastifyRequest, reply: FastifyReply) {
-    const rows = await adminService.listSales();
-    return reply.code(200).send({ data: rows });
+  async listSales(request: FastifyRequest, reply: FastifyReply) {
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await adminService.listSales((pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
-  async listPoolAccounts(_request: FastifyRequest, reply: FastifyReply) {
-    const rows = await adminService.listPoolAccounts();
-    return reply.code(200).send({ data: rows });
+  async listPoolAccounts(request: FastifyRequest, reply: FastifyReply) {
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await adminService.listPoolAccounts((pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
   async triggerScheduledSweep(_request: FastifyRequest, reply: FastifyReply) {

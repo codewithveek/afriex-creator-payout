@@ -70,7 +70,7 @@ export const customersService = {
     return customer;
   },
 
-  async getOrders(email: string) {
-    return ordersService.listForCustomer(email);
+  async getOrders(email: string, offset: number, limit: number) {
+    return ordersService.listForCustomer(email, offset, limit);
   },
 };

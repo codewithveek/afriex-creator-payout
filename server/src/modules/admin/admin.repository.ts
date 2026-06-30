@@ -10,28 +10,40 @@ import { creators, withdrawals, sales, poolAccounts } from '../../infra/database
 // layer that reads across bounded contexts for display purposes only,
 // never writing into another domain's tables.
 export const adminRepository = {
-  async listCreatorsWithUser() {
-    return db.query.creators.findMany({
+  async listCreatorsWithUser(offset: number, limit: number) {
+    const rows = await db.query.creators.findMany({
       orderBy: desc(creators.createdAt),
       with: { user: true },
+      offset,
+      limit,
     });
+    const total = await db.$count(creators);
+    return { rows, total };
   },
 
-  async listRecentWithdrawals(limit = 100) {
-    return db.query.withdrawals.findMany({
+  async listRecentWithdrawals(offset: number, limit: number) {
+    const rows = await db.query.withdrawals.findMany({
       orderBy: desc(withdrawals.createdAt),
+      offset,
       limit,
     });
+    const total = await db.$count(withdrawals);
+    return { rows, total };
   },
 
-  async listRecentSales(limit = 100) {
-    return db.query.sales.findMany({
+  async listRecentSales(offset: number, limit: number) {
+    const rows = await db.query.sales.findMany({
       orderBy: desc(sales.createdAt),
+      offset,
       limit,
     });
+    const total = await db.$count(sales);
+    return { rows, total };
   },
 
-  async listPoolAccounts() {
-    return db.query.poolAccounts.findMany({ orderBy: desc(poolAccounts.updatedAt) });
+  async listPoolAccounts(offset: number, limit: number) {
+    const rows = await db.query.poolAccounts.findMany({ orderBy: desc(poolAccounts.updatedAt), offset, limit });
+    const total = await db.$count(poolAccounts);
+    return { rows, total };
   },
 };

@@ -5,6 +5,7 @@ import type { AddPayoutMethodInput } from './payout-methods.schema';
 import { db } from '../../config/db';
 import { users } from '../../infra/database/schema';
 import { eq } from 'drizzle-orm';
+import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 
 export const payoutMethodsController = {
   async addPayoutMethod(
@@ -24,8 +25,9 @@ export const payoutMethodsController = {
 
   async listMyPayoutMethods(request: FastifyRequest, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
-    const methods = await payoutMethodsService.listForCreator(creator.id);
-    return reply.code(200).send({ data: methods });
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await payoutMethodsService.listForCreator(creator.id, (pag.page - 1) * pag.pageSize, pag.pageSize);
+    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
   },
 
   async revoke(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

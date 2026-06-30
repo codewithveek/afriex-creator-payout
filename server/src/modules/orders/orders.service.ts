@@ -70,12 +70,12 @@ export const ordersService = {
     logger.info({ orderId: order.id, sessionId }, 'Order completed');
   },
 
-  async listForCreator(creatorId: string): Promise<Order[]> {
-    return ordersRepository.findByCreatorId(creatorId);
+  async listForCreator(creatorId: string, offset: number, limit: number) {
+    return ordersRepository.findByCreatorId(creatorId, offset, limit);
   },
 
-  async listForCustomer(email: string): Promise<Order[]> {
-    return ordersRepository.findByCustomerEmail(email);
+  async listForCustomer(email: string, offset: number, limit: number) {
+    return ordersRepository.findByCustomerEmail(email, offset, limit);
   },
 
   async verifyDownloadToken(orderId: string, token: string): Promise<Order> {
