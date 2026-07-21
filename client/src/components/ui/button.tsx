@@ -10,11 +10,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 disabled:bg-blue-400',
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-400',
-  outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-blue-500',
-  ghost: 'text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-400',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 disabled:bg-red-400',
+  primary: 'bg-accent text-fg-on-accent hover:bg-accent-hover focus-visible:ring-accent disabled:opacity-50',
+  secondary: 'bg-bg-muted text-fg hover:bg-bg-subtle focus-visible:ring-border',
+  outline: 'border border-border bg-bg text-fg-muted hover:bg-bg-muted focus-visible:ring-accent',
+  ghost: 'text-fg-muted hover:bg-bg-muted focus-visible:ring-border',
+  danger: 'bg-error text-fg-on-accent hover:opacity-90 focus-visible:ring-error disabled:opacity-50',
 }
 
 const sizes = {

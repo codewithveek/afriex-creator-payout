@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
 import { cookies } from 'next/headers'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { PayoutMethod } from '@/lib/types'
 import { PayoutMethodsClient } from './client'
 
@@ -19,8 +20,8 @@ async function PayoutMethodsContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Payout Methods</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your bank accounts for receiving payouts</p>
+        <h1 className="text-2xl font-semibold text-fg">Payout Methods</h1>
+        <p className="mt-1 text-sm text-fg-muted">Manage your bank accounts for receiving payouts</p>
       </div>
 
       <PayoutMethodsClient initial={methods} />
@@ -30,13 +31,14 @@ async function PayoutMethodsContent() {
 
 export default function PayoutMethodsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+    <Suspense fallback={
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
-      }
-    >
+      </div>
+    }>
       <PayoutMethodsContent />
     </Suspense>
   )

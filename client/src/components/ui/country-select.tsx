@@ -2,8 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { List, useListRef } from 'react-window'
-import countries from '@/lib/countries'
+import { data } from '@/lib/countries'
 import type { Country } from '@/lib/countries'
+
+const countries: Country[] = data.map((item) => ({
+  code: item.cca2,
+  name: item.name.common,
+  flag: item.flags.png,
+}))
 
 interface Props {
   value: string
@@ -21,7 +27,6 @@ function CountryRow({
   selected,
   onSelect,
 }: {
-  ariaAttributes: Record<string, unknown>
   index: number
   style: React.CSSProperties
   items: Country[]
@@ -30,19 +35,22 @@ function CountryRow({
 }) {
   const country = items[index]
   if (!country) return null
+  const isSelected = country.code === selected
   return (
-    <div style={style}>
+    <div style={style} role="option" aria-selected={isSelected}>
       <button
         type="button"
+        role="option"
+        aria-selected={isSelected}
         onClick={() => onSelect(country)}
-        className={`flex w-full items-center gap-2 px-3 text-sm transition-colors hover:bg-blue-50 ${
-          country.code === selected ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-900'
+        className={`flex w-full items-center gap-2 px-3 text-sm transition-colors hover:bg-accent-muted ${
+          isSelected ? 'bg-accent-muted font-medium text-accent' : 'text-fg'
         }`}
         style={{ height: ROW_HEIGHT }}
       >
         <span className="text-lg leading-none">{country.flag}</span>
         <span>{country.name}</span>
-        <span className="ml-auto text-xs text-gray-400">{country.code}</span>
+        <span className="ml-auto text-xs text-fg-subtle">{country.code}</span>
       </button>
     </div>
   )
@@ -54,6 +62,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
   const searchRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const listRef = useListRef(null)
+  const listboxId = 'country-listbox'
 
   const selected = countries.find((c) => c.code === value)
   const filtered = query
@@ -72,7 +81,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
 
   useEffect(() => {
     if (open) {
-      setTimeout(() => searchRef.current?.focus(), 0)
+      requestAnimationFrame(() => searchRef.current?.focus())
     }
   }, [open])
 
@@ -82,17 +91,20 @@ export function CountrySelect({ value, onChange, required }: Props) {
     setQuery('')
   }, [onChange])
 
-  const rowProps: { items: Country[]; selected: string; onSelect: (c: Country) => void } = { items: filtered, selected: value, onSelect: handleSelect }
+  const rowProps = { items: filtered, selected: value, onSelect: handleSelect }
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="country-search">
+      <label className="block text-sm font-medium text-fg-muted mb-1" htmlFor="country-search">
         Country
       </label>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
+        className="flex w-full items-center gap-2 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
       >
         {selected ? (
           <>
@@ -100,7 +112,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
             <span>{selected.name}</span>
           </>
         ) : (
-          <span className="text-gray-400">Select a country</span>
+          <span className="text-fg-subtle">Select a country</span>
         )}
       </button>
       {required && !value && (
@@ -114,8 +126,13 @@ export function CountrySelect({ value, onChange, required }: Props) {
         />
       )}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
-          <div className="border-b border-gray-100 p-2">
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="Select a country"
+          className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-bg shadow-lg"
+        >
+          <div className="border-b border-border-light p-2">
             <input
               ref={searchRef}
               id="country-search"
@@ -126,11 +143,11 @@ export function CountrySelect({ value, onChange, required }: Props) {
                 setQuery(e.target.value)
                 listRef.current?.scrollToRow({ index: 0 })
               }}
-              className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
           {filtered.length === 0 ? (
-            <div className="px-3 py-8 text-center text-sm text-gray-500">No countries found</div>
+            <div className="px-3 py-8 text-center text-sm text-fg-subtle">No countries found</div>
           ) : (
             <List
               listRef={listRef}

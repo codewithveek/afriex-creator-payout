@@ -7,7 +7,7 @@ export default async function ForgotPasswordPage() {
   if (session) redirect('/dashboard')
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-bg-muted px-4">
       <ForgotPasswordForm />
     </div>
   )

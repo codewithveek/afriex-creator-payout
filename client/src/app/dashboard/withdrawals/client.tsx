@@ -32,27 +32,27 @@ export function WithdrawalsClient({ balance }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-3">
+    <div className="flex flex-col gap-3">
       {balance !== null && (
-        <p className="text-sm text-gray-500">
-          Available balance: <span className="font-semibold text-gray-900">${Number.parseFloat(balance).toFixed(2)}</span>
+        <p className="text-sm text-fg-muted">
+          Available balance: <span className="font-semibold text-fg">${Number.parseFloat(balance).toFixed(2)}</span>
         </p>
       )}
-      <form action={requestWithdrawal} className="flex items-end gap-3">
+      <form action={requestWithdrawal} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <Input
           name="amount"
           type="number"
           step="0.01"
           min="0"
           placeholder="Amount (optional)"
-          className="w-48"
+          className="w-full sm:w-48"
         />
         <Button type="submit" loading={loading}>
           Request withdrawal
         </Button>
       </form>
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-error" role="alert">
           {error}
         </p>
       )}

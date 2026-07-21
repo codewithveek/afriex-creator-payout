@@ -16,7 +16,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-bg-muted px-4">
       <ResetPasswordForm token={token} />
     </div>
   )

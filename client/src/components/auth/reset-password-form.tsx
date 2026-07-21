@@ -50,13 +50,13 @@ export function ResetPasswordForm({ token }: Props) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <h1 className="text-xl font-semibold text-gray-900">Reset password</h1>
-        <p className="text-sm text-gray-500">Enter your new password</p>
+        <h1 className="text-xl font-semibold text-fg">Reset password</h1>
+        <p className="text-sm text-fg-muted">Enter your new password</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
               {error}
             </div>
           )}

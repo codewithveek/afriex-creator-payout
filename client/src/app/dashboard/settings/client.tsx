@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
@@ -47,20 +47,20 @@ export function SettingsClient({ creator }: Props) {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your profile and payout preferences</p>
+        <h1 className="text-2xl font-semibold text-fg">Settings</h1>
+        <p className="mt-1 text-sm text-fg-muted">Manage your profile and payout preferences</p>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</div>
+        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">{error}</div>
       )}
       {success && (
-        <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700" role="status">{success}</div>
+        <div className="rounded-lg bg-success-muted p-3 text-sm text-success" role="status">{success}</div>
       )}
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
+          <h2 className="text-lg font-semibold text-fg">Profile</h2>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,20 +75,20 @@ export function SettingsClient({ creator }: Props) {
             <CountrySelect value={country} onChange={setCountry} required />
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700" htmlFor="payoutCurrency">
+              <label className="block text-sm font-medium text-fg-muted" htmlFor="payoutCurrency">
                 Default payout currency
               </label>
               <select
                 id="payoutCurrency"
                 value={payoutCurrency}
                 onChange={(e) => setPayoutCurrency(e.target.value)}
-                className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 {currencies.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-fg-subtle">
                 This determines the currency used for payouts. Ensure you have a payout method in this currency.
               </p>
             </div>

@@ -14,6 +14,7 @@ export const afriex = new AfriexSDK({
   },
 });
 
+
 interface RegisterRecipientParams {
   fullName: string;
   email: string;

@@ -1,22 +1,21 @@
 import { clsx } from 'clsx'
 
-interface CardProps {
-  className?: string
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
 }
 
-export function Card({ className, children }: CardProps) {
+export function Card({ className, children, ...props }: CardProps) {
   return (
-    <div className={clsx('rounded-xl border border-gray-200 bg-white shadow-sm', className)}>
+    <div className={clsx('rounded-xl border border-border bg-bg shadow-sm', className)} {...props}>
       {children}
     </div>
   )
 }
 
-export function CardHeader({ className, children }: CardProps) {
-  return <div className={clsx('border-b border-gray-200 px-6 py-4', className)}>{children}</div>
+export function CardHeader({ className, children, ...props }: CardProps) {
+  return <div className={clsx('border-b border-border-light px-6 py-4', className)} {...props}>{children}</div>
 }
 
-export function CardContent({ className, children }: CardProps) {
-  return <div className={clsx('px-6 py-4', className)}>{children}</div>
+export function CardContent({ className, children, ...props }: CardProps) {
+  return <div className={clsx('px-6 py-4', className)} {...props}>{children}</div>
 }

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
 import { cookies } from 'next/headers'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Product } from '@/lib/types'
 import { ProductsClient } from './client'
 
@@ -21,13 +22,14 @@ async function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+    <Suspense fallback={
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-48" />
         </div>
-      }
-    >
+      </div>
+    }>
       <ProductsContent />
     </Suspense>
   )

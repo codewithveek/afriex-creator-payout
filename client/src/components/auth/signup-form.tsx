@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,13 +47,13 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <h1 className="text-xl font-semibold text-gray-900">Create account</h1>
-        <p className="text-sm text-gray-500">Sign up to start managing your payouts</p>
+        <h1 className="text-xl font-semibold text-fg">Create account</h1>
+        <p className="text-sm text-fg-muted">Sign up to start managing your payouts</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
               {error}
             </div>
           )}
@@ -78,11 +79,11 @@ export function SignupForm() {
           <Button type="submit" loading={loading} className="w-full">
             Create account
           </Button>
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-fg-muted">
             Already have an account?{' '}
-            <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/login" className="font-medium text-accent hover:text-accent-hover">
               Sign in
-            </a>
+            </Link>
           </p>
         </form>
       </CardContent>

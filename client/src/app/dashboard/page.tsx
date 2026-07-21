@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import { apiFetch } from '@/lib/api-client'
 import { cookies } from 'next/headers'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Skeleton, CardSkeleton, TableSkeleton } from '@/components/ui/skeleton'
 import type { SaleRecord, Withdrawal } from '@/lib/types'
 
 async function getSales(cookie: string | null) {
@@ -41,17 +42,17 @@ async function DashboardContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Welcome back{session ? `, ${session.user.name}` : ''}</h1>
-        <p className="mt-1 text-sm text-gray-500">Here&apos;s your payout overview</p>
+        <h1 className="text-2xl font-semibold text-fg">Welcome back{session ? `, ${session.user.name}` : ''}</h1>
+        <p className="mt-1 text-sm text-fg-muted">Your payout overview</p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <p className="text-sm font-medium text-gray-500">Total Sales</p>
+            <p className="text-sm font-medium text-fg-muted">Total Sales</p>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-fg">
               ${totalEarnings.toFixed(2)}
             </p>
           </CardContent>
@@ -59,10 +60,10 @@ async function DashboardContent() {
 
         <Card>
           <CardHeader>
-            <p className="text-sm font-medium text-gray-500">Paid Out</p>
+            <p className="text-sm font-medium text-fg-muted">Paid Out</p>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-fg">
               ${paidOut.toFixed(2)}
             </p>
           </CardContent>
@@ -70,13 +71,13 @@ async function DashboardContent() {
 
         <Card>
           <CardHeader>
-            <p className="text-sm font-medium text-gray-500">Sales</p>
+            <p className="text-sm font-medium text-fg-muted">Sales</p>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-fg">
               {sales.data.length}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-fg-muted">
               {withdrawals.data.length} withdrawals
             </p>
           </CardContent>
@@ -86,27 +87,27 @@ async function DashboardContent() {
       {sales.data.length > 0 && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Recent Sales</h2>
+            <h2 className="text-lg font-semibold text-fg">Recent Sales</h2>
           </CardHeader>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full text-sm" aria-label="Recent sales">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-500">
-                  <th className="px-6 py-3 font-medium">Amount</th>
-                  <th className="px-6 py-3 font-medium">Currency</th>
-                  <th className="px-6 py-3 font-medium">Description</th>
-                  <th className="px-6 py-3 font-medium">Date</th>
+                <tr className="border-b border-border-light text-left text-fg-muted">
+                  <th className="px-4 sm:px-6 py-3 font-medium">Amount</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">Description</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {sales.data.slice(0, 10).map((sale) => (
-                  <tr key={sale.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-6 py-3 font-medium text-gray-900">
+                  <tr key={sale.id} className="border-b border-border-light last:border-0">
+                    <td className="px-4 sm:px-6 py-3 font-medium text-fg">
                       ${Number.parseFloat(sale.amount).toFixed(2)}
                     </td>
-                    <td className="px-6 py-3 text-gray-700">{sale.currency}</td>
-                    <td className="px-6 py-3 text-gray-700">{sale.description || '—'}</td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-4 sm:px-6 py-3 text-fg-muted">{sale.currency}</td>
+                    <td className="px-4 sm:px-6 py-3 text-fg-muted">{sale.description || '—'}</td>
+                    <td className="px-4 sm:px-6 py-3 text-fg-subtle">
                       {new Date(sale.createdAt).toLocaleDateString()}
                     </td>
                   </tr>
@@ -122,13 +123,22 @@ async function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+    <Suspense fallback={
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-40" />
         </div>
-      }
-    >
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+        <Card>
+          <TableSkeleton rows={4} />
+        </Card>
+      </div>
+    }>
       <DashboardContent />
     </Suspense>
   )

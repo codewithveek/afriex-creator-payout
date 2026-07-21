@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input'
 import type { Order, Customer } from '@/lib/types'
 
 const statusStyles: Record<string, string> = {
-  PENDING: 'bg-yellow-50 text-yellow-700',
-  COMPLETED: 'bg-green-50 text-green-700',
-  REFUNDED: 'bg-red-50 text-red-700',
-  FAILED: 'bg-gray-50 text-gray-700',
+  PENDING: 'bg-warning-muted text-warning',
+  COMPLETED: 'bg-success-muted text-success',
+  REFUNDED: 'bg-error-muted text-error',
+  FAILED: 'bg-bg-muted text-fg-muted',
 }
 
 function OrdersContent() {
@@ -21,7 +21,6 @@ function OrdersContent() {
   const [error, setError] = useState('')
   const [signingUp, setSigningUp] = useState(false)
 
-  // Check for existing session on mount
   useEffect(() => {
     const saved = sessionStorage.getItem('customerToken')
     if (saved) {
@@ -29,7 +28,6 @@ function OrdersContent() {
     }
   }, [])
 
-  // Fetch orders when token is set
   useEffect(() => {
     if (!token) return
     setLoading(true)
@@ -86,7 +84,6 @@ function OrdersContent() {
         password: form.get('password'),
       })
       setSigningUp(false)
-      // Auto-login after signup
       const res = await api.post<{ data: Customer }>('/api/customers/login', {
         email: form.get('email'),
         password: form.get('password'),
@@ -109,12 +106,11 @@ function OrdersContent() {
     setOrders([])
   }
 
-  // Login / Signup form when not authenticated
   if (!token) {
     return (
       <div className="space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+          <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
             {error}
           </div>
         )}
@@ -122,8 +118,8 @@ function OrdersContent() {
         {signingUp ? (
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">Create an account</h2>
-              <p className="text-sm text-gray-500">Sign up to view and download your orders</p>
+              <h2 className="text-lg font-semibold text-fg">Create an account</h2>
+              <p className="text-sm text-fg-muted">Sign up to view and download your orders</p>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSignup} className="space-y-4">
@@ -134,9 +130,9 @@ function OrdersContent() {
                   Sign up
                 </Button>
               </form>
-              <p className="mt-4 text-sm text-gray-500">
+              <p className="mt-4 text-sm text-fg-muted">
                 Already have an account?{' '}
-                <button onClick={() => setSigningUp(false)} className="text-blue-600 hover:underline">
+                <button onClick={() => setSigningUp(false)} className="text-accent hover:underline">
                   Log in
                 </button>
               </p>
@@ -145,8 +141,8 @@ function OrdersContent() {
         ) : (
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold text-gray-900">Log in</h2>
-              <p className="text-sm text-gray-500">Enter your email and password to view your orders</p>
+              <h2 className="text-lg font-semibold text-fg">Log in</h2>
+              <p className="text-sm text-fg-muted">Enter your email and password to view your orders</p>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
@@ -156,9 +152,9 @@ function OrdersContent() {
                   Log in
                 </Button>
               </form>
-              <p className="mt-4 text-sm text-gray-500">
+              <p className="mt-4 text-sm text-fg-muted">
                 No account?{' '}
-                <button onClick={() => setSigningUp(true)} className="text-blue-600 hover:underline">
+                <button onClick={() => setSigningUp(true)} className="text-accent hover:underline">
                   Sign up
                 </button>
               </p>
@@ -172,7 +168,7 @@ function OrdersContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" role="status" aria-label="Loading orders" />
       </div>
     )
   }
@@ -181,22 +177,22 @@ function OrdersContent() {
     <>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Orders</h1>
+          <h1 className="text-2xl font-bold text-fg">Your Orders</h1>
         </div>
-        <button onClick={handleLogout} className="text-sm text-gray-500 hover:text-gray-700">
+        <button onClick={handleLogout} className="text-sm text-fg-muted hover:text-fg">
           Sign out
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
           {error}
         </div>
       )}
 
       {orders.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-gray-500">
+          <CardContent className="py-12 text-center text-sm text-fg-muted">
             No orders found
           </CardContent>
         </Card>
@@ -206,24 +202,24 @@ function OrdersContent() {
             <Card key={order.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">{order.product?.name || 'Product'}</h2>
+                  <h2 className="text-lg font-semibold text-fg">{order.product?.name || 'Product'}</h2>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[order.status] || 'bg-gray-50 text-gray-700'}`}
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[order.status] || 'bg-bg-muted text-fg-muted'}`}
                   >
                     {order.status}
                   </span>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-fg-muted">
                     <p>${Number.parseFloat(order.amount).toFixed(2)} {order.currency}</p>
                     <p className="mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                   </div>
                   {order.status === 'COMPLETED' && order.downloadToken && order.product?.fileUrl && (
                     <a
                       href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/download/${order.id}/${order.downloadToken}`}
-                      className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      className="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-fg-on-accent hover:bg-accent-hover"
                     >
                       Download
                     </a>
@@ -241,13 +237,7 @@ function OrdersContent() {
 export default function CustomerOrdersPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          </div>
-        }
-      >
+      <Suspense fallback={null}>
         <OrdersContent />
       </Suspense>
     </div>

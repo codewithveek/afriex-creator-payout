@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,31 +36,31 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <h1 className="text-xl font-semibold text-gray-900">Sign in</h1>
-        <p className="text-sm text-gray-500">Enter your credentials to access your account</p>
+        <h1 className="text-xl font-semibold text-fg">Sign in</h1>
+        <p className="text-sm text-fg-muted">Enter your credentials to access your account</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
               {error}
             </div>
           )}
           <Input label="Email" name="email" type="email" autoComplete="email" required />
           <Input label="Password" name="password" type="password" autoComplete="current-password" required />
           <div className="flex items-center justify-end">
-            <a href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/forgot-password" className="text-sm font-medium text-accent hover:text-accent-hover">
               Forgot password?
-            </a>
+            </Link>
           </div>
           <Button type="submit" loading={loading} className="w-full">
             Sign in
           </Button>
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-fg-muted">
             Don&apos;t have an account?{' '}
-            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/signup" className="font-medium text-accent hover:text-accent-hover">
               Sign up
-            </a>
+            </Link>
           </p>
         </form>
       </CardContent>

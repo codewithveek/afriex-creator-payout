@@ -50,7 +50,7 @@ export function BuyButton({ product }: Props) {
         <CardContent className="p-4">
           <form onSubmit={handleBuy} className="space-y-3">
             {error && (
-              <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700" role="alert">
+              <div className="rounded-lg bg-error-muted p-2 text-xs text-error" role="alert">
                 {error}
               </div>
             )}

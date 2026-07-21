@@ -21,6 +21,7 @@ export function ProductsClient({ initial }: Props) {
   const [editing, setEditing] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [uploadedFile, setUploadedFile] = useState<{ url: string; fileName: string; fileSize: string } | null>(null)
 
@@ -85,27 +86,30 @@ export function ProductsClient({ initial }: Props) {
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Delete this product?')) return
+    setDeletingId(id)
+    setError('')
     try {
       await api.delete(`/api/products/${id}`)
       setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to delete product')
+    } finally {
+      setDeletingId(null)
     }
   }
 
   return (
-    <>
+    <div className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
           {error}
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your digital products</p>
+          <h1 className="text-2xl font-semibold text-fg">Products</h1>
+          <p className="mt-1 text-sm text-fg-muted">Manage your digital products</p>
         </div>
         <Button onClick={() => { setShowForm(!showForm); setUploadedFile(null) }}>
           {showForm ? 'Cancel' : 'Add product'}
@@ -115,32 +119,32 @@ export function ProductsClient({ initial }: Props) {
       {showForm && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">New Product</h2>
+            <h2 className="text-lg font-semibold text-fg">New Product</h2>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreate} className="space-y-4">
               <Input label="Product Name" name="name" required />
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700" htmlFor="description">
+                <label className="block text-sm font-medium text-fg-muted" htmlFor="description">
                   Description
                 </label>
                 <textarea
                   id="description"
                   name="description"
                   rows={3}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input label="Price" name="price" type="number" step="0.01" min="0" required />
                 <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="currency">
+                  <label className="block text-sm font-medium text-fg-muted" htmlFor="currency">
                     Currency
                   </label>
                   <select
                     id="currency"
                     name="currency"
-                    className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                     required
                   >
                     {currencies.map((c) => (
@@ -153,18 +157,18 @@ export function ProductsClient({ initial }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">Product File</label>
+                <label className="block text-sm font-medium text-fg-muted">Product File</label>
                 <input
                   type="file"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
                     if (file) handleFileUpload(file)
                   }}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                  className="block w-full text-sm text-fg-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-muted file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent-muted/80"
                 />
-                {uploading && <p className="text-sm text-blue-600">Uploading...</p>}
+                {uploading && <p className="text-sm text-accent">Uploading...</p>}
                 {uploadedFile && (
-                  <p className="text-sm text-green-600">
+                  <p className="text-sm text-success">
                     Uploaded: {uploadedFile.fileName} ({(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
                   </p>
                 )}
@@ -180,7 +184,7 @@ export function ProductsClient({ initial }: Props) {
 
       {products.length === 0 && !showForm && (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-gray-500">
+          <CardContent className="py-12 text-center text-sm text-fg-muted">
             No products yet. Create your first digital product to start selling.
           </CardContent>
         </Card>
@@ -189,47 +193,47 @@ export function ProductsClient({ initial }: Props) {
       {products.length > 0 && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Your Products ({products.length})</h2>
+            <h2 className="text-lg font-semibold text-fg">Your Products ({products.length})</h2>
           </CardHeader>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full text-sm" aria-label="Your products">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-500">
-                  <th className="px-6 py-3 font-medium">Name</th>
-                  <th className="px-6 py-3 font-medium">Price</th>
-                  <th className="px-6 py-3 font-medium">File</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3" />
+                <tr className="border-b border-border-light text-left text-fg-muted">
+                  <th className="px-4 sm:px-6 py-3 font-medium">Name</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">Price</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">File</th>
+                  <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
+                  <th className="px-4 sm:px-6 py-3" />
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-6 py-3 font-medium text-gray-900">{product.name}</td>
-                    <td className="px-6 py-3 text-gray-700">
+                  <tr key={product.id} className="border-b border-border-light last:border-0">
+                    <td className="px-4 sm:px-6 py-3 font-medium text-fg">{product.name}</td>
+                    <td className="px-4 sm:px-6 py-3 text-fg-muted">
                       ${Number.parseFloat(product.price).toFixed(2)} {product.currency}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-4 sm:px-6 py-3">
                       {product.fileUrl ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                        <span className="inline-flex items-center rounded-full bg-success-muted px-2 py-0.5 text-xs font-medium text-success">
                           Has file
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-fg-subtle">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-4 sm:px-6 py-3">
                       {product.published ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                        <span className="inline-flex items-center rounded-full bg-success-muted px-2 py-0.5 text-xs font-medium text-success">
                           Published
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
+                        <span className="inline-flex items-center rounded-full bg-bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
                           Draft
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-right">
+                    <td className="px-4 sm:px-6 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
@@ -238,7 +242,7 @@ export function ProductsClient({ initial }: Props) {
                         >
                           {product.published ? 'Unpublish' : 'Publish'}
                         </Button>
-                        <Button variant="danger" size="sm" onClick={() => handleDelete(product.id)}>
+                        <Button variant="danger" size="sm" loading={deletingId === product.id} onClick={() => handleDelete(product.id)}>
                           Delete
                         </Button>
                       </div>
@@ -250,6 +254,6 @@ export function ProductsClient({ initial }: Props) {
           </CardContent>
         </Card>
       )}
-    </>
+    </div>
   )
 }
