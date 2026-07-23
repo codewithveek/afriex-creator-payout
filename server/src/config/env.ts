@@ -16,9 +16,10 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   FRONTEND_URL: z.string().url().optional(),
 
-  // Active payment provider — switched per-environment or per-business.
-  // Supported: stripe | paystack | flutterwave | afriex-checkout
-  PAYMENT_PROVIDER: z.enum(['stripe', 'paystack', 'flutterwave', 'afriex-checkout']).default('stripe'),
+  // Default collector when the buyer does not pick one.
+  // Buyers primarily select Paystack or Flutterwave at checkout.
+  // Afriex is used only for creator payouts (disbursement), not collection.
+  PAYMENT_PROVIDER: z.enum(['stripe', 'paystack', 'flutterwave', 'afriex-checkout']).default('paystack'),
 
   // Stripe keys — required only when PAYMENT_PROVIDER === 'stripe'
   STRIPE_SECRET_KEY: z.string().optional(),

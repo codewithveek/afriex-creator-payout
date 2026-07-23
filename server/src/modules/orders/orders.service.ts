@@ -1,10 +1,20 @@
 import crypto from 'node:crypto';
-import { getPaymentProvider } from '../../infra/payment/factory';
+import {
+  getPaymentProvider,
+  resolveCheckoutProvider,
+} from '../../infra/payment/factory';
 import { ordersRepository, type Order } from './orders.repository';
 import { productsService } from '../products/products.service';
-import { NotFoundError } from '../../shared/errors';
+import { NotFoundError, ValidationError } from '../../shared/errors';
 import { logger } from '../../config/logger';
-import { env } from '../../config/env';
+import {
+  sendBuyerReceiptEmail,
+  sendCreatorSaleEmail,
+} from '../../infra/email/email.service';
+import { creatorsRepository } from '../creators/creators.repository';
+import { db } from '../../config/db';
+import { users } from '../../infra/database/schema';
+import { eq } from 'drizzle-orm';
 import type { PaymentProviderName } from '../../infra/payment/types';
 
 export const ordersService = {
@@ -14,9 +24,17 @@ export const ordersService = {
     customerName: string;
     successUrl: string;
     cancelUrl: string;
-  }): Promise<{ sessionId: string; sessionUrl: string }> {
+    paymentProvider?: PaymentProviderName;
+  }): Promise<{ sessionId: string; sessionUrl: string; provider: string }> {
     const product = await productsService.getPublishedById(input.productId);
-    const provider = getPaymentProvider(env.PAYMENT_PROVIDER as PaymentProviderName);
+
+    if (!product.fileUrl) {
+      throw new ValidationError('This product is not ready for sale yet (missing download file)');
+    }
+
+    const providerName = resolveCheckoutProvider(input.paymentProvider);
+    const provider = getPaymentProvider(providerName);
+    const creator = await creatorsRepository.findById(product.creatorId);
 
     const result = await provider.createCheckoutSession({
       amount: product.price,
@@ -28,9 +46,11 @@ export const ordersService = {
       metadata: {
         productId: product.id,
         creatorId: product.creatorId,
+        creatorUserId: creator?.userId ?? '',
         customerEmail: input.customerEmail,
         customerName: input.customerName,
         productName: product.name,
+        paymentProvider: providerName,
       },
     });
 
@@ -45,29 +65,90 @@ export const ordersService = {
     });
 
     logger.info(
-      { sessionId: result.sessionId, productId: product.id, customerEmail: input.customerEmail },
+      {
+        sessionId: result.sessionId,
+        productId: product.id,
+        customerEmail: input.customerEmail,
+        provider: providerName,
+      },
       'Checkout session created',
     );
 
-    return { sessionId: result.sessionId, sessionUrl: result.sessionUrl };
+    return {
+      sessionId: result.sessionId,
+      sessionUrl: result.sessionUrl,
+      provider: providerName,
+    };
   },
 
-  async completeOrder(sessionId: string): Promise<void> {
+  async completeOrder(sessionId: string): Promise<Order | null> {
     const order = await ordersRepository.findByPaymentSessionId(sessionId);
     if (!order) {
       logger.warn({ sessionId }, 'No order found for completed payment session');
-      return;
+      return null;
     }
 
     if (order.status !== 'PENDING') {
       logger.info({ orderId: order.id, status: order.status }, 'Order already processed');
-      return;
+      return order;
     }
 
     const downloadToken = crypto.randomBytes(32).toString('hex');
     await ordersRepository.markCompleted(order.id, downloadToken);
 
+    const completed = await ordersRepository.findById(order.id);
     logger.info({ orderId: order.id, sessionId }, 'Order completed');
+
+    // Fire-and-forget transactional emails
+    void this.sendFulfillmentEmails(completed ?? order, downloadToken);
+
+    return completed ?? order;
+  },
+
+  async sendFulfillmentEmails(order: Order, downloadToken: string): Promise<void> {
+    try {
+      const product = await productsService.getById(order.productId).catch(() => null);
+      const productName = product?.name ?? 'Your digital product';
+      const frontendUrl = process.env.FRONTEND_URL || process.env.BETTER_AUTH_URL || 'http://localhost:3000';
+      const downloadUrl = `${frontendUrl}/purchase/success?session=${encodeURIComponent(order.paymentSessionId)}`;
+
+      await sendBuyerReceiptEmail({
+        email: order.customerEmail,
+        name: order.customerName,
+        productName,
+        amount: order.amount,
+        currency: order.currency,
+        orderId: order.id,
+        downloadUrl,
+      });
+
+      const creator = await creatorsRepository.findById(order.creatorId);
+      if (creator) {
+        const [user] = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(eq(users.id, creator.userId))
+          .limit(1);
+        if (user) {
+          await sendCreatorSaleEmail({
+            email: user.email,
+            name: user.name,
+            productName,
+            amount: order.amount,
+            currency: order.currency,
+            buyerName: order.customerName,
+            buyerEmail: order.customerEmail,
+          });
+        }
+      }
+    } catch (err) {
+      logger.error({ err, orderId: order.id }, 'Failed to send fulfillment emails');
+    }
+  },
+
+  async getByPaymentSessionId(sessionId: string): Promise<Order | null> {
+    const order = await ordersRepository.findByPaymentSessionId(sessionId);
+    return order ?? null;
   },
 
   async listForCreator(creatorId: string, offset: number, limit: number) {

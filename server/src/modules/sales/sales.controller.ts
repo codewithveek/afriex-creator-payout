@@ -102,9 +102,20 @@ export const salesController = {
   },
 };
 
+/**
+ * Detect which collector sent the webhook by signature headers.
+ * Supports concurrent Paystack + Flutterwave (and legacy Stripe/Afriex) without
+ * relying on a single global PAYMENT_PROVIDER switch.
+ */
 function detectProviderFromRequest(request: FastifyRequest<{ Body: Buffer }>): PaymentProviderName {
-  const configured = env.PAYMENT_PROVIDER as PaymentProviderName;
-  return configured;
+  const headers = request.headers;
+  if (typeof headers['stripe-signature'] === 'string') return 'stripe';
+  if (typeof headers['x-paystack-signature'] === 'string') return 'paystack';
+  if (typeof headers['verif-hash'] === 'string') return 'flutterwave';
+  if (typeof headers['x-afriex-signature'] === 'string') return 'afriex-checkout';
+
+  // Fallback for misconfigured proxies that strip signature headers mid-test
+  return env.PAYMENT_PROVIDER as PaymentProviderName;
 }
 
 function getProviderSignatureHeader(

@@ -17,15 +17,31 @@ export interface Session {
   }
 }
 
+export interface Creator {
+  id: string
+  userId: string
+  availableBalance: string
+  payoutCurrency: string
+  payoutEligible: boolean
+  phone: string | null
+  country: string | null
+  lastWithdrawalAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface PayoutMethod {
   id: string
   creatorId: string
-  type: string
+  type?: string
   currency: string
-  details: Record<string, unknown>
-  isDefault: boolean
+  bankName: string | null
+  maskedAccountNumber: string | null
+  status: 'PENDING' | 'VERIFIED' | 'REVOKED' | string
+  isDefault?: boolean
   afriexCustomerId: string | null
   afriexPaymentMethodId: string | null
+  details?: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -36,9 +52,10 @@ export interface Withdrawal {
   payoutMethodId: string
   amount: string
   currency: string
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  status: 'QUEUED' | 'PENDING' | 'PROCESSING' | 'PAID' | 'COMPLETED' | 'FAILED' | string
   afriexTransactionId: string | null
   errorMessage: string | null
+  failureReason?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -46,11 +63,16 @@ export interface Withdrawal {
 export interface SaleRecord {
   id: string
   creatorId: string
-  amount: string
+  paymentIntentId: string
+  grossAmount: string
   currency: string
-  description: string | null
-  metadata: Record<string, unknown> | null
+  status: string
+  /** @deprecated use grossAmount */
+  amount?: string
+  description?: string | null
+  metadata?: Record<string, unknown> | null
   createdAt: string
+  updatedAt?: string
 }
 
 export interface Product {
@@ -90,6 +112,13 @@ export interface Customer {
   email: string
   name: string
   token?: string
+}
+
+export interface PaymentCollector {
+  id: 'paystack' | 'flutterwave' | 'afriex-checkout' | 'stripe'
+  name: string
+  description: string
+  primary: boolean
 }
 
 export interface ApiError {

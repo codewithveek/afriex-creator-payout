@@ -34,10 +34,16 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm shadow-[var(--shadow-lift)]">
       <CardHeader>
-        <h1 className="text-xl font-semibold text-fg">Sign in</h1>
-        <p className="text-sm text-fg-muted">Enter your credentials to access your account</p>
+        <Link href="/" className="mb-2 flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-xs font-bold text-fg-on-accent">
+            AC
+          </span>
+          <span className="text-sm font-semibold text-fg">Afriex Creators</span>
+        </Link>
+        <h1 className="text-xl font-semibold text-fg">Creator sign in</h1>
+        <p className="text-sm text-fg-muted">Access your dashboard, products, and Afriex payouts</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

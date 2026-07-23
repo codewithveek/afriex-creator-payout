@@ -126,6 +126,75 @@ export async function sendPasswordResetEmail(params: {
   }
 }
 
+export async function sendBuyerReceiptEmail(params: {
+  email: string;
+  name: string;
+  productName: string;
+  amount: string;
+  currency: string;
+  orderId: string;
+  downloadUrl: string;
+}): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: ensureFrom(),
+      to: params.email,
+      subject: `Your purchase: ${params.productName}`,
+      html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; color: #1c1917;">
+          <h1 style="font-size: 22px; margin-bottom: 8px;">Thanks for your purchase</h1>
+          <p style="color: #57534e;">Hi ${escapeHtml(params.name)},</p>
+          <p>Your payment for <strong>${escapeHtml(params.productName)}</strong> (${escapeHtml(params.currency)} ${escapeHtml(params.amount)}) went through.</p>
+          <p><a href="${params.downloadUrl}" style="display:inline-block;background:#c2410c;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Get your download</a></p>
+          <p style="font-size: 13px; color: #78716c;">Order ID: ${escapeHtml(params.orderId)}</p>
+          <p style="font-size: 13px; color: #78716c;">If the button does not work, open: ${params.downloadUrl}</p>
+        </div>
+      `,
+    });
+    logger.info({ email: params.email, orderId: params.orderId }, 'Buyer receipt email sent');
+  } catch (err) {
+    logger.error({ err, email: params.email }, 'Failed to send buyer receipt email');
+  }
+}
+
+export async function sendCreatorSaleEmail(params: {
+  email: string;
+  name: string;
+  productName: string;
+  amount: string;
+  currency: string;
+  buyerName: string;
+  buyerEmail: string;
+}): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: ensureFrom(),
+      to: params.email,
+      subject: `New sale: ${params.productName}`,
+      html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: 0 auto; color: #1c1917;">
+          <h1 style="font-size: 22px; margin-bottom: 8px;">You made a sale</h1>
+          <p style="color: #57534e;">Hi ${escapeHtml(params.name)},</p>
+          <p><strong>${escapeHtml(params.buyerName)}</strong> (${escapeHtml(params.buyerEmail)}) just bought <strong>${escapeHtml(params.productName)}</strong>.</p>
+          <p>Gross amount: <strong>${escapeHtml(params.currency)} ${escapeHtml(params.amount)}</strong></p>
+          <p style="font-size: 13px; color: #78716c;">Earnings (after platform fee) will appear in your dashboard shortly.</p>
+        </div>
+      `,
+    });
+    logger.info({ email: params.email }, 'Creator sale email sent');
+  } catch (err) {
+    logger.error({ err, email: params.email }, 'Failed to send creator sale email');
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export async function sendDataExport(params: {
   user: EmailUser;
   data: unknown;

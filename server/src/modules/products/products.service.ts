@@ -2,13 +2,27 @@ import { productsRepository, type Product } from './products.repository';
 import { NotFoundError } from '../../shared/errors';
 
 export const productsService = {
-  async create(creatorId: string, input: { name: string; description?: string; price: string; currency: string }): Promise<Product> {
+  async create(
+    creatorId: string,
+    input: {
+      name: string;
+      description?: string;
+      price: string;
+      currency: string;
+      fileUrl?: string;
+      fileName?: string;
+      fileSize?: string;
+    },
+  ): Promise<Product> {
     return productsRepository.create({
       creatorId,
       name: input.name,
       description: input.description ?? null,
       price: input.price,
       currency: input.currency as Product['currency'],
+      fileUrl: input.fileUrl ?? null,
+      fileName: input.fileName ?? null,
+      fileSize: input.fileSize ?? null,
     });
   },
 

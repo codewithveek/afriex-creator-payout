@@ -33,7 +33,8 @@ export const productsController = {
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ) {
-    const product = await productsService.getById(request.params.id);
+    // Public product detail only returns published products
+    const product = await productsService.getPublishedById(request.params.id);
     return reply.code(200).send({ data: sanitizeForPublic(product) });
   },
 

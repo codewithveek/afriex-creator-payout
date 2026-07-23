@@ -18,6 +18,7 @@ import { ordersRoutes } from './modules/orders/orders.router';
 import { downloadRoutes } from './modules/orders/download.router';
 import { customersRoutes } from './modules/customers/customers.router';
 import { uploadRoutes } from './modules/uploads/uploads.router';
+import { gdprRoutes } from './modules/auth/gdpr.router';
 import { env } from './config/env';
 
 // Per the architecture guide: "app.ts — register plugins, modules — no
@@ -76,6 +77,7 @@ export async function buildApp() {
   await app.register(customersRoutes);
   await app.register(afriexWebhookRoutes);
   await app.register(uploadRoutes);
+  await app.register(gdprRoutes);
 
   return app;
 }

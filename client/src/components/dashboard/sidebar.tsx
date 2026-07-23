@@ -39,9 +39,9 @@ export function Sidebar({ role }: Props) {
     <>
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-          <span className="text-sm font-bold text-fg-on-accent">A</span>
+          <span className="text-sm font-bold text-fg-on-accent">AC</span>
         </div>
-        <span className="text-lg font-semibold text-fg">Creator Payout</span>
+        <span className="text-base font-semibold text-fg">Afriex Creators</span>
       </div>
 
       <nav className="flex-1 space-y-1 p-4" aria-label="Dashboard navigation">
@@ -124,9 +124,9 @@ export function Sidebar({ role }: Props) {
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
-          <span className="text-xs font-bold text-fg-on-accent">A</span>
+          <span className="text-xs font-bold text-fg-on-accent">AC</span>
         </div>
-        <span className="text-base font-semibold text-fg">Creator Payout</span>
+        <span className="text-base font-semibold text-fg">Afriex Creators</span>
       </div>
 
       {/* Mobile overlay */}

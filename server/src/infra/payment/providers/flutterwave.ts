@@ -80,7 +80,8 @@ export class FlutterwaveProvider implements PaymentProvider {
     });
 
     return {
-      sessionId: String(response.data.id),
+      // Use tx_ref so webhook + redirect query params match orders.paymentSessionId
+      sessionId: response.data.tx_ref || txRef,
       sessionUrl: response.data.link,
       provider: this.name,
     };

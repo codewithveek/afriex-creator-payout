@@ -72,6 +72,11 @@ export const payoutMethodsService = {
    * trying to pay them out — there is no fallback method to redirect to.
    */
   async revoke(creatorId: string, payoutMethodId: string): Promise<void> {
+    const method = await payoutMethodsRepository.findById(payoutMethodId);
+    if (!method || method.creatorId !== creatorId) {
+      throw new NotFoundError('Payout method not found');
+    }
+
     await payoutMethodsRepository.markRevoked(payoutMethodId);
 
     const stillHasVerified = await payoutMethodsRepository.findVerifiedByCreatorId(creatorId);

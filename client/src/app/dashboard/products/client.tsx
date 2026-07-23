@@ -2,10 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Copy, ExternalLink } from 'lucide-react'
 import { api, ApiClientError } from '@/lib/api-client'
+import { formatMoney } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Product } from '@/lib/types'
 
 const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
@@ -18,17 +23,23 @@ export function ProductsClient({ initial }: Props) {
   const router = useRouter()
   const [products, setProducts] = useState(initial)
   const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState('')
-  const [uploadedFile, setUploadedFile] = useState<{ url: string; fileName: string; fileSize: string } | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<{
+    url: string
+    fileName: string
+    fileSize: string
+  } | null>(null)
+
+  const editingProduct = editingId ? products.find((p) => p.id === editingId) : null
 
   async function handleFileUpload(file: File) {
     setUploading(true)
     setError('')
-
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -53,19 +64,18 @@ export function ProductsClient({ initial }: Props) {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     const form = new FormData(e.currentTarget)
-
     try {
-      await api.post('/api/products', {
+      const res = await api.post<{ data: Product }>('/api/products', {
         name: form.get('name'),
-        description: form.get('description'),
+        description: form.get('description') || undefined,
         price: form.get('price'),
         currency: form.get('currency'),
         fileUrl: uploadedFile?.url || undefined,
         fileName: uploadedFile?.fileName || undefined,
         fileSize: uploadedFile?.fileSize || undefined,
       })
+      setProducts((prev) => [res.data, ...prev])
       setShowForm(false)
       setUploadedFile(null)
       router.refresh()
@@ -76,16 +86,49 @@ export function ProductsClient({ initial }: Props) {
     }
   }
 
+  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!editingId) return
+    setLoading(true)
+    setError('')
+    const form = new FormData(e.currentTarget)
+    try {
+      const body: Record<string, unknown> = {
+        name: form.get('name'),
+        description: form.get('description') || undefined,
+        price: form.get('price'),
+        currency: form.get('currency'),
+      }
+      if (uploadedFile) {
+        body.fileUrl = uploadedFile.url
+        body.fileName = uploadedFile.fileName
+        body.fileSize = uploadedFile.fileSize
+      }
+      const res = await api.patch<{ data: Product }>(`/api/products/${editingId}`, body)
+      setProducts((prev) => prev.map((p) => (p.id === editingId ? res.data : p)))
+      setEditingId(null)
+      setUploadedFile(null)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Failed to update product')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleTogglePublish(id: string, published: boolean) {
     try {
-      await api.patch(`/api/products/${id}`, { published: !published })
-      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, published: !published } : p)))
+      const res = await api.patch<{ data: Product }>(`/api/products/${id}`, {
+        published: !published,
+      })
+      setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)))
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to update product')
     }
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this product? This cannot be undone.')) return
     setDeletingId(id)
     setError('')
     try {
@@ -98,6 +141,27 @@ export function ProductsClient({ initial }: Props) {
     }
   }
 
+  function copyLink(id: string) {
+    const url = `${window.location.origin}/store/${id}`
+    void navigator.clipboard.writeText(url)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  function openForm(mode: 'create' | 'edit', product?: Product) {
+    setError('')
+    setUploadedFile(null)
+    if (mode === 'create') {
+      setEditingId(null)
+      setShowForm(true)
+    } else if (product) {
+      setShowForm(false)
+      setEditingId(product.id)
+    }
+  }
+
+  const formOpen = showForm || Boolean(editingId)
+
   return (
     <div className="space-y-6">
       {error && (
@@ -108,22 +172,44 @@ export function ProductsClient({ initial }: Props) {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-fg">Products</h1>
-          <p className="mt-1 text-sm text-fg-muted">Manage your digital products</p>
+          <h1 className="font-display text-2xl font-semibold text-fg">Products</h1>
+          <p className="mt-1 text-sm text-fg-muted">
+            Create digital downloads, publish them to the store, and share your link.
+          </p>
         </div>
-        <Button onClick={() => { setShowForm(!showForm); setUploadedFile(null) }}>
-          {showForm ? 'Cancel' : 'Add product'}
+        <Button
+          onClick={() => {
+            if (formOpen) {
+              setShowForm(false)
+              setEditingId(null)
+              setUploadedFile(null)
+            } else {
+              openForm('create')
+            }
+          }}
+        >
+          {formOpen ? 'Cancel' : 'Add product'}
         </Button>
       </div>
 
-      {showForm && (
+      {formOpen && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-fg">New Product</h2>
+            <h2 className="text-lg font-semibold text-fg">
+              {editingId ? 'Edit product' : 'New product'}
+            </h2>
+            <p className="text-sm text-fg-muted">
+              Upload the file buyers will download after paying with Paystack or Flutterwave.
+            </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <Input label="Product Name" name="name" required />
+            <form onSubmit={editingId ? handleUpdate : handleCreate} className="space-y-4">
+              <Input
+                label="Product name"
+                name="name"
+                required
+                defaultValue={editingProduct?.name}
+              />
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-fg-muted" htmlFor="description">
                   Description
@@ -131,12 +217,22 @@ export function ProductsClient({ initial }: Props) {
                 <textarea
                   id="description"
                   name="description"
-                  rows={3}
+                  rows={4}
+                  defaultValue={editingProduct?.description ?? ''}
                   className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
+                  placeholder="What buyers get, who it is for, and what format the file is in."
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="Price" name="price" type="number" step="0.01" min="0" required />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  label="Price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  defaultValue={editingProduct?.price}
+                />
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-fg-muted" htmlFor="currency">
                     Currency
@@ -144,6 +240,7 @@ export function ProductsClient({ initial }: Props) {
                   <select
                     id="currency"
                     name="currency"
+                    defaultValue={editingProduct?.currency ?? 'NGN'}
                     className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                     required
                   >
@@ -157,92 +254,128 @@ export function ProductsClient({ initial }: Props) {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-fg-muted">Product File</label>
+                <label className="block text-sm font-medium text-fg-muted">Product file</label>
                 <input
                   type="file"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
-                    if (file) handleFileUpload(file)
+                    if (file) void handleFileUpload(file)
                   }}
                   className="block w-full text-sm text-fg-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-muted file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent-muted/80"
                 />
-                {uploading && <p className="text-sm text-accent">Uploading...</p>}
+                {uploading && <p className="text-sm text-accent">Uploading…</p>}
                 {uploadedFile && (
                   <p className="text-sm text-success">
-                    Uploaded: {uploadedFile.fileName} ({(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
+                    Uploaded: {uploadedFile.fileName} (
+                    {(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
                   </p>
+                )}
+                {!uploadedFile && editingProduct?.fileName && (
+                  <p className="text-sm text-fg-muted">Current file: {editingProduct.fileName}</p>
                 )}
               </div>
 
               <Button type="submit" loading={loading}>
-                Create product
+                {editingId ? 'Save changes' : 'Create product'}
               </Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      {products.length === 0 && !showForm && (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-fg-muted">
-            No products yet. Create your first digital product to start selling.
-          </CardContent>
-        </Card>
+      {products.length === 0 && !formOpen && (
+        <EmptyState
+          title="No products yet"
+          description="Create your first digital product, upload the file, publish it, and share the store link."
+          action={
+            <Button onClick={() => openForm('create')}>Add your first product</Button>
+          }
+        />
       )}
 
       {products.length > 0 && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-fg">Your Products ({products.length})</h2>
+            <h2 className="text-lg font-semibold text-fg">
+              Your products ({products.length})
+            </h2>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <table className="w-full text-sm" aria-label="Your products">
               <thead>
                 <tr className="border-b border-border-light text-left text-fg-muted">
-                  <th className="px-4 sm:px-6 py-3 font-medium">Name</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">Price</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">File</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
-                  <th className="px-4 sm:px-6 py-3" />
+                  <th className="px-4 py-3 font-medium sm:px-6">Name</th>
+                  <th className="px-4 py-3 font-medium sm:px-6">Price</th>
+                  <th className="px-4 py-3 font-medium sm:px-6">File</th>
+                  <th className="px-4 py-3 font-medium sm:px-6">Status</th>
+                  <th className="px-4 py-3 sm:px-6" />
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
                   <tr key={product.id} className="border-b border-border-light last:border-0">
-                    <td className="px-4 sm:px-6 py-3 font-medium text-fg">{product.name}</td>
-                    <td className="px-4 sm:px-6 py-3 text-fg-muted">
-                      ${Number.parseFloat(product.price).toFixed(2)} {product.currency}
+                    <td className="px-4 py-3 font-medium text-fg sm:px-6">{product.name}</td>
+                    <td className="px-4 py-3 text-fg-muted sm:px-6">
+                      {formatMoney(product.price, product.currency)}
                     </td>
-                    <td className="px-4 sm:px-6 py-3">
+                    <td className="px-4 py-3 sm:px-6">
                       {product.fileUrl ? (
-                        <span className="inline-flex items-center rounded-full bg-success-muted px-2 py-0.5 text-xs font-medium text-success">
-                          Has file
-                        </span>
+                        <Badge variant="success">Ready</Badge>
                       ) : (
-                        <span className="text-xs text-fg-subtle">—</span>
+                        <Badge>No file</Badge>
                       )}
                     </td>
-                    <td className="px-4 sm:px-6 py-3">
+                    <td className="px-4 py-3 sm:px-6">
                       {product.published ? (
-                        <span className="inline-flex items-center rounded-full bg-success-muted px-2 py-0.5 text-xs font-medium text-success">
-                          Published
-                        </span>
+                        <Badge variant="success">Published</Badge>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
-                          Draft
-                        </span>
+                        <Badge>Draft</Badge>
                       )}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-right">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-4 py-3 sm:px-6">
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {product.published && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyLink(product.id)}
+                              aria-label="Copy store link"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                              <span className="ml-1 hidden sm:inline">
+                                {copiedId === product.id ? 'Copied' : 'Link'}
+                              </span>
+                            </Button>
+                            <Link href={`/store/${product.id}`} target="_blank">
+                              <Button variant="ghost" size="sm" aria-label="Open store page">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                          </>
+                        )}
+                        <Button variant="outline" size="sm" onClick={() => openForm('edit', product)}>
+                          Edit
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleTogglePublish(product.id, product.published)}
+                          disabled={!product.fileUrl && !product.published}
+                          title={
+                            !product.fileUrl && !product.published
+                              ? 'Upload a file before publishing'
+                              : undefined
+                          }
                         >
                           {product.published ? 'Unpublish' : 'Publish'}
                         </Button>
-                        <Button variant="danger" size="sm" loading={deletingId === product.id} onClick={() => handleDelete(product.id)}>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          loading={deletingId === product.id}
+                          onClick={() => handleDelete(product.id)}
+                        >
                           Delete
                         </Button>
                       </div>

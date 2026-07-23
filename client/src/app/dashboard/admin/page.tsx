@@ -1,47 +1,23 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { api, ApiClientError } from '@/lib/api-client'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ApiClientError } from '@/lib/api-client'
+import { formatMoney, formatDate } from '@/lib/utils'
+import { queryKeys } from '@/lib/queries/keys'
+import {
+  fetchAdminCreators,
+  fetchAdminWithdrawals,
+  fetchAdminSales,
+  fetchAdminPoolAccounts,
+  triggerAdminSweep,
+} from '@/lib/queries/admin'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
 
 type Tab = 'creators' | 'withdrawals' | 'sales' | 'pool-accounts'
-
-interface Creator {
-  id: string
-  user: { name: string; email: string; role: string }
-  availableBalance: string
-  payoutCurrency: string
-  payoutEligible: boolean
-  createdAt: string
-}
-
-interface Withdrawal {
-  id: string
-  creatorId: string
-  amount: string
-  currency: string
-  status: string
-  errorMessage: string | null
-  createdAt: string
-}
-
-interface Sale {
-  id: string
-  creatorId: string
-  amount: string
-  currency: string
-  description: string | null
-  createdAt: string
-}
-
-interface PoolAccount {
-  id: string
-  currency: string
-  balance: string
-  updatedAt: string
-}
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'creators', label: 'Creators' },
@@ -50,80 +26,97 @@ const tabs: { key: Tab; label: string }[] = [
   { key: 'pool-accounts', label: 'Pool Accounts' },
 ]
 
-const statusStyles: Record<string, string> = {
-  PENDING: 'bg-warning-muted text-warning',
-  PROCESSING: 'bg-info-muted text-info',
-  COMPLETED: 'bg-success-muted text-success',
-  FAILED: 'bg-error-muted text-error',
+function statusVariant(status: string): 'success' | 'warning' | 'error' | 'info' | 'default' {
+  if (status === 'COMPLETED' || status === 'PAID') return 'success'
+  if (status === 'PENDING' || status === 'QUEUED') return 'warning'
+  if (status === 'PROCESSING') return 'info'
+  if (status === 'FAILED') return 'error'
+  return 'default'
 }
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('creators')
-  const [creators, setCreators] = useState<Creator[]>([])
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
-  const [sales, setSales] = useState<Sale[]>([])
-  const [pools, setPools] = useState<PoolAccount[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [sweepLoading, setSweepLoading] = useState(false)
-  const [sweepResult, setSweepResult] = useState('')
+  const queryClient = useQueryClient()
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const [creatorsResponse, withdrawalsResponse, salesResponse, poolsResponse] = await Promise.all([
-        api.get<{ data: Creator[] }>('/api/admin/creators'),
-        api.get<{ data: Withdrawal[] }>('/api/admin/withdrawals'),
-        api.get<{ data: Sale[] }>('/api/admin/sales'),
-        api.get<{ data: PoolAccount[] }>('/api/admin/pool-accounts'),
-      ])
-      setCreators(creatorsResponse.data)
-      setWithdrawals(withdrawalsResponse.data)
-      setSales(salesResponse.data)
-      setPools(poolsResponse.data)
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to load admin data')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const creatorsQuery = useQuery({
+    queryKey: queryKeys.admin.creators,
+    queryFn: fetchAdminCreators,
+  })
+  const withdrawalsQuery = useQuery({
+    queryKey: queryKeys.admin.withdrawals,
+    queryFn: fetchAdminWithdrawals,
+  })
+  const salesQuery = useQuery({
+    queryKey: queryKeys.admin.sales,
+    queryFn: fetchAdminSales,
+  })
+  const poolsQuery = useQuery({
+    queryKey: queryKeys.admin.poolAccounts,
+    queryFn: fetchAdminPoolAccounts,
+  })
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  const loading =
+    creatorsQuery.isLoading ||
+    withdrawalsQuery.isLoading ||
+    salesQuery.isLoading ||
+    poolsQuery.isLoading
 
-  async function handleTriggerSweep() {
-    setSweepLoading(true)
-    setSweepResult('')
-    try {
-      const res = await api.post<{ message: string }>('/api/admin/sweep/trigger')
-      setSweepResult(res.message || 'Sweep triggered successfully')
-      fetchData()
-    } catch (err) {
-      setSweepResult(err instanceof ApiClientError ? err.message : 'Failed to trigger sweep')
-    } finally {
-      setSweepLoading(false)
-    }
+  const error =
+    [creatorsQuery, withdrawalsQuery, salesQuery, poolsQuery]
+      .map((q) => q.error)
+      .find(Boolean) ?? null
+
+  const errorMessage =
+    error instanceof ApiClientError
+      ? error.message
+      : error
+        ? 'Failed to load admin data'
+        : ''
+
+  const sweepMutation = useMutation({
+    mutationFn: triggerAdminSweep,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.admin.all })
+    },
+  })
+
+  function refreshAll() {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.admin.all })
   }
+
+  const creators = creatorsQuery.data ?? []
+  const withdrawals = withdrawalsQuery.data ?? []
+  const sales = salesQuery.data ?? []
+  const pools = poolsQuery.data ?? []
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-fg">Admin</h1>
+          <h1 className="font-display text-2xl font-semibold text-fg">Admin</h1>
           <p className="mt-1 text-sm text-fg-muted">Platform overview and management</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {sweepResult && (
-            <p className={`text-sm ${sweepResult.includes('Failed') ? 'text-error' : 'text-success'}`}>
-              {sweepResult}
+          {sweepMutation.isSuccess && (
+            <p className="text-sm text-success">
+              {sweepMutation.data?.message || 'Sweep triggered successfully'}
             </p>
           )}
-          <Button variant="outline" onClick={handleTriggerSweep} loading={sweepLoading}>
+          {sweepMutation.isError && (
+            <p className="text-sm text-error">
+              {sweepMutation.error instanceof ApiClientError
+                ? sweepMutation.error.message
+                : 'Failed to trigger sweep'}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => sweepMutation.mutate()}
+            loading={sweepMutation.isPending}
+          >
             Trigger sweep
           </Button>
-          <Button variant="secondary" onClick={fetchData} loading={loading}>
+          <Button variant="secondary" onClick={refreshAll} loading={loading}>
             Refresh
           </Button>
         </div>
@@ -133,6 +126,7 @@ export default function AdminPage() {
         {tabs.map((t) => (
           <button
             key={t.key}
+            type="button"
             role="tab"
             id={`tab-${t.key}`}
             aria-selected={tab === t.key}
@@ -149,27 +143,25 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {error && (
+      {errorMessage && (
         <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-          {error}
+          {errorMessage}
         </div>
       )}
 
       {loading ? (
         <Card>
-          <CardContent className="p-6">
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
+          <CardContent className="space-y-3 p-6">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
           </CardContent>
         </Card>
       ) : (
         <>
           {tab === 'creators' && (
-            <Card key="creators" role="tabpanel" id="panel-creators" aria-labelledby="tab-creators">
+            <Card role="tabpanel" id="panel-creators" aria-labelledby="tab-creators">
               <CardHeader>
                 <h2 className="text-lg font-semibold text-fg">Creators ({creators.length})</h2>
               </CardHeader>
@@ -177,33 +169,31 @@ export default function AdminPage() {
                 <table className="w-full text-sm" aria-label="Creators">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 sm:px-6 py-3 font-medium">Name</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Email</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Balance</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Eligible</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Joined</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Name</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Email</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Balance</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Eligible</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Joined</th>
                     </tr>
                   </thead>
                   <tbody>
                     {creators.map((c) => (
                       <tr key={c.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 sm:px-6 py-3 font-medium text-fg">{c.user.name}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-muted">{c.user.email}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg">${Number.parseFloat(c.availableBalance).toFixed(2)}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-muted">{c.payoutCurrency}</td>
-                        <td className="px-4 sm:px-6 py-3">
-                          {c.payoutEligible ? (
-                            <span className="inline-flex items-center rounded-full bg-success-muted px-2 py-0.5 text-xs font-medium text-success">
-                              Yes
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-bg-muted px-2 py-0.5 text-xs font-medium text-fg-muted">
-                              No
-                            </span>
-                          )}
+                        <td className="px-4 py-3 font-medium text-fg sm:px-6">{c.user.name}</td>
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">{c.user.email}</td>
+                        <td className="px-4 py-3 text-fg sm:px-6">
+                          {formatMoney(c.availableBalance, c.payoutCurrency)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-subtle">{new Date(c.createdAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">{c.payoutCurrency}</td>
+                        <td className="px-4 py-3 sm:px-6">
+                          <Badge variant={c.payoutEligible ? 'success' : 'default'}>
+                            {c.payoutEligible ? 'Yes' : 'No'}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                          {formatDate(c.createdAt)}
+                        </td>
                       </tr>
                     ))}
                     {creators.length === 0 && (
@@ -220,33 +210,39 @@ export default function AdminPage() {
           )}
 
           {tab === 'withdrawals' && (
-            <Card key="withdrawals" role="tabpanel" id="panel-withdrawals" aria-labelledby="tab-withdrawals">
+            <Card role="tabpanel" id="panel-withdrawals" aria-labelledby="tab-withdrawals">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">Withdrawals ({withdrawals.length})</h2>
+                <h2 className="text-lg font-semibold text-fg">
+                  Withdrawals ({withdrawals.length})
+                </h2>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
                 <table className="w-full text-sm" aria-label="Withdrawals">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 sm:px-6 py-3 font-medium">Amount</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Status</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Error</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Date</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Amount</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Status</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Error</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {withdrawals.map((w) => (
                       <tr key={w.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 sm:px-6 py-3 font-medium text-fg">${Number.parseFloat(w.amount).toFixed(2)}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-muted">{w.currency}</td>
-                        <td className="px-4 sm:px-6 py-3">
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[w.status] || 'bg-bg-muted text-fg-muted'}`}>
-                            {w.status}
-                          </span>
+                        <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                          {formatMoney(w.amount, w.currency)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-subtle">{w.errorMessage || '—'}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-subtle">{new Date(w.createdAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">{w.currency}</td>
+                        <td className="px-4 py-3 sm:px-6">
+                          <Badge variant={statusVariant(w.status)}>{w.status}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                          {w.errorMessage || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                          {formatDate(w.createdAt)}
+                        </td>
                       </tr>
                     ))}
                     {withdrawals.length === 0 && (
@@ -263,7 +259,7 @@ export default function AdminPage() {
           )}
 
           {tab === 'sales' && (
-            <Card key="sales" role="tabpanel" id="panel-sales" aria-labelledby="tab-sales">
+            <Card role="tabpanel" id="panel-sales" aria-labelledby="tab-sales">
               <CardHeader>
                 <h2 className="text-lg font-semibold text-fg">Sales ({sales.length})</h2>
               </CardHeader>
@@ -271,21 +267,30 @@ export default function AdminPage() {
                 <table className="w-full text-sm" aria-label="Sales">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 sm:px-6 py-3 font-medium">Amount</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Description</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Date</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Amount</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Description</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {sales.map((s) => (
-                      <tr key={s.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 sm:px-6 py-3 font-medium text-fg">${Number.parseFloat(s.amount).toFixed(2)}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-muted">{s.currency}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-muted">{s.description || '—'}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-subtle">{new Date(s.createdAt).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
+                    {sales.map((s) => {
+                      const amount = s.grossAmount ?? s.amount ?? '0'
+                      return (
+                        <tr key={s.id} className="border-b border-border-light last:border-0">
+                          <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                            {formatMoney(amount, s.currency)}
+                          </td>
+                          <td className="px-4 py-3 text-fg-muted sm:px-6">{s.currency}</td>
+                          <td className="px-4 py-3 text-fg-muted sm:px-6">
+                            {s.description || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                            {formatDate(s.createdAt)}
+                          </td>
+                        </tr>
+                      )
+                    })}
                     {sales.length === 0 && (
                       <tr>
                         <td colSpan={4} className="px-6 py-8 text-center text-sm text-fg-muted">
@@ -300,25 +305,31 @@ export default function AdminPage() {
           )}
 
           {tab === 'pool-accounts' && (
-            <Card key="pool-accounts" role="tabpanel" id="panel-pool-accounts" aria-labelledby="tab-pool-accounts">
+            <Card role="tabpanel" id="panel-pool-accounts" aria-labelledby="tab-pool-accounts">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">Pool Accounts ({pools.length})</h2>
+                <h2 className="text-lg font-semibold text-fg">
+                  Pool Accounts ({pools.length})
+                </h2>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
                 <table className="w-full text-sm" aria-label="Pool accounts">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Balance</th>
-                      <th className="px-4 sm:px-6 py-3 font-medium">Updated</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Balance</th>
+                      <th className="px-4 py-3 font-medium sm:px-6">Updated</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pools.map((p) => (
                       <tr key={p.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 sm:px-6 py-3 font-medium text-fg">{p.currency}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg">${Number.parseFloat(p.balance).toFixed(2)}</td>
-                        <td className="px-4 sm:px-6 py-3 text-fg-subtle">{new Date(p.updatedAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 font-medium text-fg sm:px-6">{p.currency}</td>
+                        <td className="px-4 py-3 text-fg sm:px-6">
+                          {formatMoney(p.balance, p.currency)}
+                        </td>
+                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                          {formatDate(p.updatedAt)}
+                        </td>
                       </tr>
                     ))}
                     {pools.length === 0 && (
