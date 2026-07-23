@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, numeric, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, numeric, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { orderStatusEnum, currencyEnum } from './enums';
 import { products } from './products';
@@ -15,11 +15,14 @@ export const orders = pgTable(
     creatorId: uuid('creator_id')
       .notNull()
       .references(() => creators.id, { onDelete: 'restrict' }),
-    customerId: uuid('customer_id')
-      .references(() => customers.id, { onDelete: 'set null' }),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
 
-    customerEmail: varchar('customer_email', { length: 255 }).notNull(),
-    customerName: varchar('customer_name', { length: 255 }).notNull(),
+    /** Encrypted buyer email (or legacy plaintext). */
+    customerEmail: text('customer_email').notNull(),
+    /** Blind index for guest-order linking and lookup. */
+    customerEmailHash: varchar('customer_email_hash', { length: 64 }).notNull().default(''),
+    /** Encrypted buyer name. */
+    customerName: text('customer_name').notNull(),
 
     amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
     currency: currencyEnum('currency').notNull(),
@@ -27,19 +30,24 @@ export const orders = pgTable(
     status: orderStatusEnum('status').notNull().default('PENDING'),
 
     paymentSessionId: varchar('payment_session_id', { length: 255 }).notNull().unique(),
-    downloadToken: varchar('download_token', { length: 64 }),
-    /** When the download token stops working. Renewable for the owning customer. */
+
+    /** Encrypted raw download token (enc:v1:...). Presented only to authorized buyers. */
+    downloadTokenEncrypted: text('download_token_encrypted'),
+    /** SHA-256 of raw token for constant-time verification without decrypt. */
+    downloadTokenHash: varchar('download_token_hash', { length: 64 }),
     downloadTokenExpiresAt: timestamp('download_token_expires_at', { withTimezone: true }),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index('idx_orders_customer_email').on(table.customerEmail),
+    index('idx_orders_customer_email_hash').on(table.customerEmailHash),
     index('idx_orders_customer_id').on(table.customerId),
     index('idx_orders_creator').on(table.creatorId),
     index('idx_orders_product').on(table.productId),
     index('idx_orders_status').on(table.status),
+    index('idx_orders_download_token_hash').on(table.downloadTokenHash),
+    index('idx_orders_creator_status_created').on(table.creatorId, table.status, table.createdAt),
   ],
 );
 

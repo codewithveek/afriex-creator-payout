@@ -5,25 +5,45 @@ import {
   creatorBalancesRepository,
   type CurrencyCode,
 } from './creator-balances.repository';
+import {
+  encryptPii,
+  decryptPii,
+  blindIndex,
+  isEncryptedPii,
+} from '../../shared/utils/encryption';
 
 export type Creator = typeof creators.$inferSelect;
 
+function decryptCreatorPhone(row: Creator): Creator {
+  return { ...row, phone: decryptPii(row.phone) };
+}
+
 export const creatorsRepository = {
   async findById(creatorId: string): Promise<Creator | undefined> {
-    return db.query.creators.findFirst({ where: eq(creators.id, creatorId) });
+    const row = await db.query.creators.findFirst({ where: eq(creators.id, creatorId) });
+    return row ? decryptCreatorPhone(row) : undefined;
   },
 
   async findByUserId(userId: string): Promise<Creator | undefined> {
-    return db.query.creators.findFirst({ where: eq(creators.userId, userId) });
+    const row = await db.query.creators.findFirst({ where: eq(creators.userId, userId) });
+    return row ? decryptCreatorPhone(row) : undefined;
   },
 
   async create(userId: string, phone: string, country: string): Promise<Creator> {
-    const [row] = await db.insert(creators).values({ userId, phone, country }).returning();
-    // Seed zero balance for default payout currency
+    const phonePlain = phone.trim();
+    const [row] = await db
+      .insert(creators)
+      .values({
+        userId,
+        phone: phonePlain ? encryptPii(phonePlain) : '',
+        phoneHash: phonePlain ? blindIndex(phonePlain, 'phone') : null,
+        country,
+      })
+      .returning();
     if (row) {
       await creatorBalancesRepository.ensureRow(row.id, row.payoutCurrency as CurrencyCode);
     }
-    return row!;
+    return row ? decryptCreatorPhone(row) : row!;
   },
 
   /**
@@ -72,13 +92,21 @@ export const creatorsRepository = {
     creatorId: string,
     input: Partial<Pick<Creator, 'payoutCurrency' | 'phone' | 'country'>>,
   ): Promise<Creator | undefined> {
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (input.country !== undefined) patch.country = input.country;
+    if (input.payoutCurrency !== undefined) patch.payoutCurrency = input.payoutCurrency;
+    if (input.phone !== undefined) {
+      const phonePlain = input.phone.trim();
+      patch.phone = phonePlain ? encryptPii(phonePlain) : '';
+      patch.phoneHash = phonePlain ? blindIndex(phonePlain, 'phone') : null;
+    }
+
     const [row] = await db
       .update(creators)
-      .set({ ...input, updatedAt: new Date() })
+      .set(patch)
       .where(eq(creators.id, creatorId))
       .returning();
 
-    // When payout currency changes, re-mirror the correct ledger into availableBalance
     if (row && input.payoutCurrency) {
       await creatorBalancesRepository.ensureRow(creatorId, input.payoutCurrency as CurrencyCode);
       const bal = await creatorBalancesRepository.getBalance(
@@ -90,10 +118,16 @@ export const creatorsRepository = {
         .set({ availableBalance: bal, updatedAt: new Date() })
         .where(eq(creators.id, creatorId))
         .returning();
-      return synced ?? row;
+      return synced ? decryptCreatorPhone(synced) : decryptCreatorPhone(row);
     }
 
-    return row;
+    // Opportunistic upgrade of legacy plaintext phone
+    if (row && input.phone === undefined && row.phone && !isEncryptedPii(row.phone)) {
+      await this.update(creatorId, { phone: row.phone });
+      return this.findById(creatorId);
+    }
+
+    return row ? decryptCreatorPhone(row) : undefined;
   },
 
   /**

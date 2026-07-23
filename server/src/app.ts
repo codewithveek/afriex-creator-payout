@@ -44,7 +44,26 @@ export async function buildApp() {
 
   await app.register(helmet);
   await app.register(cors, { origin: env.NODE_ENV === 'production' ? false : true, credentials: true });
-  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    // Tighter limits applied per-route for auth/checkout via route config where needed
+  });
+
+  // Stricter limits on sensitive public endpoints
+  app.addHook('onRoute', (routeOptions) => {
+    const path = routeOptions.url ?? '';
+    if (
+      path.startsWith('/api/customers/login') ||
+      path.startsWith('/api/customers/signup') ||
+      path.startsWith('/api/checkout/sessions')
+    ) {
+      routeOptions.config = {
+        ...routeOptions.config,
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      };
+    }
+  });
   await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } }); // 100 MB max
 
 

@@ -6,8 +6,8 @@ describe('CreateCheckoutSessionSchema', () => {
     productId: '550e8400-e29b-41d4-a716-446655440000',
     customerEmail: 'buyer@example.com',
     customerName: 'Ada Lovelace',
-    successUrl: 'https://app.example.com/success',
-    cancelUrl: 'https://app.example.com/cancel',
+    successUrl: 'http://localhost:3000/purchase/success',
+    cancelUrl: 'http://localhost:3000/store',
   };
 
   it('accepts checkout without paymentProvider (optional)', () => {

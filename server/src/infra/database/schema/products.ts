@@ -29,6 +29,9 @@ export const products = pgTable(
   (table) => [
     index('idx_products_creator').on(table.creatorId),
     index('idx_products_published').on(table.published),
+    // Public store: published = true ORDER BY created_at DESC
+    index('idx_products_published_created').on(table.published, table.createdAt),
+    index('idx_products_creator_published').on(table.creatorId, table.published),
   ],
 );
 

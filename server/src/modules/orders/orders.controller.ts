@@ -37,19 +37,21 @@ export const ordersController = {
 
     const expired =
       order.downloadTokenExpiresAt != null && order.downloadTokenExpiresAt < new Date();
+    const rawToken =
+      order.status === 'COMPLETED' && !expired
+        ? ordersService.getRawDownloadToken(order)
+        : null;
 
-    // Only expose a still-valid download token for completed orders
     const payload = {
       id: order.id,
       productId: order.productId,
       productName,
-      customerEmail: order.customerEmail,
-      customerName: order.customerName,
+      customerEmail: order.customerEmailPlain,
+      customerName: order.customerNamePlain,
       amount: order.amount,
       currency: order.currency,
       status: order.status,
-      downloadToken:
-        order.status === 'COMPLETED' && !expired ? order.downloadToken : null,
+      downloadToken: rawToken,
       downloadExpired: order.status === 'COMPLETED' && expired,
       downloadTokenExpiresAt: order.downloadTokenExpiresAt,
       createdAt: order.createdAt,
@@ -66,6 +68,17 @@ export const ordersController = {
       (pag.page - 1) * pag.pageSize,
       pag.pageSize,
     );
-    return reply.code(200).send({ data: rows, meta: buildPaginationMeta(pag, total) });
+    return reply.code(200).send({
+      data: rows.map((o) => ({
+        ...o,
+        customerEmail: o.customerEmailPlain,
+        customerName: o.customerNamePlain,
+        customerEmailPlain: undefined,
+        customerNamePlain: undefined,
+        downloadTokenEncrypted: undefined,
+        downloadTokenHash: undefined,
+      })),
+      meta: buildPaginationMeta(pag, total),
+    });
   },
 };

@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, numeric, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, numeric, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { currencyEnum } from './enums';
 import { users } from './users';
@@ -28,11 +28,10 @@ export const creators = pgTable(
       .unique()
       .references(() => users.id, { onDelete: 'cascade' }),
 
-    // Money is stored as NUMERIC, not FLOAT — exact decimal arithmetic is
-    // mandatory for any balance. Precision 14, scale 2 supports balances up
-    // to ~999 billion units of the minor currency, which is more than ample
-    // headroom and avoids ever having to widen this column.
-    phone: varchar('phone', { length: 20 }).notNull().default(''),
+    /** Encrypted phone (enc:v1:...) or legacy plaintext. */
+    phone: text('phone').notNull().default(''),
+    /** HMAC blind index of normalized phone for optional lookup. */
+    phoneHash: varchar('phone_hash', { length: 64 }),
     country: varchar('country', { length: 2 }).notNull().default('NG'),
 
     availableBalance: numeric('available_balance', { precision: 14, scale: 2 })
@@ -57,6 +56,8 @@ export const creators = pgTable(
     // (equality on both columns, the balance > 0 range scan benefits from
     // the resulting narrow row set rather than needing its own index).
     index('idx_creators_eligible_currency').on(table.payoutEligible, table.payoutCurrency),
+    index('idx_creators_phone_hash').on(table.phoneHash),
+    index('idx_creators_user_id').on(table.userId),
   ],
 );
 

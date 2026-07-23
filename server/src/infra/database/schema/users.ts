@@ -5,11 +5,12 @@ import { creators } from './creators';
 
 // `users` is the identity table that better-auth manages (sessions, email
 // verification, password hashes live in auth-owned tables alongside this).
+//
+// Email stays plaintext here by design: better-auth requires a stable email
+// identifier for login, verification, and unique constraints. Buyer/order
+// PII and creator phones are encrypted in their own tables with blind indexes.
+//
 // `role` gates access at the route/middleware layer (see shared/middleware).
-// A CREATOR user has exactly one row in `creators` holding domain-specific
-// state (balance, currency). An ADMIN user has no `creators` row — admins are
-// platform operators, not earners, so giving them a balance row would be a
-// leaky/meaningless concept per Domain-Driven Design bounded-context rules.
 export const users = pgTable(
   'users',
   {
@@ -22,8 +23,9 @@ export const users = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    // Role is queried on every admin-only route check via middleware.
     index('idx_users_role').on(table.role),
+    // better-auth already uniques email; composite helps role+email admin filters
+    index('idx_users_role_email').on(table.role, table.email),
   ],
 );
 

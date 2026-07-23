@@ -1,17 +1,17 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { customersService } from '../../modules/customers/customers.service';
 import { UnauthorizedError } from '../errors';
-import type { Customer } from '../../modules/customers/customers.repository';
+import type { DecryptedCustomer } from '../../modules/customers/customers.repository';
 
 declare module 'fastify' {
   interface FastifyRequest {
-    customer?: Customer;
+    customer?: DecryptedCustomer;
   }
 }
 
 export async function customerAuth(request: FastifyRequest, _reply: FastifyReply) {
   const token = request.headers['x-customer-token'] as string | undefined;
-  if (!token) {
+  if (!token || token.length < 32) {
     throw new UnauthorizedError('Customer token required');
   }
 

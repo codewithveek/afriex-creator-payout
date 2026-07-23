@@ -3,7 +3,7 @@ import {
   getPaymentProvider,
   resolveCheckoutProvider,
 } from '../../infra/payment/factory';
-import { ordersRepository, type Order } from './orders.repository';
+import { ordersRepository, type DecryptedOrder } from './orders.repository';
 import { productsService } from '../products/products.service';
 import { customersRepository } from '../customers/customers.repository';
 import { NotFoundError, ValidationError } from '../../shared/errors';
@@ -18,10 +18,9 @@ import { db } from '../../config/db';
 import { users } from '../../infra/database/schema';
 import { eq } from 'drizzle-orm';
 import type { PaymentProviderName } from '../../infra/payment/types';
-import {
-  canServeDownload,
-  computeDownloadExpiry,
-} from '../../shared/utils/download-token';
+import { computeDownloadExpiry } from '../../shared/utils/download-token';
+import { assertSafeAppRedirectUrl } from '../../shared/utils/safe-redirect';
+import { maskEmail, normalizeEmail } from '../../shared/utils/encryption';
 
 function issueDownloadToken(): { token: string; expiresAt: Date } {
   return {
@@ -45,27 +44,28 @@ export const ordersService = {
       throw new ValidationError('This product is not ready for sale yet (missing download file)');
     }
 
+    const successUrl = assertSafeAppRedirectUrl(input.successUrl, 'successUrl');
+    const cancelUrl = assertSafeAppRedirectUrl(input.cancelUrl, 'cancelUrl');
+
     const providerName = resolveCheckoutProvider(input.paymentProvider);
     const provider = getPaymentProvider(providerName);
     const creator = await creatorsRepository.findById(product.creatorId);
 
-    // Link guest checkout to an existing buyer account when email matches
-    const existingCustomer = await customersRepository.findByEmail(
-      input.customerEmail.trim().toLowerCase(),
-    );
+    const email = normalizeEmail(input.customerEmail);
+    const existingCustomer = await customersRepository.findByEmail(email);
 
     const result = await provider.createCheckoutSession({
       amount: product.price,
       currency: product.currency,
-      customerEmail: input.customerEmail,
+      customerEmail: email,
       customerName: input.customerName,
-      successUrl: input.successUrl,
-      cancelUrl: input.cancelUrl,
+      successUrl,
+      cancelUrl,
       metadata: {
         productId: product.id,
         creatorId: product.creatorId,
         creatorUserId: creator?.userId ?? '',
-        customerEmail: input.customerEmail,
+        customerEmail: email,
         customerName: input.customerName,
         productName: product.name,
         paymentProvider: providerName,
@@ -77,7 +77,7 @@ export const ordersService = {
       productId: product.id,
       creatorId: product.creatorId,
       customerId: existingCustomer?.id ?? null,
-      customerEmail: input.customerEmail.trim().toLowerCase(),
+      customerEmail: email,
       customerName: input.customerName,
       amount: product.price,
       currency: product.currency,
@@ -88,7 +88,7 @@ export const ordersService = {
       {
         sessionId: result.sessionId,
         productId: product.id,
-        customerEmail: input.customerEmail,
+        customerEmail: maskEmail(email),
         provider: providerName,
         customerId: existingCustomer?.id ?? null,
       },
@@ -102,7 +102,7 @@ export const ordersService = {
     };
   },
 
-  async completeOrder(sessionId: string): Promise<Order | null> {
+  async completeOrder(sessionId: string): Promise<DecryptedOrder | null> {
     const order = await ordersRepository.findByPaymentSessionId(sessionId);
     if (!order) {
       logger.warn({ sessionId }, 'No order found for completed payment session');
@@ -117,11 +117,10 @@ export const ordersService = {
     const { token, expiresAt } = issueDownloadToken();
     await ordersRepository.markCompleted(order.id, token, expiresAt);
 
-    // Re-link customer if they signed up between checkout and payment
     if (!order.customerId) {
-      const customer = await customersRepository.findByEmail(order.customerEmail);
+      const customer = await customersRepository.findByEmail(order.customerEmailPlain);
       if (customer) {
-        await ordersRepository.linkGuestOrdersByEmail(order.customerEmail, customer.id);
+        await ordersRepository.linkGuestOrdersByEmail(order.customerEmailPlain, customer.id);
       }
     }
 
@@ -133,17 +132,16 @@ export const ordersService = {
     return completed ?? order;
   },
 
-  async sendFulfillmentEmails(order: Order, downloadToken: string): Promise<void> {
+  async sendFulfillmentEmails(order: DecryptedOrder, downloadToken: string): Promise<void> {
     try {
       const product = await productsService.getById(order.productId).catch(() => null);
       const productName = product?.name ?? 'Your digital product';
-      const frontendUrl =
-        process.env.FRONTEND_URL || process.env.BETTER_AUTH_URL || 'http://localhost:3000';
+      const frontendUrl = env.FRONTEND_URL || env.BETTER_AUTH_URL || 'http://localhost:3000';
       const downloadUrl = `${frontendUrl}/purchase/success?session=${encodeURIComponent(order.paymentSessionId)}`;
 
       await sendBuyerReceiptEmail({
-        email: order.customerEmail,
-        name: order.customerName,
+        email: order.customerEmailPlain,
+        name: order.customerNamePlain,
         productName,
         amount: order.amount,
         currency: order.currency,
@@ -165,8 +163,8 @@ export const ordersService = {
             productName,
             amount: order.amount,
             currency: order.currency,
-            buyerName: order.customerName,
-            buyerEmail: order.customerEmail,
+            buyerName: order.customerNamePlain,
+            buyerEmail: order.customerEmailPlain,
           });
         }
       }
@@ -175,9 +173,13 @@ export const ordersService = {
     }
   },
 
-  async getByPaymentSessionId(sessionId: string): Promise<Order | null> {
+  async getByPaymentSessionId(sessionId: string): Promise<DecryptedOrder | null> {
     const order = await ordersRepository.findByPaymentSessionId(sessionId);
     return order ?? null;
+  },
+
+  getRawDownloadToken(order: DecryptedOrder): string | null {
+    return ordersRepository.getRawDownloadToken(order);
   },
 
   async listForCreator(creatorId: string, offset: number, limit: number) {
@@ -194,7 +196,6 @@ export const ordersService = {
     offset: number,
     limit: number,
   ) {
-    // Ensure any guest purchases with this email are claimed
     await ordersRepository.linkGuestOrdersByEmail(email, customerId);
     return ordersRepository.findByCustomerId(customerId, offset, limit);
   },
@@ -202,47 +203,29 @@ export const ordersService = {
   async linkGuestOrders(email: string, customerId: string): Promise<number> {
     const linked = await ordersRepository.linkGuestOrdersByEmail(email, customerId);
     if (linked > 0) {
-      logger.info({ email, customerId, linked }, 'Linked guest orders to customer account');
+      logger.info(
+        { email: maskEmail(email), customerId, linked },
+        'Linked guest orders to customer account',
+      );
     }
     return linked;
   },
 
-  async verifyDownloadToken(orderId: string, token: string): Promise<Order> {
-    const order = await ordersRepository.findById(orderId);
-    if (!order) {
+  async verifyDownloadToken(orderId: string, token: string): Promise<DecryptedOrder> {
+    const order = await ordersRepository.verifyDownloadTokenHash(orderId, token);
+    if (!order || order.status !== 'COMPLETED') {
       throw new NotFoundError('Invalid or expired download link');
     }
 
-    // Grandfather legacy rows that completed before expiry column existed
-    // (status COMPLETED + token match + null expiry → allow once, then renews get TTL).
-    const allowed = canServeDownload({
-      status: order.status,
-      storedToken: order.downloadToken,
-      presentedToken: token,
-      expiresAt: order.downloadTokenExpiresAt,
-      allowLegacyNoExpiry: true,
-    });
-
-    if (!allowed) {
-      if (
-        order.status === 'COMPLETED' &&
-        order.downloadToken === token &&
-        order.downloadTokenExpiresAt &&
-        order.downloadTokenExpiresAt < new Date()
-      ) {
-        throw new ValidationError(
-          'This download link has expired. Sign in to Your orders to get a new link.',
-        );
-      }
-      throw new NotFoundError('Invalid or expired download link');
+    if (order.downloadTokenExpiresAt && order.downloadTokenExpiresAt < new Date()) {
+      throw new ValidationError(
+        'This download link has expired. Sign in to Your orders to get a new link.',
+      );
     }
 
     return order;
   },
 
-  /**
-   * Issue a fresh download token for a completed order owned by this customer.
-   */
   async renewDownloadForCustomer(
     orderId: string,
     customerId: string,
@@ -255,7 +238,7 @@ export const ordersService = {
 
     const ownsOrder =
       order.customerId === customerId ||
-      order.customerEmail.toLowerCase() === customerEmail.toLowerCase();
+      order.customerEmailPlain.toLowerCase() === customerEmail.toLowerCase();
     if (!ownsOrder) {
       throw new NotFoundError('Order not found');
     }

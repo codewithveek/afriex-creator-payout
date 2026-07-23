@@ -40,9 +40,13 @@ export const auth = betterAuth({
     ...(env.FRONTEND_URL ? [env.FRONTEND_URL] : []),
   ],
 
+  // Use memory storage — secondary-storage was configured without a Redis
+  // secondary store, which silently disabled rate limits.
   rateLimit: {
     enabled: true,
-    storage: 'secondary-storage',
+    window: 60,
+    max: 100,
+    storage: 'memory',
     customRules: {
       '/api/auth/sign-in/email': { window: 60, max: 5 },
       '/api/auth/sign-up/email': { window: 60, max: 3 },

@@ -45,7 +45,17 @@ const envSchema = z.object({
   AFRIEX_ENVIRONMENT: z.enum(['staging', 'production']).optional().default('staging'),
   AFRIEX_WEBHOOK_PUBLIC_KEY: z.string().min(1),
 
+  /** AES-256 key (base64, 32 bytes) for bank secrets and default PII encryption. */
   PAYOUT_SECRETS_ENCRYPTION_KEY: z.string().min(1),
+  /** Optional separate AES key for PII; defaults to PAYOUT_SECRETS_ENCRYPTION_KEY. */
+  PII_ENCRYPTION_KEY: z.string().optional(),
+  /** Optional HMAC key (base64, ≥32 bytes) for blind indexes; derived if omitted. */
+  BLIND_INDEX_KEY: z.string().optional(),
+
+  /** Public site URL used for redirect allowlisting (often same as FRONTEND_URL). */
+  SITE_URL: z.string().url().optional(),
+  /** Comma-separated extra origins allowed for file download redirects. */
+  ALLOWED_STORAGE_ORIGINS: z.string().optional(),
 
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().email(),

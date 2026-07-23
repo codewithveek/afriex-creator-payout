@@ -2,13 +2,12 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { customersService } from './customers.service';
 import type { CustomerSignupInput, CustomerLoginInput } from './customers.schema';
 import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
+import { ordersService } from '../orders/orders.service';
 
-function sanitizeOrder(order: Record<string, unknown>) {
-  const product = order.product as Record<string, unknown> | undefined;
-  if (!product) return order;
-  // Never leak permanent file storage URLs to the client
-  const { fileUrl: _f, ...safeProduct } = product;
-  return { ...order, product: safeProduct };
+function sanitizeProduct(product: Record<string, unknown> | undefined) {
+  if (!product) return undefined;
+  const { fileUrl: _f, ...safe } = product;
+  return safe;
 }
 
 export const customersController = {
@@ -43,14 +42,31 @@ export const customersController = {
     );
 
     const data = rows.map((row) => {
-      const sanitized = sanitizeOrder(row as unknown as Record<string, unknown>);
-      const expiresAt = row.downloadTokenExpiresAt;
-      const expired = expiresAt ? expiresAt < new Date() : false;
+      const expired =
+        row.downloadTokenExpiresAt != null && row.downloadTokenExpiresAt < new Date();
+      const rawToken =
+        row.status === 'COMPLETED' && !expired
+          ? ordersService.getRawDownloadToken(row)
+          : null;
+      const product = (row as { product?: Record<string, unknown> }).product;
+
       return {
-        ...sanitized,
-        downloadToken: expired ? null : row.downloadToken,
-        downloadExpired: expired,
-        downloadTokenExpiresAt: expiresAt,
+        id: row.id,
+        productId: row.productId,
+        creatorId: row.creatorId,
+        customerId: row.customerId,
+        customerEmail: row.customerEmailPlain,
+        customerName: row.customerNamePlain,
+        amount: row.amount,
+        currency: row.currency,
+        status: row.status,
+        paymentSessionId: row.paymentSessionId,
+        downloadToken: rawToken,
+        downloadExpired: row.status === 'COMPLETED' && expired,
+        downloadTokenExpiresAt: row.downloadTokenExpiresAt,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        product: sanitizeProduct(product),
       };
     });
 
