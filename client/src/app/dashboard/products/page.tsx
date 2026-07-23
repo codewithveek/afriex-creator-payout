@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
-import { cookies } from 'next/headers'
+import { getCookieHeader } from '@/lib/cookies'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Product } from '@/lib/types'
 import { ProductsClient } from './client'
@@ -14,7 +14,7 @@ async function getProducts(cookie: string | null) {
 }
 
 async function ProductsContent() {
-  const cookie = cookies().toString() || null
+  const cookie = await getCookieHeader()
   const { data: products } = await getProducts(cookie)
 
   return <ProductsClient initial={products} />

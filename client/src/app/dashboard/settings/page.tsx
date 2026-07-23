@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers'
 import { apiFetch } from '@/lib/api-client'
+import { getCookieHeader } from '@/lib/cookies'
 import { redirect } from 'next/navigation'
 import { SettingsClient } from './client'
 
@@ -23,7 +23,7 @@ async function getCreator(cookie: string | null) {
 }
 
 export default async function SettingsPage() {
-  const cookie = (await cookies()).toString()
+  const cookie = await getCookieHeader()
   const creator = await getCreator(cookie)
   if (!creator) redirect('/login')
 

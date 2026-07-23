@@ -46,6 +46,7 @@ export async function buildApp() {
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } }); // 100 MB max
 
+
   await app.register(swagger, {
     openapi: {
       info: { title: 'Afriex Creator Payout API', version: '0.1.0', description: 'API for the Afriex Creator Payout Platform' },
@@ -59,6 +60,7 @@ export async function buildApp() {
   await app.register(swaggerUi, { routePrefix: '/docs' });
 
   app.setErrorHandler(globalErrorHandler);
+  
 
   app.get('/health', async () => ({ data: { status: 'ok' } }));
 

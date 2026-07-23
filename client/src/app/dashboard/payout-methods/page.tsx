@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
-import { cookies } from 'next/headers'
+import { getCookieHeader } from '@/lib/cookies'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { PayoutMethod } from '@/lib/types'
 import { PayoutMethodsClient } from './client'
@@ -14,7 +14,7 @@ async function getPayoutMethods(cookie: string | null) {
 }
 
 async function PayoutMethodsContent() {
-  const cookie = cookies().toString() || null
+  const cookie = await getCookieHeader()
   const { data: methods } = await getPayoutMethods(cookie)
 
   return (

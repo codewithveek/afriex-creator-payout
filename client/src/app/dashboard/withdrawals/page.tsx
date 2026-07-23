@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
-import { cookies } from 'next/headers'
+import { getCookieHeader } from '@/lib/cookies'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton, CardSkeleton } from '@/components/ui/skeleton'
 import type { Withdrawal } from '@/lib/types'
@@ -31,7 +31,7 @@ const statusStyles: Record<string, string> = {
 }
 
 async function WithdrawalsContent() {
-  const cookie = cookies().toString() || null
+  const cookie = await getCookieHeader()
   const [balance, { data: withdrawals }] = await Promise.all([
     getBalance(cookie),
     getWithdrawals(cookie),

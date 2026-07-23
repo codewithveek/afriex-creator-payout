@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { apiFetch } from '@/lib/api-client'
-import { cookies } from 'next/headers'
+import { getCookieHeader } from '@/lib/cookies'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton, CardSkeleton, TableSkeleton } from '@/components/ui/skeleton'
 import type { SaleRecord, Withdrawal } from '@/lib/types'
@@ -22,7 +22,7 @@ async function getWithdrawals(cookie: string | null) {
 }
 
 async function EarningsContent() {
-  const cookie = cookies().toString() || null
+  const cookie = await getCookieHeader()
   const [sales, withdrawals] = await Promise.all([
     getSales(cookie),
     getWithdrawals(cookie),

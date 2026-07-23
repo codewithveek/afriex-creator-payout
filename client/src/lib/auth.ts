@@ -1,13 +1,13 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { apiFetch } from './api-client'
+import { getCookieHeader } from './cookies'
 import type { Session } from './types'
 
 export async function getSession(): Promise<Session | null> {
   try {
-    const cookie = cookies().toString()
-    return await apiFetch<Session>('/api/auth/session', { cookie: cookie || null })
+    const cookie = await getCookieHeader()
+    return await apiFetch<Session>('/api/auth/session', { cookie })
   } catch {
     return null
   }
