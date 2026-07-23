@@ -41,14 +41,16 @@ export const earningsService = {
       status: 'CONFIRMED',
     });
 
-    // Credit the creator's running balance with the net amount...
-    await creatorsRepository.incrementBalance(sale.creatorId, fee.netAmount);
+    // Credit the creator's balance in the sale currency (not payout currency).
+    // Multi-currency ledgers prevent NGN sales from inflating a USD balance.
+    await creatorsRepository.incrementBalance(
+      sale.creatorId,
+      fee.netAmount,
+      sale.currency as 'USD' | 'NGN' | 'GHS' | 'KES',
+    );
 
-    // ...and settle the GROSS amount into the currency's pool account. The
-    // pool account holds what was actually collected from the buyer; the
-    // platform fee portion simply remains there as platform revenue rather
-    // than being disbursed, while the net portion is what eventually flows
-    // out to the creator on withdrawal.
+    // Settle the GROSS amount into the currency's pool account. The pool holds
+    // what was collected from the buyer; platform fee remains as revenue.
     const poolAccount = await poolAccountsService.getByCurrencyOrThrow(sale.currency);
     await poolAccountsService.settleSaleIntoPool(poolAccount.id, fee.grossAmount);
 
@@ -71,7 +73,11 @@ export const earningsService = {
     if (!earning || earning.status === 'REVERSED') return;
 
     await earningsRepository.markReversed(earning.id);
-    await creatorsRepository.decrementBalance(earning.creatorId, earning.amount);
+    await creatorsRepository.decrementBalance(
+      earning.creatorId,
+      earning.amount,
+      earning.currency as 'USD' | 'NGN' | 'GHS' | 'KES',
+    );
 
     const poolAccount = await poolAccountsService.getByCurrencyOrThrow(earning.currency);
     await poolAccountsService.debitForWithdrawal(poolAccount.id, earning.grossAmount);

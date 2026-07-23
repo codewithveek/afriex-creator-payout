@@ -19,4 +19,9 @@ export async function customersRoutes(fastify: FastifyInstance) {
     preHandler: [customerAuth],
     handler: customersController.myOrders,
   });
+
+  fastify.post('/api/customers/orders/:orderId/renew-download', {
+    preHandler: [customerAuth],
+    handler: customersController.renewDownload,
+  });
 }

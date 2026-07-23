@@ -1,12 +1,13 @@
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../config/db';
 import { creators } from '../../infra/database/schema';
+import {
+  creatorBalancesRepository,
+  type CurrencyCode,
+} from './creator-balances.repository';
 
 export type Creator = typeof creators.$inferSelect;
 
-// Repository: DB access only. Returns domain rows directly here since
-// drizzle's inferred select type already IS the domain shape (no ORM-leak
-// risk the way a raw query builder result might leak driver-specific types).
 export const creatorsRepository = {
   async findById(creatorId: string): Promise<Creator | undefined> {
     return db.query.creators.findFirst({ where: eq(creators.id, creatorId) });
@@ -18,43 +19,41 @@ export const creatorsRepository = {
 
   async create(userId: string, phone: string, country: string): Promise<Creator> {
     const [row] = await db.insert(creators).values({ userId, phone, country }).returning();
+    // Seed zero balance for default payout currency
+    if (row) {
+      await creatorBalancesRepository.ensureRow(row.id, row.payoutCurrency as CurrencyCode);
+    }
     return row!;
   },
 
   /**
-   * Adds `amount` to the creator's available balance, atomically at the DB
-   * level via raw SQL arithmetic. This avoids a read-modify-write race: two
-   * concurrent earnings (or a withdrawal racing an earning) must never
-   * clobber each other by both reading the same stale balance.
+   * Credits balance in the given currency (sale currency).
+   * Prefer this over the legacy single-currency helpers.
    */
-  async incrementBalance(creatorId: string, amount: string): Promise<void> {
-    await db
-      .update(creators)
-      .set({
-        availableBalance: sql`${creators.availableBalance} + ${amount}::numeric`,
-        updatedAt: new Date(),
-      })
-      .where(eq(creators.id, creatorId));
+  async incrementBalance(
+    creatorId: string,
+    amount: string,
+    currency: CurrencyCode,
+  ): Promise<void> {
+    await creatorBalancesRepository.increment(creatorId, currency, amount);
   },
 
-  /**
-   * Subtracts `amount` from the creator's available balance. Used when a
-   * withdrawal is created (optimistic debit) and is NOT guarded here against
-   * going negative — the service layer must check sufficiency before
-   * calling this, since the repository's job is DB access only, not
-   * business rules.
-   */
-  async decrementBalance(creatorId: string, amount: string): Promise<void> {
-    await db
-      .update(creators)
-      .set({
-        availableBalance: sql`${creators.availableBalance} - ${amount}::numeric`,
-        updatedAt: new Date(),
-      })
-      .where(eq(creators.id, creatorId));
+  async decrementBalance(
+    creatorId: string,
+    amount: string,
+    currency: CurrencyCode,
+  ): Promise<void> {
+    await creatorBalancesRepository.decrement(creatorId, currency, amount);
   },
 
-  /** Sets payoutEligible based on whether the creator has any VERIFIED payout method. */
+  async getBalance(creatorId: string, currency: CurrencyCode): Promise<string> {
+    return creatorBalancesRepository.getBalance(creatorId, currency);
+  },
+
+  async listBalances(creatorId: string) {
+    return creatorBalancesRepository.listForCreator(creatorId);
+  },
+
   async setPayoutEligible(creatorId: string, eligible: boolean): Promise<void> {
     await db
       .update(creators)
@@ -69,19 +68,66 @@ export const creatorsRepository = {
       .where(eq(creators.id, creatorId));
   },
 
-  async update(creatorId: string, input: Partial<Pick<Creator, 'payoutCurrency' | 'phone' | 'country'>>): Promise<Creator | undefined> {
+  async update(
+    creatorId: string,
+    input: Partial<Pick<Creator, 'payoutCurrency' | 'phone' | 'country'>>,
+  ): Promise<Creator | undefined> {
     const [row] = await db
       .update(creators)
       .set({ ...input, updatedAt: new Date() })
       .where(eq(creators.id, creatorId))
       .returning();
+
+    // When payout currency changes, re-mirror the correct ledger into availableBalance
+    if (row && input.payoutCurrency) {
+      await creatorBalancesRepository.ensureRow(creatorId, input.payoutCurrency as CurrencyCode);
+      const bal = await creatorBalancesRepository.getBalance(
+        creatorId,
+        input.payoutCurrency as CurrencyCode,
+      );
+      const [synced] = await db
+        .update(creators)
+        .set({ availableBalance: bal, updatedAt: new Date() })
+        .where(eq(creators.id, creatorId))
+        .returning();
+      return synced ?? row;
+    }
+
     return row;
   },
 
-  /** Creators eligible for the scheduled disbursement sweep: payout-eligible with a positive balance. */
+  /**
+   * Creators eligible for the scheduled disbursement sweep:
+   * payout-eligible with a positive balance in their payout currency.
+   */
   async findEligibleForScheduledSweep(): Promise<Creator[]> {
-    return db.query.creators.findMany({
-      where: and(eq(creators.payoutEligible, true), gt(creators.availableBalance, '0')),
+    const eligible = await db.query.creators.findMany({
+      where: eq(creators.payoutEligible, true),
     });
+
+    const result: Creator[] = [];
+    for (const creator of eligible) {
+      const bal = await creatorBalancesRepository.getBalance(
+        creator.id,
+        creator.payoutCurrency as CurrencyCode,
+      );
+      if (gtNumeric(bal, '0')) {
+        // Reflect ledger into legacy field so callers reading availableBalance are correct
+        if (creator.availableBalance !== bal) {
+          await db
+            .update(creators)
+            .set({ availableBalance: bal })
+            .where(eq(creators.id, creator.id));
+          result.push({ ...creator, availableBalance: bal });
+        } else {
+          result.push(creator);
+        }
+      }
+    }
+    return result;
   },
 };
+
+function gtNumeric(a: string, b: string): boolean {
+  return Math.round(Number(a) * 100) > Math.round(Number(b) * 100);
+}

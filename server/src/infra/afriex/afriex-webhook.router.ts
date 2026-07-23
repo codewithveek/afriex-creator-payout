@@ -47,7 +47,11 @@ async function handleAfriexWebhook(
     logger.info({ withdrawalId: withdrawal.id }, 'Withdrawal confirmed PAID via Afriex webhook');
   } else if (status === 'FAILED' || status === 'CANCELLED' || status === 'REJECTED') {
     await withdrawalsRepository.markFailed(withdrawal.id, `Afriex reported ${status}`);
-    await creatorsRepository.incrementBalance(withdrawal.creatorId, withdrawal.amount);
+    await creatorsRepository.incrementBalance(
+      withdrawal.creatorId,
+      withdrawal.amount,
+      withdrawal.currency as 'USD' | 'NGN' | 'GHS' | 'KES',
+    );
     await poolAccountsRepository.incrementBalance(withdrawal.poolAccountId, withdrawal.amount);
     logger.warn({ withdrawalId: withdrawal.id }, 'Withdrawal FAILED via Afriex webhook, balances credited back');
   }

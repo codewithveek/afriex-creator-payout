@@ -28,12 +28,15 @@ export const orders = pgTable(
 
     paymentSessionId: varchar('payment_session_id', { length: 255 }).notNull().unique(),
     downloadToken: varchar('download_token', { length: 64 }),
+    /** When the download token stops working. Renewable for the owning customer. */
+    downloadTokenExpiresAt: timestamp('download_token_expires_at', { withTimezone: true }),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('idx_orders_customer_email').on(table.customerEmail),
+    index('idx_orders_customer_id').on(table.customerId),
     index('idx_orders_creator').on(table.creatorId),
     index('idx_orders_product').on(table.productId),
     index('idx_orders_status').on(table.status),

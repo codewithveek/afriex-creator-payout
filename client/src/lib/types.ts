@@ -17,6 +17,11 @@ export interface Session {
   }
 }
 
+export interface CreatorBalance {
+  currency: string
+  availableBalance: string
+}
+
 export interface Creator {
   id: string
   userId: string
@@ -26,6 +31,7 @@ export interface Creator {
   phone: string | null
   country: string | null
   lastWithdrawalAt: string | null
+  balances?: CreatorBalance[]
   createdAt: string
   updatedAt: string
 }
@@ -102,6 +108,8 @@ export interface Order {
   status: 'PENDING' | 'COMPLETED' | 'REFUNDED' | 'FAILED'
   paymentSessionId: string
   downloadToken: string | null
+  downloadExpired?: boolean
+  downloadTokenExpiresAt?: string | null
   createdAt: string
   updatedAt: string
   product?: Product

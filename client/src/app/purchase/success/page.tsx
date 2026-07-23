@@ -45,7 +45,7 @@ function SuccessContent() {
     (orderQuery.isLoading || orderQuery.isFetching || orderQuery.isPending)
 
   const downloadHref =
-    completed && order?.downloadToken
+    completed && order?.downloadToken && !order.downloadExpired
       ? `${API_BASE}/api/download/${order.id}/${order.downloadToken}`
       : null
 
@@ -96,9 +96,15 @@ function SuccessContent() {
                 </a>
               )}
 
+              {completed && order.downloadExpired && (
+                <p className="mt-6 text-sm text-warning">
+                  Your download link has expired. Open Your orders and request a new link.
+                </p>
+              )}
+
               <div className="mt-4 flex flex-col gap-2">
                 <Link href={`/customer/orders?email=${encodeURIComponent(order.customerEmail)}`}>
-                  <Button variant="outline" className="w-full">
+                  <Button variant={downloadHref ? 'outline' : 'primary'} className="w-full">
                     View all orders
                   </Button>
                 </Link>

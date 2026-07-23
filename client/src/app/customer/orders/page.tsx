@@ -12,6 +12,7 @@ import {
   fetchCustomerOrders,
   customerLogin,
   customerSignup,
+  renewCustomerDownload,
 } from '@/lib/queries/orders'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -65,6 +66,15 @@ function OrdersContent() {
         sessionStorage.setItem(TOKEN_KEY, customer.token)
         setToken(customer.token)
         setSigningUp(false)
+      }
+    },
+  })
+
+  const renewMutation = useMutation({
+    mutationFn: (orderId: string) => renewCustomerDownload(token!, orderId),
+    onSuccess: () => {
+      if (token) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.customerOrders(token) })
       }
     },
   })
@@ -265,7 +275,7 @@ function OrdersContent() {
                     {formatMoney(order.amount, order.currency)} · {formatDate(order.createdAt)}
                   </p>
                 </div>
-                {order.status === 'COMPLETED' && order.downloadToken && (
+                {order.status === 'COMPLETED' && order.downloadToken && !order.downloadExpired && (
                   <a
                     href={`${API_BASE}/api/download/${order.id}/${order.downloadToken}`}
                     className="inline-flex"
@@ -276,6 +286,18 @@ function OrdersContent() {
                     </Button>
                   </a>
                 )}
+                {order.status === 'COMPLETED' &&
+                  (order.downloadExpired || !order.downloadToken) && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      loading={renewMutation.isPending && renewMutation.variables === order.id}
+                      onClick={() => renewMutation.mutate(order.id)}
+                    >
+                      <Download className="h-4 w-4" />
+                      Get new download link
+                    </Button>
+                  )}
               </CardContent>
             </Card>
           ))}

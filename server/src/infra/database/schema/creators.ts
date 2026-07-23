@@ -7,13 +7,13 @@ import { sales } from './sales';
 import { earnings } from './earnings';
 import { withdrawals } from './withdrawals';
 
-// One row per creator user. `availableBalance` is the locked-in model: a
-// running counter incremented by confirmed earnings and decremented by
-// queued/paid withdrawals. It is NOT derived by summing earnings on every
-// read — that would not scale once a creator has thousands of sales, and the
-// counter is authoritative by design (earnings rows are historical record
-// only, per the explicit decision not to trace withdrawals back to specific
-// earnings).
+// One row per creator user.
+//
+// Multi-currency balances live in `creator_balances`. `availableBalance`
+// here is a denormalized mirror of the balance for `payoutCurrency` only,
+// kept for backward-compatible API responses and scheduled-sweep filters.
+// Always credit/debit via creatorsRepository.incrementBalance /
+// decrementBalance with an explicit currency.
 //
 // `payoutEligible` is a denormalized flag set true only when the creator has
 // at least one VERIFIED payout method. The scheduled disbursement sweep

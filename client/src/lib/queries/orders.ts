@@ -1,4 +1,4 @@
-import { api, ApiClientError } from '@/lib/api-client'
+import { api, apiFetch, ApiClientError } from '@/lib/api-client'
 import type { Order, Customer } from '@/lib/types'
 
 export interface OrderBySession {
@@ -11,6 +11,8 @@ export interface OrderBySession {
   currency: string
   status: string
   downloadToken: string | null
+  downloadExpired?: boolean
+  downloadTokenExpiresAt?: string | null
   createdAt: string
 }
 
@@ -47,4 +49,15 @@ export async function customerSignup(input: {
 }) {
   await api.post('/api/customers/signup', input)
   return customerLogin({ email: input.email, password: input.password })
+}
+
+export async function renewCustomerDownload(token: string, orderId: string) {
+  const res = await apiFetch<{ data: { downloadToken: string; expiresAt: string } }>(
+    `/api/customers/orders/${orderId}/renew-download`,
+    {
+      method: 'POST',
+      headers: { 'x-customer-token': token },
+    },
+  )
+  return res.data
 }

@@ -81,11 +81,15 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
 }
 
 async function failWithdrawal(
-  withdrawal: { id: string; creatorId: string; amount: string },
+  withdrawal: { id: string; creatorId: string; amount: string; currency: string },
   reason: string,
 ): Promise<void> {
   await withdrawalsRepository.markFailed(withdrawal.id, reason);
-  await creatorsRepository.incrementBalance(withdrawal.creatorId, withdrawal.amount);
+  await creatorsRepository.incrementBalance(
+    withdrawal.creatorId,
+    withdrawal.amount,
+    withdrawal.currency as 'USD' | 'NGN' | 'GHS' | 'KES',
+  );
   logger.warn({ withdrawalId: withdrawal.id, reason }, 'Withdrawal failed, balance credited back');
 }
 

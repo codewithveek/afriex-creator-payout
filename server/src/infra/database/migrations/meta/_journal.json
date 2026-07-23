@@ -22,6 +22,13 @@
       "when": 1782826604541,
       "tag": "0002_curly_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784820000000,
+      "tag": "0003_multi_currency_downloads",
+      "breakpoints": true
     }
   ]
 }

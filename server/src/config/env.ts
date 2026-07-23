@@ -58,6 +58,9 @@ const envSchema = z.object({
   // every earnings row at the rate in effect when the sale was processed —
   // see infra/database/schema/earnings.ts for why this matters.
   PLATFORM_FEE_PERCENT: z.coerce.number().min(0).max(100).default(10),
+
+  /** How long a purchase download token remains valid (days). Default 7. */
+  DOWNLOAD_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
 });
 
 function loadEnv() {

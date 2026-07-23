@@ -4,7 +4,7 @@ import { UpdateCreatorProfileSchema } from './creators.schema';
 
 export const creatorsController = {
   async getMyProfile(request: FastifyRequest, reply: FastifyReply) {
-    const creator = await creatorsService.getByUserId(request.user!.id);
+    const creator = await creatorsService.getProfileWithBalances(request.user!.id);
     return reply.code(200).send({ data: creator });
   },
 

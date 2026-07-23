@@ -1,4 +1,5 @@
 import { creatorsRepository, type Creator } from './creators.repository';
+import { creatorBalancesRepository } from './creator-balances.repository';
 import { NotFoundError } from '../../shared/errors';
 
 export type UpdateCreatorProfile = {
@@ -7,14 +8,11 @@ export type UpdateCreatorProfile = {
   country?: string;
 };
 
+export type CreatorProfile = Creator & {
+  balances: Array<{ currency: string; availableBalance: string }>;
+};
+
 export const creatorsService = {
-  /**
-   * Idempotently ensures a `creators` row exists for the given user.
-   * Called right after signup. Safe to call again (e.g. a retried request)
-   * since it checks for an existing row first rather than relying on a
-   * unique-constraint catch, which keeps the happy path free of exception
-   *-driven control flow.
-   */
   async ensureCreatorRecord(userId: string, phone?: string, country?: string): Promise<Creator> {
     const existing = await creatorsRepository.findByUserId(userId);
     if (existing) {
@@ -41,10 +39,37 @@ export const creatorsService = {
     return creator;
   },
 
-  async updateProfile(userId: string, input: UpdateCreatorProfile): Promise<Creator> {
+  async getProfileWithBalances(userId: string): Promise<CreatorProfile> {
+    const creator = await this.getByUserId(userId);
+    const balances = await creatorBalancesRepository.listForCreator(creator.id);
+
+    // Ensure payout currency always appears even at zero
+    const hasPayout = balances.some((b) => b.currency === creator.payoutCurrency);
+    if (!hasPayout) {
+      await creatorBalancesRepository.ensureRow(
+        creator.id,
+        creator.payoutCurrency as 'USD' | 'NGN' | 'GHS' | 'KES',
+      );
+    }
+
+    const refreshed = await creatorBalancesRepository.listForCreator(creator.id);
+    const payoutBal =
+      refreshed.find((b) => b.currency === creator.payoutCurrency)?.availableBalance ?? '0.00';
+
+    return {
+      ...creator,
+      availableBalance: payoutBal,
+      balances: refreshed.map((b) => ({
+        currency: b.currency,
+        availableBalance: b.availableBalance,
+      })),
+    };
+  },
+
+  async updateProfile(userId: string, input: UpdateCreatorProfile): Promise<CreatorProfile> {
     const creator = await this.getByUserId(userId);
     const updated = await creatorsRepository.update(creator.id, input);
     if (!updated) throw new NotFoundError('Creator not found');
-    return updated;
+    return this.getProfileWithBalances(userId);
   },
 };

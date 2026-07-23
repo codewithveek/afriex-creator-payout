@@ -35,7 +35,10 @@ export const ordersController = {
       // product may have been deleted
     }
 
-    // Only expose download token for completed orders
+    const expired =
+      order.downloadTokenExpiresAt != null && order.downloadTokenExpiresAt < new Date();
+
+    // Only expose a still-valid download token for completed orders
     const payload = {
       id: order.id,
       productId: order.productId,
@@ -45,7 +48,10 @@ export const ordersController = {
       amount: order.amount,
       currency: order.currency,
       status: order.status,
-      downloadToken: order.status === 'COMPLETED' ? order.downloadToken : null,
+      downloadToken:
+        order.status === 'COMPLETED' && !expired ? order.downloadToken : null,
+      downloadExpired: order.status === 'COMPLETED' && expired,
+      downloadTokenExpiresAt: order.downloadTokenExpiresAt,
       createdAt: order.createdAt,
     };
 

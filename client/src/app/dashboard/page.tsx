@@ -61,6 +61,9 @@ async function DashboardContent() {
   const totalGross = sales.data.reduce((sum, s) => sum + saleAmount(s), 0)
   const currency = creator?.payoutCurrency ?? sales.data[0]?.currency ?? 'USD'
   const balance = creator?.availableBalance ?? '0'
+  const multiBalances = creator?.balances?.filter(
+    (b) => Number.parseFloat(b.availableBalance) > 0 || b.currency === currency,
+  )
   const paidOut = withdrawals.data
     .filter((w) => w.status === 'COMPLETED' || w.status === 'PAID')
     .reduce((sum, w) => sum + Number.parseFloat(w.amount), 0)
@@ -107,6 +110,18 @@ async function DashboardContent() {
                 ? 'Payout method verified · ready to withdraw via Afriex'
                 : 'Add a verified bank payout method to withdraw'}
             </p>
+            {multiBalances && multiBalances.length > 1 && (
+              <ul className="mt-3 space-y-1 border-t border-border-light pt-3">
+                {multiBalances.map((b) => (
+                  <li key={b.currency} className="flex justify-between text-xs text-fg-muted">
+                    <span>{b.currency}</span>
+                    <span className="font-medium text-fg">
+                      {formatMoney(b.availableBalance, b.currency)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
         <Card>
