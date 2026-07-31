@@ -1,0 +1,13 @@
+packages:
+  - client
+  - server
+
+onlyBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
+  - sharp
+  - unrs-resolver
+
+# Force a single ioredis instance so bullmq and app code share the same Redis types
+overrides:
+  ioredis: 5.10.1
