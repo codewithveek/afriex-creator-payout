@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Copy, ExternalLink } from 'lucide-react'
 import { api, ApiClientError } from '@/lib/api-client'
 import { formatMoney } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -210,19 +211,14 @@ export function ProductsClient({ initial }: Props) {
                 required
                 defaultValue={editingProduct?.name}
               />
-              <div className="space-y-1">
-                <label className="block text-sm font-medium text-fg-muted" htmlFor="description">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={4}
-                  defaultValue={editingProduct?.description ?? ''}
-                  className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="What buyers get, who it is for, and what format the file is in."
-                />
-              </div>
+              <Textarea
+                label="Description"
+                id="description"
+                name="description"
+                rows={4}
+                defaultValue={editingProduct?.description ?? ''}
+                placeholder="What buyers get, who it is for, and what format the file is in."
+              />
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Price"
@@ -233,29 +229,27 @@ export function ProductsClient({ initial }: Props) {
                   required
                   defaultValue={editingProduct?.price}
                 />
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-fg-muted" htmlFor="currency">
-                    Currency
-                  </label>
-                  <select
-                    id="currency"
-                    name="currency"
-                    defaultValue={editingProduct?.currency ?? 'NGN'}
-                    className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
-                    required
-                  >
-                    {currencies.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Currency"
+                  id="currency"
+                  name="currency"
+                  defaultValue={editingProduct?.currency ?? 'NGN'}
+                  required
+                >
+                  {currencies.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-fg-muted">Product file</label>
+                <label className="block text-sm font-medium text-fg-muted" htmlFor="product-file">
+                  Product file
+                </label>
                 <input
+                  id="product-file"
                   type="file"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
@@ -263,13 +257,15 @@ export function ProductsClient({ initial }: Props) {
                   }}
                   className="block w-full text-sm text-fg-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-muted file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent-muted/80"
                 />
-                {uploading && <p className="text-sm text-accent">Uploading…</p>}
-                {uploadedFile && (
-                  <p className="text-sm text-success">
-                    Uploaded: {uploadedFile.fileName} (
-                    {(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
-                  </p>
-                )}
+                <div aria-live="polite">
+                  {uploading && <p className="text-sm text-accent">Uploading…</p>}
+                  {uploadedFile && (
+                    <p className="text-sm text-success">
+                      Uploaded: {uploadedFile.fileName} (
+                      {(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
+                    </p>
+                  )}
+                </div>
                 {!uploadedFile && editingProduct?.fileName && (
                   <p className="text-sm text-fg-muted">Current file: {editingProduct.fileName}</p>
                 )}
@@ -343,15 +339,19 @@ export function ProductsClient({ initial }: Props) {
                               aria-label="Copy store link"
                             >
                               <Copy className="h-3.5 w-3.5" />
-                              <span className="ml-1 hidden sm:inline">
+                              <span className="ml-1 hidden sm:inline" aria-live="polite">
                                 {copiedId === product.id ? 'Copied' : 'Link'}
                               </span>
                             </Button>
-                            <Link href={`/store/${product.id}`} target="_blank">
-                              <Button variant="ghost" size="sm" aria-label="Open store page">
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </Button>
-                            </Link>
+                            <Button
+                              href={`/store/${product.id}`}
+                              target="_blank"
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Open store page"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Button>
                           </>
                         )}
                         <Button variant="outline" size="sm" onClick={() => openForm('edit', product)}>

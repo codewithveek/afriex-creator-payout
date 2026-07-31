@@ -22,14 +22,14 @@ const mono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Afriex Creators — Sell digital products. Get paid across Africa.',
+    default: 'Afriex Creators: Sell digital products. Get paid anywhere.',
     template: '%s · Afriex Creators',
   },
   description:
-    'A marketplace for African creators. Sell ebooks, courses, templates, and more. Buyers pay with Paystack, Flutterwave, or Afriex Checkout. Creators withdraw via Afriex.',
+    'The marketplace where creators everywhere sell ebooks, courses, templates, and more. Buyers pay with Paystack, Flutterwave, or Afriex Checkout. Creators withdraw straight to their bank via Afriex.',
   openGraph: {
     title: 'Afriex Creators',
-    description: 'Sell digital products and get paid across Africa.',
+    description: 'Sell digital products and get paid anywhere.',
     type: 'website',
   },
 }

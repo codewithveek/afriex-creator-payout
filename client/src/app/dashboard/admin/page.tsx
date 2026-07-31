@@ -41,30 +41,35 @@ export default function AdminPage() {
   const creatorsQuery = useQuery({
     queryKey: queryKeys.admin.creators,
     queryFn: fetchAdminCreators,
+    enabled: tab === 'creators',
   })
   const withdrawalsQuery = useQuery({
     queryKey: queryKeys.admin.withdrawals,
     queryFn: fetchAdminWithdrawals,
+    enabled: tab === 'withdrawals',
   })
   const salesQuery = useQuery({
     queryKey: queryKeys.admin.sales,
     queryFn: fetchAdminSales,
+    enabled: tab === 'sales',
   })
   const poolsQuery = useQuery({
     queryKey: queryKeys.admin.poolAccounts,
     queryFn: fetchAdminPoolAccounts,
+    enabled: tab === 'pool-accounts',
   })
 
-  const loading =
-    creatorsQuery.isLoading ||
-    withdrawalsQuery.isLoading ||
-    salesQuery.isLoading ||
-    poolsQuery.isLoading
+  const queriesByTab = {
+    creators: creatorsQuery,
+    withdrawals: withdrawalsQuery,
+    sales: salesQuery,
+    'pool-accounts': poolsQuery,
+  } as const
+  const activeQuery = queriesByTab[tab]
 
-  const error =
-    [creatorsQuery, withdrawalsQuery, salesQuery, poolsQuery]
-      .map((q) => q.error)
-      .find(Boolean) ?? null
+  const loading = activeQuery.isLoading
+
+  const error = activeQuery.error ?? null
 
   const errorMessage =
     error instanceof ApiClientError

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { CountrySelect } from '@/components/ui/country-select'
 
@@ -47,7 +48,7 @@ export function SettingsClient({ creator }: Props) {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-fg">Settings</h1>
+        <h1 className="font-display text-2xl font-semibold text-fg">Settings</h1>
         <p className="mt-1 text-sm text-fg-muted">Manage your profile and payout preferences</p>
       </div>
 
@@ -74,24 +75,17 @@ export function SettingsClient({ creator }: Props) {
             />
             <CountrySelect value={country} onChange={setCountry} required />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-fg-muted" htmlFor="payoutCurrency">
-                Default payout currency
-              </label>
-              <select
-                id="payoutCurrency"
-                value={payoutCurrency}
-                onChange={(e) => setPayoutCurrency(e.target.value)}
-                className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
-              >
-                {currencies.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <p className="text-xs text-fg-subtle">
-                This determines the currency used for payouts. Ensure you have a payout method in this currency.
-              </p>
-            </div>
+            <Select
+              label="Default payout currency"
+              id="payoutCurrency"
+              value={payoutCurrency}
+              onChange={(e) => setPayoutCurrency(e.target.value)}
+              hint="This determines the currency used for payouts. Ensure you have a payout method in this currency."
+            >
+              {currencies.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </Select>
 
             <Button type="submit" loading={loading}>
               Save Settings

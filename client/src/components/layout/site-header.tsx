@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const links = [
-  { href: '/store', label: 'Store' },
+  { href: '/discover', label: 'Discover' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/pricing', label: 'Pricing' },
 ]
@@ -16,6 +16,15 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-bg/90 backdrop-blur-md">
@@ -48,19 +57,17 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Log in
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button size="sm">Start selling</Button>
-          </Link>
+          <Button href="/login" variant="ghost" size="sm">
+            Log in
+          </Button>
+          <Button href="/signup" size="sm">
+            Start selling
+          </Button>
         </div>
 
         <button
           type="button"
-          className="rounded-lg p-2 text-fg-muted hover:bg-bg-muted md:hidden"
+          className="rounded-lg p-2.5 text-fg-muted hover:bg-bg-muted md:hidden"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -83,14 +90,12 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-              <Link href="/login" onClick={() => setOpen(false)}>
-                <Button variant="outline" className="w-full">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/signup" onClick={() => setOpen(false)}>
-                <Button className="w-full">Start selling</Button>
-              </Link>
+              <Button href="/login" variant="outline" className="w-full" onClick={() => setOpen(false)}>
+                Log in
+              </Button>
+              <Button href="/signup" className="w-full" onClick={() => setOpen(false)}>
+                Start selling
+              </Button>
             </div>
           </nav>
         </div>

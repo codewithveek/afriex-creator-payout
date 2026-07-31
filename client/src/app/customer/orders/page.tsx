@@ -137,7 +137,7 @@ function OrdersContent() {
           </div>
         )}
 
-        <Card className="shadow-[var(--shadow-card)]">
+        <Card className="shadow-card">
           <CardHeader>
             <h2 className="text-lg font-semibold text-fg">
               {signingUp ? 'Create a buyer account' : 'Log in'}
@@ -204,8 +204,8 @@ function OrdersContent() {
 
         <p className="text-center text-sm text-fg-subtle">
           Looking for a product?{' '}
-          <Link href="/store" className="font-medium text-accent hover:underline">
-            Browse the store
+          <Link href="/discover" className="font-medium text-accent hover:underline">
+            Explore Discover
           </Link>
         </p>
       </div>
@@ -253,16 +253,12 @@ function OrdersContent() {
           icon={<Package className="h-6 w-6" />}
           title="No orders yet"
           description="When you buy a product, it will appear here with a download button."
-          action={
-            <Link href="/store">
-              <Button>Browse store</Button>
-            </Link>
-          }
+          action={<Button href="/discover">Discover products</Button>}
         />
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <Card key={order.id} className="shadow-[var(--shadow-card)]">
+            <Card key={order.id} className="shadow-card">
               <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -276,15 +272,13 @@ function OrdersContent() {
                   </p>
                 </div>
                 {order.status === 'COMPLETED' && order.downloadToken && !order.downloadExpired && (
-                  <a
+                  <Button
                     href={`${API_BASE}/api/download/${order.id}/${order.downloadToken}`}
-                    className="inline-flex"
+                    className="gap-2"
                   >
-                    <Button className="gap-2">
-                      <Download className="h-4 w-4" />
-                      Download
-                    </Button>
-                  </a>
+                    <Download className="h-4 w-4" />
+                    Download
+                  </Button>
                 )}
                 {order.status === 'COMPLETED' &&
                   (order.downloadExpired || !order.downloadToken) && (

@@ -33,8 +33,8 @@ const steps = [
 const features = [
   {
     icon: Globe2,
-    title: 'Built for African creators',
-    body: 'Local payment methods your buyers already use, plus cross-border payouts that actually arrive.',
+    title: 'Local payments, global reach',
+    body: 'Sell to buyers anywhere. They pay with methods they already use, and cross-border payouts actually arrive.',
   },
   {
     icon: Download,
@@ -73,24 +73,21 @@ export default function HomePage() {
             </p>
             <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.1] tracking-tight text-fg sm:text-5xl lg:text-[3.25rem]">
               Sell digital products.
-              <span className="block text-accent">Get paid across Africa.</span>
+              <span className="block text-accent">Get paid anywhere.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-fg-muted">
-              Afriex Creators is the storefront for ebooks, templates, and digital downloads —
-              with Paystack, Flutterwave, and Afriex Checkout for buyers, and Afriex for creator payouts.
+              Start with what you know. Package it as an ebook, template, or course, and sell it to
+              anyone. Buyers pay with Paystack, Flutterwave, or Afriex Checkout, and you withdraw
+              to your bank through Afriex.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/signup">
-                <Button size="lg" className="gap-2">
-                  Start selling free
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/store">
-                <Button size="lg" variant="outline">
-                  Browse the store
-                </Button>
-              </Link>
+              <Button href="/signup" size="lg" className="gap-2">
+                Start selling free
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button href="/discover" size="lg" variant="outline">
+                Discover products
+              </Button>
             </div>
             <p className="mt-4 text-sm text-fg-subtle">
               No setup fee. Publish in minutes. Withdraw when you hit the minimum.
@@ -98,7 +95,7 @@ export default function HomePage() {
           </div>
 
           <div className="relative">
-            <div className="rounded-2xl border border-border bg-bg-elevated p-6 shadow-[var(--shadow-lift)]">
+            <div className="rounded-2xl border border-border bg-bg-elevated p-6 shadow-lift">
               <div className="flex items-center justify-between border-b border-border-light pb-4">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">
@@ -167,7 +164,7 @@ export default function HomePage() {
             return (
               <li
                 key={step.title}
-                className="relative rounded-xl border border-border bg-bg-elevated p-6 shadow-[var(--shadow-card)]"
+                className="relative rounded-xl border border-border bg-bg-elevated p-6 shadow-card"
               >
                 <span className="absolute right-4 top-4 font-display text-3xl font-semibold text-bg-subtle">
                   {i + 1}
@@ -189,14 +186,14 @@ export default function HomePage() {
           <div className="max-w-2xl">
             <p className="text-sm font-semibold text-accent">Why creators switch</p>
             <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
-              Storefront that respects how Africa pays
+              Storefront that respects how your buyers pay
             </h2>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {features.map((f) => {
               const Icon = f.icon
               return (
-                <div key={f.title} className="flex gap-4 rounded-xl bg-bg-elevated p-6 shadow-[var(--shadow-card)]">
+                <div key={f.title} className="flex gap-4 rounded-xl bg-bg-elevated p-6 shadow-card">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-subtle text-accent">
                     <Icon className="h-5 w-5" aria-hidden />
                   </div>
@@ -213,7 +210,7 @@ export default function HomePage() {
 
       {/* Collectors callout */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-[var(--shadow-card)]">
+        <div className="overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-card">
           <div className="grid lg:grid-cols-2">
             <div className="border-b border-border p-8 lg:border-b-0 lg:border-r lg:p-10">
               <p className="text-sm font-semibold text-accent">For buyers</p>
@@ -244,7 +241,7 @@ export default function HomePage() {
                 Afriex is your only payout rail
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-fg-on-accent/75">
-                We separate collection from payout on purpose. Buyers pay through mainstream African
+                We separate collection from payout on purpose. Buyers pay through trusted
                 collectors. You withdraw earnings exclusively through Afriex to your verified bank
                 account. Clean books. Clear responsibility.
               </p>
@@ -268,12 +265,10 @@ export default function HomePage() {
               Create a free account, upload a file, and share your product link today.
             </p>
           </div>
-          <Link href="/signup">
-            <Button size="lg" className="gap-2 whitespace-nowrap">
-              Create creator account
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button href="/signup" size="lg" className="gap-2 whitespace-nowrap">
+            Create creator account
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </section>
     </MarketingShell>

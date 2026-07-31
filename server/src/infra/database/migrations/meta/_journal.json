@@ -36,6 +36,13 @@
       "when": 1784821000000,
       "tag": "0004_security_pii_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785493683498,
+      "tag": "0005_pink_captain_cross",
+      "breakpoints": true
     }
   ]
 }

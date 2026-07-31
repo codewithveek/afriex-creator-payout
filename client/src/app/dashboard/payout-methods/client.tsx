@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import type { PayoutMethod } from '@/lib/types'
 
@@ -19,6 +21,7 @@ export function PayoutMethodsClient({ initial }: Props) {
   const [methods, setMethods] = useState(initial)
   const [showForm, setShowForm] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -55,6 +58,7 @@ export function PayoutMethodsClient({ initial }: Props) {
       setError(err instanceof ApiClientError ? err.message : 'Failed to delete payout method')
     } finally {
       setDeleting(null)
+      setConfirmingId(null)
     }
   }
 
@@ -65,31 +69,16 @@ export function PayoutMethodsClient({ initial }: Props) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-              {error}
-            </div>
-          )}
           <Input label="Account Number" name="accountNumber" required />
           <Input label="Bank Code" name="bankCode" required />
           <Input label="Bank Name" name="bankName" required />
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-fg-muted" htmlFor="currency">
-              Currency
-            </label>
-            <select
-              id="currency"
-              name="currency"
-              className="block w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
-              required
-            >
-              {currencies.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select label="Currency" id="currency" name="currency" required>
+            {currencies.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
           <div className="flex gap-3">
             <Button type="submit" loading={loading}>
               Save
@@ -112,6 +101,12 @@ export function PayoutMethodsClient({ initial }: Props) {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
+          {error}
+        </div>
+      )}
+
       {methods.length === 0 && !showForm && (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
@@ -158,9 +153,7 @@ export function PayoutMethodsClient({ initial }: Props) {
                     <td className="px-4 sm:px-6 py-3 text-fg-muted">{method.currency}</td>
                     <td className="px-4 sm:px-6 py-3">
                       {method.isDefault ? (
-                        <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 text-xs font-medium text-accent">
-                          Default
-                        </span>
+                        <Badge variant="accent">Default</Badge>
                       ) : (
                         <span className="text-fg-subtle">—</span>
                       )}
@@ -169,14 +162,37 @@ export function PayoutMethodsClient({ initial }: Props) {
                       {new Date(method.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 sm:px-6 py-3 text-right">
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        loading={deleting === method.id}
-                        onClick={() => handleDelete(method.id)}
-                      >
-                        Delete
-                      </Button>
+                      {confirmingId === method.id ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            loading={deleting === method.id}
+                            onClick={() => handleDelete(method.id)}
+                          >
+                            Confirm delete
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={deleting === method.id}
+                            onClick={() => setConfirmingId(null)}
+                          >
+                            Keep
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmingId(method.id)
+                            setError('')
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-md rounded-2xl border border-border bg-bg-elevated p-8 shadow-[var(--shadow-lift)]">
+        <div className="mx-auto mt-12 max-w-md rounded-2xl border border-border bg-bg-elevated p-8 shadow-lift">
           <p className="text-sm font-medium text-fg-muted">Platform fee per sale</p>
           <p className="font-display mt-2 text-5xl font-semibold text-fg">10%</p>
           <p className="mt-2 text-sm text-fg-muted">
@@ -43,19 +42,17 @@ export default function PricingPage() {
               </li>
             ))}
           </ul>
-          <Link href="/signup" className="mt-8 block">
-            <Button size="lg" className="w-full">
-              Create free account
-            </Button>
-          </Link>
+          <Button href="/signup" size="lg" className="mt-8 w-full">
+            Create free account
+          </Button>
         </div>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2">
           <div className="rounded-xl border border-border p-6">
             <h2 className="font-semibold text-fg">Minimum withdrawal</h2>
             <p className="mt-2 text-sm text-fg-muted">
-              Small floor (configurable on the platform, typically a few dollars equivalent) so
-              micro-payouts do not create noise. You choose how much to withdraw above that.
+              A small minimum (a few dollars equivalent) keeps tiny transfers from eating into
+              your earnings. Above it, you decide how much to withdraw and when.
             </p>
           </div>
           <div className="rounded-xl border border-border p-6">

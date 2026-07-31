@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { clsx } from 'clsx'
@@ -28,6 +28,19 @@ export function Sidebar({ role }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
 
   async function handleLogout() {
     await api.post('/api/auth/logout')
@@ -57,7 +70,7 @@ export function Sidebar({ role }: Props) {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-accent-muted text-accent'
                   : 'text-fg-muted hover:bg-bg-muted hover:text-fg',
@@ -84,7 +97,7 @@ export function Sidebar({ role }: Props) {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={clsx(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-warning-muted text-warning'
                       : 'text-fg-muted hover:bg-bg-muted hover:text-fg',
@@ -103,7 +116,7 @@ export function Sidebar({ role }: Props) {
         <button
           onClick={handleLogout}
           aria-label="Sign out"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-muted hover:text-fg"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-muted hover:text-fg"
         >
           <LogOut className="h-5 w-5" />
           Sign out
@@ -119,7 +132,8 @@ export function Sidebar({ role }: Props) {
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
-          className="rounded-lg p-2 text-fg-muted hover:bg-bg-muted"
+          aria-expanded={mobileOpen}
+          className="rounded-lg p-2.5 text-fg-muted hover:bg-bg-muted"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -132,7 +146,7 @@ export function Sidebar({ role }: Props) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/20 lg:hidden"
+          className="fixed inset-0 z-30 bg-fg/20 lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />

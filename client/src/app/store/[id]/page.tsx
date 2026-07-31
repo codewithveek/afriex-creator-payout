@@ -33,11 +33,11 @@ async function ProductContent({ params }: Props) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <Link
-        href="/store"
+        href="/discover"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-fg-muted transition-colors hover:text-fg"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to store
+        Back to Discover
       </Link>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-5">
@@ -64,7 +64,7 @@ async function ProductContent({ params }: Props) {
         </div>
 
         <div className="lg:col-span-2">
-          <Card className="sticky top-24 shadow-[var(--shadow-card)]">
+          <Card className="sticky top-24 shadow-card">
             <CardContent className="space-y-5 p-6">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">Price</p>

@@ -77,27 +77,23 @@ async function DashboardContent() {
             Welcome back{session ? `, ${session.user.name.split(' ')[0]}` : ''}
           </h1>
           <p className="mt-1 text-sm text-fg-muted">
-            Your balance is the first thing that matters. Everything else supports it.
+            Here is how your store is doing today.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/products">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Package className="h-4 w-4" />
-              Products
-            </Button>
-          </Link>
-          <Link href="/dashboard/withdrawals">
-            <Button size="sm" className="gap-1.5">
-              <Wallet className="h-4 w-4" />
-              Withdraw
-            </Button>
-          </Link>
+          <Button href="/dashboard/products" variant="outline" size="sm" className="gap-1.5">
+            <Package className="h-4 w-4" />
+            Products
+          </Button>
+          <Button href="/dashboard/withdrawals" size="sm" className="gap-1.5">
+            <Wallet className="h-4 w-4" />
+            Withdraw
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="sm:col-span-2 border-accent/20 bg-gradient-to-br from-accent-muted/40 to-bg-elevated shadow-[var(--shadow-card)]">
+        <Card className="sm:col-span-2 border-accent/20 bg-accent-muted/40 shadow-card">
           <CardHeader>
             <p className="text-sm font-medium text-fg-muted">Available balance</p>
           </CardHeader>
@@ -159,12 +155,10 @@ async function DashboardContent() {
                 Upload a digital file, set a price, publish, and share your store link.
               </p>
             </div>
-            <Link href="/dashboard/products">
-              <Button className="gap-1.5">
-                Create product
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button href="/dashboard/products" className="gap-1.5">
+              Create product
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
       )}

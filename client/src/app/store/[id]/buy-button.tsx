@@ -76,7 +76,7 @@ export function BuyButton({ product }: Props) {
   return (
     <form
       onSubmit={handleBuy}
-      className="w-full space-y-4 rounded-xl border border-border bg-bg-elevated p-5 shadow-[var(--shadow-card)]"
+      className="w-full space-y-4 rounded-xl border border-border bg-bg-elevated p-5 shadow-card"
     >
       <div>
         <h3 className="text-sm font-semibold text-fg">Complete your purchase</h3>

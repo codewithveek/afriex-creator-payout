@@ -1,7 +1,6 @@
 'use client'
 
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle2, Download, Package } from 'lucide-react'
@@ -62,7 +61,7 @@ function SuccessContent() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-16 sm:px-6">
-      <Card className="shadow-[var(--shadow-lift)]">
+      <Card className="shadow-lift">
         <CardContent className="p-8 text-center">
           {stillPolling && !order ? (
             <div className="space-y-4">
@@ -88,12 +87,10 @@ function SuccessContent() {
               <p className="mt-1 text-xs text-fg-subtle">Receipt sent to {order.customerEmail}</p>
 
               {downloadHref && (
-                <a href={downloadHref} className="mt-8 block">
-                  <Button size="lg" className="w-full gap-2">
-                    <Download className="h-4 w-4" />
-                    Download now
-                  </Button>
-                </a>
+                <Button href={downloadHref} size="lg" className="mt-8 w-full gap-2">
+                  <Download className="h-4 w-4" />
+                  Download now
+                </Button>
               )}
 
               {completed && order.downloadExpired && (
@@ -103,16 +100,16 @@ function SuccessContent() {
               )}
 
               <div className="mt-4 flex flex-col gap-2">
-                <Link href={`/customer/orders?email=${encodeURIComponent(order.customerEmail)}`}>
-                  <Button variant={downloadHref ? 'outline' : 'primary'} className="w-full">
-                    View all orders
-                  </Button>
-                </Link>
-                <Link href="/store">
-                  <Button variant="ghost" className="w-full">
-                    Continue browsing
-                  </Button>
-                </Link>
+                <Button
+                  href={`/customer/orders?email=${encodeURIComponent(order.customerEmail)}`}
+                  variant={downloadHref ? 'outline' : 'primary'}
+                  className="w-full"
+                >
+                  View all orders
+                </Button>
+                <Button href="/discover" variant="ghost" className="w-full">
+                  Continue browsing
+                </Button>
               </div>
             </>
           ) : (
@@ -128,20 +125,19 @@ function SuccessContent() {
                   'Your payment is still confirming. This usually takes a few seconds. Check your email for a receipt, or open Your orders with the email you used at checkout.'}
               </p>
               <div className="mt-8 flex flex-col gap-2">
-                <Link
+                <Button
                   href={
                     email
                       ? `/customer/orders?email=${encodeURIComponent(email)}`
                       : '/customer/orders'
                   }
+                  className="w-full"
                 >
-                  <Button className="w-full">Go to your orders</Button>
-                </Link>
-                <Link href="/store">
-                  <Button variant="outline" className="w-full">
-                    Back to store
-                  </Button>
-                </Link>
+                  Go to your orders
+                </Button>
+                <Button href="/discover" variant="outline" className="w-full">
+                  Back to Discover
+                </Button>
               </div>
             </>
           )}

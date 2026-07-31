@@ -4,10 +4,10 @@ const columns = [
   {
     title: 'Product',
     links: [
-      { href: '/store', label: 'Browse store' },
+      { href: '/discover', label: 'Discover products' },
       { href: '/how-it-works', label: 'How it works' },
       { href: '/pricing', label: 'Pricing' },
-      { href: '/signup', label: 'Create account' },
+      { href: '/signup', label: 'Start selling' },
     ],
   },
   {
@@ -23,7 +23,7 @@ const columns = [
     title: 'Buyers',
     links: [
       { href: '/customer/orders', label: 'Your orders' },
-      { href: '/store', label: 'Digital products' },
+      { href: '/discover', label: 'Discover products' },
     ],
   },
   {
@@ -48,8 +48,8 @@ export function SiteFooter() {
               <span className="font-semibold text-fg">Afriex Creators</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-fg-muted">
-              Sell digital products and get paid across Africa. Buyers pay with Paystack,
-              Flutterwave, or Afriex Checkout. Creators withdraw through Afriex.
+              The marketplace where creators sell digital products and get paid at home,
+              wherever home is. Buyers pay with Paystack, Flutterwave, or Afriex Checkout.
             </p>
           </div>
           {columns.map((col) => (

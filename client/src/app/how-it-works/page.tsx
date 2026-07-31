@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
@@ -7,7 +6,7 @@ const flow = [
   {
     who: 'Creator',
     title: 'Publish a product',
-    body: 'Upload your digital file, set a price in USD, NGN, GHS, or KES, and publish. Share the store link with your audience.',
+    body: 'Upload your digital file, set a price in USD, NGN, GHS, or KES, and publish. Share your product link with your audience anywhere they follow you.',
   },
   {
     who: 'Buyer',
@@ -43,7 +42,7 @@ export default function HowItWorksPage() {
           {flow.map((step, i) => (
             <li
               key={step.title}
-              className="rounded-xl border border-border bg-bg-elevated p-6 shadow-[var(--shadow-card)]"
+              className="rounded-xl border border-border bg-bg-elevated p-6 shadow-card"
             >
               <div className="flex items-center gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-fg-on-accent">
@@ -66,12 +65,10 @@ export default function HowItWorksPage() {
             bank accounts across borders. Keeping those roles clear means fewer failed payouts and
             a money trail you can explain to finance (or yourself at tax time).
           </p>
-          <Link href="/signup" className="mt-6 inline-block">
-            <Button className="gap-2 bg-accent hover:bg-accent-hover">
-              Start selling
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button href="/signup" className="mt-6 gap-2 bg-accent hover:bg-accent-hover">
+            Start selling
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </MarketingShell>

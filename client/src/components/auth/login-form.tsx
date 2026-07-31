@@ -34,7 +34,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm shadow-[var(--shadow-lift)]">
+    <Card className="w-full max-w-sm shadow-lift">
       <CardHeader>
         <Link href="/" className="mb-2 flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-xs font-bold text-fg-on-accent">
