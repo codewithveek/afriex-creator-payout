@@ -10,7 +10,7 @@ const flow = [
   },
   {
     who: 'Buyer',
-    title: 'Pay with Paystack or Flutterwave',
+    title: 'Pay with Afriex, Paystack, or Flutterwave',
     body: 'At checkout the buyer chooses a collector. Cards, bank transfer, USSD, and mobile money are available where each collector supports them.',
   },
   {
@@ -34,8 +34,8 @@ export default function HowItWorksPage() {
           The full path from product to payout
         </h1>
         <p className="mt-4 text-lg text-fg-muted">
-          Collection and payout are intentionally separate. Buyers use Paystack or Flutterwave.
-          Creators are paid only through Afriex.
+          Buyers can pay with Afriex Checkout, Paystack, or Flutterwave. Creators are paid out
+          through Afriex.
         </p>
 
         <ol className="mt-12 space-y-6">
@@ -59,11 +59,11 @@ export default function HowItWorksPage() {
         </ol>
 
         <div className="mt-12 rounded-xl bg-bg-inverse p-8 text-fg-on-accent">
-          <h2 className="font-display text-2xl font-semibold">Why this split?</h2>
+          <h2 className="font-display text-2xl font-semibold">Why Afriex?</h2>
           <p className="mt-3 text-sm leading-relaxed text-fg-on-accent/80">
-            Local collectors excel at taking payment. Afriex excels at moving creator earnings to
-            bank accounts across borders. Keeping those roles clear means fewer failed payouts and
-            a money trail you can explain to finance (or yourself at tax time).
+            Afriex is the default collector at checkout and the only rail creators are paid
+            through, so most sales stay on a single money trail end to end. Paystack and
+            Flutterwave remain available at checkout for buyers who prefer them.
           </p>
           <Button href="/signup" className="mt-6 gap-2 bg-accent hover:bg-accent-hover">
             Start selling

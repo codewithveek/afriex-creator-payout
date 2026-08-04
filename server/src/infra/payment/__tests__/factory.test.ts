@@ -9,7 +9,7 @@ vi.mock('../../../config/env', () => ({
     STRIPE_SECRET_KEY: 'sk_test_stripe',
     STRIPE_WEBHOOK_SECRET: 'whsec_test',
     AFRIEX_API_KEY: 'afriex-key',
-    PAYMENT_PROVIDER: 'paystack',
+    PAYMENT_PROVIDER: 'afriex-checkout',
   },
 }));
 
@@ -42,11 +42,11 @@ const {
 } = await import('../factory');
 
 describe('payment factory', () => {
-  it('exposes Paystack, Flutterwave, and Afriex Checkout as selectable collectors', () => {
-    expect(SELECTABLE_COLLECTORS).toEqual(['paystack', 'flutterwave', 'afriex-checkout']);
+  it('exposes Afriex Checkout, Paystack, and Flutterwave as selectable collectors', () => {
+    expect(SELECTABLE_COLLECTORS).toEqual(['afriex-checkout', 'paystack', 'flutterwave']);
   });
 
-  it('lists available collectors including Afriex Checkout', () => {
+  it('lists available collectors with Afriex Checkout as primary', () => {
     const collectors = listAvailableCollectors();
     expect(collectors.length).toBeGreaterThanOrEqual(1);
     const ids = collectors.map((c) => c.id);
@@ -55,10 +55,8 @@ describe('payment factory', () => {
     expect(ids).toContain('afriex-checkout');
 
     const afriex = collectors.find((c) => c.id === 'afriex-checkout');
-    expect(afriex?.primary).toBe(false);
-    expect(collectors.filter((c) => c.primary).map((c) => c.id)).toEqual(
-      expect.arrayContaining(['paystack', 'flutterwave']),
-    );
+    expect(afriex?.primary).toBe(true);
+    expect(collectors.filter((c) => c.primary).map((c) => c.id)).toEqual(['afriex-checkout']);
   });
 
   it('resolves buyer-requested paystack when available', () => {
@@ -74,7 +72,7 @@ describe('payment factory', () => {
   });
 
   it('defaults to first available selectable collector when none requested', () => {
-    expect(resolveCheckoutProvider(undefined)).toBe('paystack');
-    expect(resolveCheckoutProvider(null)).toBe('paystack');
+    expect(resolveCheckoutProvider(undefined)).toBe('afriex-checkout');
+    expect(resolveCheckoutProvider(null)).toBe('afriex-checkout');
   });
 });

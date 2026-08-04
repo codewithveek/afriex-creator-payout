@@ -17,9 +17,7 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().optional(),
 
   // Default collector when the buyer does not pick one.
-  // Buyers primarily select Paystack or Flutterwave at checkout.
-  // Afriex is used only for creator payouts (disbursement), not collection.
-  PAYMENT_PROVIDER: z.enum(['stripe', 'paystack', 'flutterwave', 'afriex-checkout']).default('paystack'),
+  PAYMENT_PROVIDER: z.enum(['stripe', 'paystack', 'flutterwave', 'afriex-checkout']).default('afriex-checkout'),
 
   // Stripe keys — required only when PAYMENT_PROVIDER === 'stripe'
   STRIPE_SECRET_KEY: z.string().optional(),
@@ -40,7 +38,7 @@ const envSchema = z.object({
   R2_BUCKET: z.string().optional().default('afriex-creator-files'),
   R2_PUBLIC_URL: z.string().url().optional(),
 
-  // Afriex — always required for disbursement, also reused by afriex-checkout provider
+  // Afriex — required for both disbursement and the afriex-checkout collector
   AFRIEX_API_KEY: z.string().min(1),
   AFRIEX_ENVIRONMENT: z.enum(['staging', 'production']).optional().default('staging'),
   AFRIEX_WEBHOOK_PUBLIC_KEY: z.string().min(1),

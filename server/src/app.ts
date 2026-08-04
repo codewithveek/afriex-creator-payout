@@ -20,6 +20,9 @@ import { customersRoutes } from './modules/customers/customers.router';
 import { uploadRoutes } from './modules/uploads/uploads.router';
 import { gdprRoutes } from './modules/auth/gdpr.router';
 import { env } from './config/env';
+import { db } from './config/db';
+import { redisConnection } from './infra/queue/redis-connection';
+import { sql } from 'drizzle-orm';
 
 // Per the architecture guide: "app.ts — register plugins, modules — no
 // logic." Every router import above is a self-contained Fastify plugin;
@@ -82,7 +85,24 @@ export async function buildApp() {
   app.setErrorHandler(globalErrorHandler);
   
 
-  app.get('/health', async () => ({ data: { status: 'ok' } }));
+  app.get('/health', async (_request, reply) => {
+    const [dbOk, redisOk] = await Promise.all([
+      db
+        .execute(sql`select 1`)
+        .then(() => true)
+        .catch(() => false),
+      redisConnection
+        .ping()
+        .then(() => true)
+        .catch(() => false),
+    ]);
+
+    const checks = { database: dbOk, redis: redisOk };
+    const healthy = dbOk && redisOk;
+
+    reply.code(healthy ? 200 : 503);
+    return { data: { status: healthy ? 'ok' : 'degraded', checks } };
+  });
 
   await app.register(authRoutes);
   await app.register(creatorsRoutes);

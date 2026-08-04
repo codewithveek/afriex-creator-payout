@@ -82,7 +82,7 @@ async function ProductContent({ params }: Props) {
                 </li>
                 <li className="flex gap-3 text-sm text-fg-muted">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
-                  Secure checkout via Paystack or Flutterwave
+                  Secure checkout via Afriex, Paystack, or Flutterwave
                 </li>
                 <li className="flex gap-3 text-sm text-fg-muted">
                   <FileDown className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />

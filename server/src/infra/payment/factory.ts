@@ -15,14 +15,13 @@ const providers: Record<PaymentProviderName, () => PaymentProvider> = {
 const instanceCache = new Map<PaymentProviderName, PaymentProvider>();
 
 /**
- * Collectors buyers can choose at checkout.
- * Paystack and Flutterwave are primary; Afriex Checkout is also available.
- * Creator *payouts* always go through Afriex disbursement (separate path).
+ * Collectors buyers can choose at checkout, in fallback preference order.
+ * Creator payouts always go through Afriex disbursement (separate path).
  */
 export const SELECTABLE_COLLECTORS: PaymentProviderName[] = [
+  'afriex-checkout',
   'paystack',
   'flutterwave',
-  'afriex-checkout',
 ];
 
 export function getPaymentProvider(name: PaymentProviderName): PaymentProvider {
@@ -44,9 +43,9 @@ export function isCollectorAvailable(name: PaymentProviderName): boolean {
 }
 
 /**
- * Collectors exposed to buyers. Paystack and Flutterwave are primary;
- * Afriex Checkout is also selectable. Falls back to full catalog when no keys
- * are configured (dev convenience).
+ * Collectors exposed to buyers. Afriex Checkout is primary and default;
+ * Paystack and Flutterwave are also selectable. Falls back to full catalog
+ * when no keys are configured (dev convenience).
  */
 export function listAvailableCollectors(): Array<{
   id: PaymentProviderName;
@@ -61,21 +60,21 @@ export function listAvailableCollectors(): Array<{
     primary: boolean;
   }> = [
     {
+      id: 'afriex-checkout',
+      name: 'Afriex Checkout',
+      description: 'Hosted checkout via Afriex (virtual bank account & mobile money)',
+      primary: true,
+    },
+    {
       id: 'paystack',
       name: 'Paystack',
       description: 'Cards, bank transfer, USSD, and mobile money across Africa',
-      primary: true,
+      primary: false,
     },
     {
       id: 'flutterwave',
       name: 'Flutterwave',
       description: 'Cards, bank, and mobile money in 30+ African markets',
-      primary: true,
-    },
-    {
-      id: 'afriex-checkout',
-      name: 'Afriex Checkout',
-      description: 'Hosted checkout via Afriex (virtual bank account & mobile money)',
       primary: false,
     },
   ];
@@ -94,7 +93,7 @@ export function resolveCheckoutProvider(
     return requested;
   }
 
-  // Prefer primary collectors first, then Afriex Checkout
+  // Prefer Afriex Checkout first, then the other selectable collectors
   for (const name of SELECTABLE_COLLECTORS) {
     if (isCollectorAvailable(name)) return name;
   }
@@ -102,5 +101,5 @@ export function resolveCheckoutProvider(
   const fallback = env.PAYMENT_PROVIDER as PaymentProviderName;
   if (isCollectorAvailable(fallback)) return fallback;
 
-  return 'paystack';
+  return 'afriex-checkout';
 }
