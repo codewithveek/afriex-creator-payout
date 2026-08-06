@@ -24,7 +24,6 @@ function makeCreator(overrides: Partial<Creator> = {}): Creator {
   return {
     id: 'creator-1',
     userId: 'user-1',
-    availableBalance: '100.00',
     payoutCurrency: 'USD',
     payoutEligible: true,
     lastWithdrawalAt: null,

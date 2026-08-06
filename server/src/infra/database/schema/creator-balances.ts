@@ -4,12 +4,10 @@ import { currencyEnum } from './enums';
 import { creators } from './creators';
 
 /**
- * Per-currency available balance for a creator.
+ * Per-currency available balance for a creator. This is the single source
+ * of truth for balance — `creators` has no balance column of its own.
  * Sales credit the sale currency; withdrawals debit the withdrawal currency.
  * This prevents NGN earnings from being withdrawn as USD (or vice versa).
- *
- * `creators.availableBalance` is kept as a denormalized mirror of the
- * creator's `payoutCurrency` balance for backward-compatible API consumers.
  */
 export const creatorBalances = pgTable(
   'creator_balances',

@@ -1,18 +1,31 @@
 import { Worker, type Job } from 'bullmq';
+import { ApiError, RateLimitError } from '@afriex/sdk';
 import { redisConnection } from './redis-connection';
 import type { DisbursementJobPayload } from './disbursement-queue';
 import { registerScheduledSweep } from './scheduler';
 import './scheduler';
 import { withdrawalsRepository } from '../../modules/withdrawals/withdrawals.repository';
 import { creatorsRepository } from '../../modules/creators/creators.repository';
+import { notifyWithdrawalOutcome } from '../../modules/withdrawals/withdrawal-notifications';
 import { poolAccountsRepository } from '../../modules/pool-accounts/pool-accounts.repository';
 import { payoutMethodsRepository } from '../../modules/payout-methods/payout-methods.repository';
 import { afriexClient } from '../afriex/afriex-client';
-import { db } from '../../config/db';
-import { users, creators } from '../database/schema';
-import { eq } from 'drizzle-orm';
 import { logger } from '../../config/logger';
-import { sendWithdrawalCompleted, sendWithdrawalFailed } from '../email/email.service';
+
+/**
+ * True only when Afriex explicitly rejected the request (a 4xx response
+ * body we can read, excluding 408/429 which the SDK already retries
+ * transparently). False for timeouts, network errors, and 5xx — none of
+ * those prove the transfer didn't happen, so they must never be treated as
+ * "safe to credit the balance back".
+ */
+function isDefiniteRejection(err: unknown): boolean {
+  if (err instanceof RateLimitError) return false;
+  if (err instanceof ApiError) {
+    return err.statusCode >= 400 && err.statusCode < 500 && err.statusCode !== 408 && err.statusCode !== 429;
+  }
+  return false;
+}
 
 async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<void> {
   const { withdrawalId } = job.data;
@@ -23,8 +36,11 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
     return;
   }
 
-  if (withdrawal.status === 'PAID') {
-    logger.info({ withdrawalId }, 'Withdrawal already PAID, skipping (job retried after success)');
+  if (withdrawal.status === 'PAID' || withdrawal.status === 'PROCESSING') {
+    logger.info(
+      { withdrawalId, status: withdrawal.status },
+      'Withdrawal already reached Afriex on a prior attempt, skipping to avoid double-debiting the pool account',
+    );
     return;
   }
 
@@ -53,7 +69,7 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
     if (transfer.status === 'COMPLETED') {
       await withdrawalsRepository.markPaid(withdrawal.id);
       logger.info({ withdrawalId: withdrawal.id }, 'Disbursement completed synchronously');
-      await notifyUser(withdrawal.creatorId, {
+      await notifyWithdrawalOutcome(withdrawal.creatorId, {
         amount: withdrawal.amount,
         currency: withdrawal.currency,
         status: 'COMPLETED',
@@ -66,16 +82,29 @@ async function processDisbursement(job: Job<DisbursementJobPayload>): Promise<vo
     logger.error({ err, withdrawalId: withdrawal.id }, 'Disbursement attempt failed');
 
     const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
-    if (isFinalAttempt) {
+    if (!isFinalAttempt) {
+      throw err;
+    }
+
+    if (isDefiniteRejection(err)) {
       await failWithdrawal(withdrawal, message);
-      await notifyUser(withdrawal.creatorId, {
+      await notifyWithdrawalOutcome(withdrawal.creatorId, {
         amount: withdrawal.amount,
         currency: withdrawal.currency,
         status: 'FAILED',
         reason: message,
       });
     } else {
-      throw err;
+      // Timeout / 5xx / network error on the final attempt: Afriex may have
+      // already processed the transfer. Do NOT credit the balance back —
+      // that would double-pay the creator if the transfer in fact went
+      // through. Park it for manual reconciliation against Afriex by this
+      // withdrawal's id (the idempotency key sent on every transfer).
+      await withdrawalsRepository.markUnknown(withdrawal.id, message);
+      logger.error(
+        { withdrawalId: withdrawal.id, reason: message },
+        'Disbursement outcome unknown after final attempt — needs manual reconciliation against Afriex',
+      );
     }
   }
 }
@@ -91,29 +120,6 @@ async function failWithdrawal(
     withdrawal.currency as 'USD' | 'NGN' | 'GHS' | 'KES',
   );
   logger.warn({ withdrawalId: withdrawal.id, reason }, 'Withdrawal failed, balance credited back');
-}
-
-async function notifyUser(
-  creatorId: string,
-  params: { amount: string; currency: string; status: string; reason?: string },
-): Promise<void> {
-  try {
-    const creator = await db.query.creators.findFirst({
-      where: (c, { eq: e }) => e(c.id, creatorId),
-      with: { user: true },
-    });
-    if (!creator?.user) return;
-
-    const user = { id: creator.user.id, email: creator.user.email, name: creator.user.name };
-
-    if (params.status === 'COMPLETED') {
-      await sendWithdrawalCompleted({ user, amount: params.amount, currency: params.currency });
-    } else if (params.status === 'FAILED' && params.reason) {
-      await sendWithdrawalFailed({ user, amount: params.amount, currency: params.currency, reason: params.reason });
-    }
-  } catch (err) {
-    logger.error({ err, creatorId }, 'Failed to send withdrawal notification email');
-  }
 }
 
 export const disbursementWorker = new Worker<DisbursementJobPayload>('disbursements', processDisbursement, {

@@ -1,14 +1,14 @@
+import { eq } from 'drizzle-orm';
 import { withdrawalsRepository, type Withdrawal } from './withdrawals.repository';
 import { creatorsRepository, type Creator } from '../creators/creators.repository';
-import type { CurrencyCode } from '../creators/creator-balances.repository';
+import { creatorBalancesRepository, type CurrencyCode } from '../creators/creator-balances.repository';
 import { payoutMethodsService } from '../payout-methods/payout-methods.service';
 import { poolAccountsService } from '../pool-accounts/pool-accounts.service';
 import { enqueueDisbursement } from '../../infra/queue/disbursement-queue';
 import { fromMinorUnits, isAmountGte, isPositiveAmount } from '../../shared/utils/currency';
 import { env } from '../../config/env';
 import { db } from '../../config/db';
-import { users } from '../../infra/database/schema';
-import { eq } from 'drizzle-orm';
+import { users, creators } from '../../infra/database/schema';
 import { logger } from '../../config/logger';
 import {
   BelowMinimumWithdrawalError,
@@ -19,6 +19,11 @@ import {
 } from '../../shared/errors';
 
 const COOLDOWN_MS = env.WITHDRAWAL_COOLDOWN_HOURS * 60 * 60 * 1000;
+
+function cooldownRemainingHours(lastWithdrawalAt: Date): number {
+  const elapsedMs = Date.now() - lastWithdrawalAt.getTime();
+  return Math.ceil((COOLDOWN_MS - elapsedMs) / (60 * 60 * 1000));
+}
 
 export const withdrawalsService = {
   async requestOnDemandWithdrawal(
@@ -65,6 +70,12 @@ export const withdrawalsService = {
 
     const poolAccount = await poolAccountsService.getByCurrencyOrThrow(withdrawCurrency);
 
+    // The checks above are for a fast, friendly error message — they read
+    // outside any lock and can be stale by the time we get here. The
+    // transaction inside createAndQueue re-validates the cooldown and
+    // balance under a row lock / conditional update, so a second concurrent
+    // request from the same creator cannot slip past both checks and debit
+    // twice.
     return this.createAndQueue({
       creator,
       payoutMethodId: payoutMethod.id,
@@ -129,25 +140,62 @@ export const withdrawalsService = {
       throw new InsufficientBalanceError(available, params.amount);
     }
 
-    const withdrawal = await withdrawalsRepository.create({
-      creatorId: params.creator.id,
-      payoutMethodId: params.payoutMethodId,
-      poolAccountId: params.poolAccountId,
-      amount: params.amount,
-      currency: params.currency,
-      trigger: params.trigger,
-      status: 'QUEUED',
-    });
+    // Everything that reserves funds happens in one transaction: lock the
+    // creator row (serializing concurrent withdrawal attempts from the same
+    // creator), re-check the cooldown against that locked row, debit the
+    // balance with a conditional UPDATE that can't take it negative, create
+    // the withdrawal row, and stamp lastWithdrawalAt — all or nothing. A
+    // crash between any of these steps rolls the whole thing back instead
+    // of leaving a QUEUED withdrawal against funds that were never debited.
+    const withdrawal = await db.transaction(async (tx) => {
+      const [lockedCreator] = await tx
+        .select({ lastWithdrawalAt: creators.lastWithdrawalAt })
+        .from(creators)
+        .where(eq(creators.id, params.creator.id))
+        .for('update');
 
-    await creatorsRepository.decrementBalance(
-      params.creator.id,
-      params.amount,
-      params.currency,
-    );
-    await creatorsRepository.setLastWithdrawalAt(params.creator.id, new Date());
+      if (lockedCreator?.lastWithdrawalAt) {
+        const elapsedMs = Date.now() - lockedCreator.lastWithdrawalAt.getTime();
+        if (elapsedMs < COOLDOWN_MS) {
+          throw new WithdrawalCooldownError(cooldownRemainingHours(lockedCreator.lastWithdrawalAt));
+        }
+      }
+
+      const debited = await creatorBalancesRepository.decrement(
+        params.creator.id,
+        params.currency,
+        params.amount,
+        tx,
+      );
+      if (!debited) {
+        const available = await creatorBalancesRepository.getBalance(params.creator.id, params.currency, tx);
+        throw new InsufficientBalanceError(available, params.amount);
+      }
+
+      const row = await withdrawalsRepository.create(
+        {
+          creatorId: params.creator.id,
+          payoutMethodId: params.payoutMethodId,
+          poolAccountId: params.poolAccountId,
+          amount: params.amount,
+          currency: params.currency,
+          trigger: params.trigger,
+          status: 'QUEUED',
+        },
+        tx,
+      );
+
+      await creatorsRepository.setLastWithdrawalAt(params.creator.id, new Date(), tx);
+
+      return row;
+    });
 
     await enqueueDisbursement(withdrawal.id);
 
+    // Confirmation email is best-effort and outside the critical path — it
+    // must never fail (or even slow down) a withdrawal that already
+    // succeeded and was already queued for disbursement. sendWithdrawalConfirmation
+    // already catches and logs its own errors internally.
     const user = await db.query.users.findFirst({ where: eq(users.id, params.creator.userId) });
     if (user) {
       const { sendWithdrawalConfirmation } = await import('../../infra/email/email.service');
@@ -177,8 +225,7 @@ export const withdrawalsService = {
 
     const elapsedMs = Date.now() - creator.lastWithdrawalAt.getTime();
     if (elapsedMs < COOLDOWN_MS) {
-      const remainingHours = Math.ceil((COOLDOWN_MS - elapsedMs) / (60 * 60 * 1000));
-      throw new WithdrawalCooldownError(remainingHours);
+      throw new WithdrawalCooldownError(cooldownRemainingHours(creator.lastWithdrawalAt));
     }
   },
 

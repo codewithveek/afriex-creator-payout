@@ -35,4 +35,9 @@ describe('currency utils', () => {
     expect(fromMinorUnits(1250, 'USD')).toBe('12.50');
     expect(fromMinorUnits(toMinorUnits('500.00', 'NGN'), 'NGN')).toBe('500.00');
   });
+
+  it('toMinorUnits handles negative amounts', () => {
+    expect(toMinorUnits('-12.50', 'USD')).toBe(-1250);
+    expect(toMinorUnits('-0.01', 'USD')).toBe(-1);
+  });
 });

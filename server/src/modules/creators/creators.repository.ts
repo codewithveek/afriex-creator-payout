@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
-import { db } from '../../config/db';
-import { creators } from '../../infra/database/schema';
+import { eq, and, gt } from 'drizzle-orm';
+import { db, type Executor } from '../../config/db';
+import { creators, creatorBalances } from '../../infra/database/schema';
 import {
   creatorBalancesRepository,
   type CurrencyCode,
@@ -54,20 +54,23 @@ export const creatorsRepository = {
     creatorId: string,
     amount: string,
     currency: CurrencyCode,
+    executor: Executor = db,
   ): Promise<void> {
-    await creatorBalancesRepository.increment(creatorId, currency, amount);
+    await creatorBalancesRepository.increment(creatorId, currency, amount, executor);
   },
 
+  /** Returns false (without touching the balance) if funds are insufficient. */
   async decrementBalance(
     creatorId: string,
     amount: string,
     currency: CurrencyCode,
-  ): Promise<void> {
-    await creatorBalancesRepository.decrement(creatorId, currency, amount);
+    executor: Executor = db,
+  ): Promise<boolean> {
+    return creatorBalancesRepository.decrement(creatorId, currency, amount, executor);
   },
 
-  async getBalance(creatorId: string, currency: CurrencyCode): Promise<string> {
-    return creatorBalancesRepository.getBalance(creatorId, currency);
+  async getBalance(creatorId: string, currency: CurrencyCode, executor: Executor = db): Promise<string> {
+    return creatorBalancesRepository.getBalance(creatorId, currency, executor);
   },
 
   async listBalances(creatorId: string) {
@@ -81,8 +84,8 @@ export const creatorsRepository = {
       .where(eq(creators.id, creatorId));
   },
 
-  async setLastWithdrawalAt(creatorId: string, when: Date): Promise<void> {
-    await db
+  async setLastWithdrawalAt(creatorId: string, when: Date, executor: Executor = db): Promise<void> {
+    await executor
       .update(creators)
       .set({ lastWithdrawalAt: when, updatedAt: new Date() })
       .where(eq(creators.id, creatorId));
@@ -109,16 +112,6 @@ export const creatorsRepository = {
 
     if (row && input.payoutCurrency) {
       await creatorBalancesRepository.ensureRow(creatorId, input.payoutCurrency as CurrencyCode);
-      const bal = await creatorBalancesRepository.getBalance(
-        creatorId,
-        input.payoutCurrency as CurrencyCode,
-      );
-      const [synced] = await db
-        .update(creators)
-        .set({ availableBalance: bal, updatedAt: new Date() })
-        .where(eq(creators.id, creatorId))
-        .returning();
-      return synced ? decryptCreatorPhone(synced) : decryptCreatorPhone(row);
     }
 
     // Opportunistic upgrade of legacy plaintext phone
@@ -133,35 +126,21 @@ export const creatorsRepository = {
   /**
    * Creators eligible for the scheduled disbursement sweep:
    * payout-eligible with a positive balance in their payout currency.
+   * Single join against `creator_balances` — no per-creator query in a loop.
    */
   async findEligibleForScheduledSweep(): Promise<Creator[]> {
-    const eligible = await db.query.creators.findMany({
-      where: eq(creators.payoutEligible, true),
-    });
+    const rows = await db
+      .select({ creator: creators })
+      .from(creators)
+      .innerJoin(
+        creatorBalances,
+        and(
+          eq(creatorBalances.creatorId, creators.id),
+          eq(creatorBalances.currency, creators.payoutCurrency),
+        ),
+      )
+      .where(and(eq(creators.payoutEligible, true), gt(creatorBalances.availableBalance, '0')));
 
-    const result: Creator[] = [];
-    for (const creator of eligible) {
-      const bal = await creatorBalancesRepository.getBalance(
-        creator.id,
-        creator.payoutCurrency as CurrencyCode,
-      );
-      if (gtNumeric(bal, '0')) {
-        // Reflect ledger into legacy field so callers reading availableBalance are correct
-        if (creator.availableBalance !== bal) {
-          await db
-            .update(creators)
-            .set({ availableBalance: bal })
-            .where(eq(creators.id, creator.id));
-          result.push({ ...creator, availableBalance: bal });
-        } else {
-          result.push(creator);
-        }
-      }
-    }
-    return result;
+    return rows.map((r) => decryptCreatorPhone(r.creator));
   },
 };
-
-function gtNumeric(a: string, b: string): boolean {
-  return Math.round(Number(a) * 100) > Math.round(Number(b) * 100);
-}

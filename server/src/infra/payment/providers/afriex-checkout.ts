@@ -1,20 +1,16 @@
 import crypto from 'node:crypto';
-import { WebhookVerifier, WEBHOOK_SIGNATURE_HEADER } from '@afriex/sdk';
+import { WebhookVerifier } from '@afriex/sdk';
+import { afriex } from '../../afriex/afriex-client';
 import { env } from '../../../config/env';
 import { ValidationError } from '../../../shared/errors';
 import { logger } from '../../../config/logger';
+import { toMinorUnits } from '../../../shared/utils/currency';
 import type {
   PaymentProvider,
   CreateCheckoutSessionParams,
   CheckoutSessionResponse,
   PaymentWebhookEvent,
 } from '../types';
-
-interface AfriexCheckoutResponse {
-  data: {
-    checkoutUrl: string;
-  };
-}
 
 interface AfriexWebhookPayload {
   event: string;
@@ -30,44 +26,33 @@ interface AfriexWebhookPayload {
 
 export class AfriexCheckoutProvider implements PaymentProvider {
   readonly name = 'afriex-checkout' as const;
-  private readonly baseUrl =
-    env.AFRIEX_ENVIRONMENT === 'staging' ? 'https://sandbox.api.afriex.com' : 'https://api.afriex.com';
 
   async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<CheckoutSessionResponse> {
     const merchantReference = `co-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
-    const res = await fetch(`${this.baseUrl}/api/v1/checkout-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': env.AFRIEX_API_KEY,
+    // Goes through the shared `afriex` SDK client (same one used for
+    // disbursement) instead of a hand-built fetch — this gets the SDK's
+    // retry policy on transient failures, its own request validation
+    // (channels, HTTPS redirect URL, metadata shape), and one place that
+    // maps AFRIEX_ENVIRONMENT to a base URL instead of two.
+    const session = await afriex.checkout.createSession({
+      amount: toMinorUnits(params.amount, params.currency),
+      currency: params.currency,
+      merchantReference,
+      redirectUrl: params.successUrl,
+      customer: {
+        phone: params.customerPhone ?? params.metadata.customerPhone ?? '+2340000000000',
+        name: params.customerName,
+        email: params.customerEmail,
+        countryCode: params.metadata.countryCode ?? 'NG',
       },
-      body: JSON.stringify({
-        amount: Math.round(Number.parseFloat(params.amount) * 100),
-        currency: params.currency,
-        merchantReference,
-        redirectUrl: params.successUrl,
-        customer: {
-          phone: params.customerPhone ?? params.metadata.customerPhone ?? '+2340000000000',
-          name: params.customerName,
-          email: params.customerEmail,
-          countryCode: params.metadata.countryCode ?? 'NG',
-        },
-        channels: ['CARD', 'VIRTUAL_BANK_ACCOUNT', 'MOBILE_MONEY'],
-        metadata: params.metadata,
-      }),
+     channels: ['CARD','VIRTUAL_BANK_ACCOUNT', 'MOBILE_MONEY'],
+      metadata: params.metadata,
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Afriex Checkout API error: ${err}`);
-    }
-
-    const json = (await res.json()) as AfriexCheckoutResponse;
 
     return {
       sessionId: merchantReference,
-      sessionUrl: json.data.checkoutUrl,
+      sessionUrl: session.checkoutUrl,
       provider: this.name,
     };
   }

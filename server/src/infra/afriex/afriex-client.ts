@@ -1,5 +1,6 @@
 import { AfriexSDK, Environment, type TransactionWebhookPayload } from '@afriex/sdk';
 import { env } from '../../config/env';
+import { logger } from '../../config/logger';
 
 const environment = env.AFRIEX_ENVIRONMENT === 'staging' ? Environment.STAGING : Environment.PRODUCTION;
 
@@ -50,6 +51,21 @@ function mapTransactionStatus(status: string): 'PENDING' | 'COMPLETED' | 'FAILED
   return 'PENDING';
 }
 
+function normalizeName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function namesMatch(resolvedName: string, creatorName: string): boolean {
+  const a = normalizeName(resolvedName);
+  const b = normalizeName(creatorName);
+  return a.length > 0 && a === b;
+}
+
 export const afriexClient = {
   async registerRecipient(params: RegisterRecipientParams): Promise<RegisterRecipientResult> {
     const customer = await afriex.customers.create({
@@ -59,10 +75,33 @@ export const afriexClient = {
       countryCode: params.countryCode,
     });
 
+    // Resolve the account before trusting it. A payment method is only
+    // VERIFIED when Afriex's own account-resolution endpoint returns an
+    // account-holder name matching the creator's name on file — creating
+    // the payment method alone proves nothing about whether the account
+    // number is real or belongs to this creator.
+    let verified = false;
+    let resolvedAccountName: string | undefined;
+    try {
+      const resolved = await afriex.paymentMethods.resolveAccount({
+        channel: 'BANK_ACCOUNT',
+        accountNumber: params.accountNumber,
+        institutionCode: params.bankCode,
+        countryCode: params.countryCode,
+      });
+      resolvedAccountName = resolved.recipientName;
+      verified = resolvedAccountName ? namesMatch(resolvedAccountName, params.fullName) : false;
+    } catch (err) {
+      logger.warn(
+        { err, accountNumber: params.accountNumber.slice(-4) },
+        'Afriex account resolution failed; payout method will be left PENDING',
+      );
+    }
+
     const paymentMethod = await afriex.paymentMethods.create({
       channel: 'BANK_ACCOUNT',
       customerId: customer.customerId,
-      accountName: params.fullName,
+      accountName: resolvedAccountName ?? params.fullName,
       accountNumber: params.accountNumber,
       countryCode: params.countryCode,
       institution: {
@@ -74,7 +113,7 @@ export const afriexClient = {
     return {
       afriexCustomerId: customer.customerId,
       afriexPaymentMethodId: paymentMethod.paymentMethodId,
-      verified: true,
+      verified,
     };
   },
 
@@ -99,11 +138,17 @@ export const afriexClient = {
     };
   },
 
-  async getPoolAccountBalance(_afriexAccountId: string): Promise<{ balance: string }> {
+  /**
+   * Returns the pool balance per currency. Never collapse this into a
+   * single total — USD, NGN, GHS, and KES are different units of value,
+   * and summing them produces a number with no meaning.
+   */
+  async getPoolAccountBalances(): Promise<Record<string, string>> {
     const currencies = ['USD', 'NGN', 'GHS', 'KES'];
     const balances = await afriex.balance.getBalance({ currencies });
-    const total = Object.values(balances).reduce((sum, b) => sum + b, 0);
-    return { balance: String(total) };
+    return Object.fromEntries(
+      Object.entries(balances).map(([currency, amount]) => [currency, amount.toFixed(2)]),
+    );
   },
 };
 

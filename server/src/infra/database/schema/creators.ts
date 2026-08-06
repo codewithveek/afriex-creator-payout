@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, numeric, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { currencyEnum } from './enums';
 import { users } from './users';
@@ -9,9 +9,12 @@ import { withdrawals } from './withdrawals';
 
 // One row per creator user.
 //
-// Multi-currency balances live in `creator_balances`. `availableBalance`
-// here is a denormalized mirror of the balance for `payoutCurrency` only,
-// kept for backward-compatible API responses and scheduled-sweep filters.
+// Multi-currency balances live in `creator_balances` — that table is the
+// single source of truth for balance. There is deliberately no denormalized
+// balance mirror on this table; a mirror that isn't written inside the same
+// transaction as the ledger it mirrors will drift, and API responses that
+// need a creator's payout-currency balance (creatorsService.getProfileWithBalances)
+// read it from `creator_balances` directly instead.
 // Always credit/debit via creatorsRepository.incrementBalance /
 // decrementBalance with an explicit currency.
 //
@@ -34,9 +37,6 @@ export const creators = pgTable(
     phoneHash: varchar('phone_hash', { length: 64 }),
     country: varchar('country', { length: 2 }).notNull().default('NG'),
 
-    availableBalance: numeric('available_balance', { precision: 14, scale: 2 })
-      .notNull()
-      .default('0.00'),
     payoutCurrency: currencyEnum('payout_currency').notNull().default('USD'),
 
     payoutEligible: boolean('payout_eligible').notNull().default(false),
@@ -49,12 +49,11 @@ export const creators = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    // The scheduled sweep query is: WHERE payout_eligible = true AND
+    // The scheduled sweep query is: WHERE payout_eligible = true, joined to
+    // creator_balances on (creator_id, currency = payout_currency) with
     // available_balance > 0. Composite index on (payout_eligible, currency)
     // supports filtering eligible creators grouped by which pool account
-    // they draw from, satisfying the Equality->Sort->Range index pattern
-    // (equality on both columns, the balance > 0 range scan benefits from
-    // the resulting narrow row set rather than needing its own index).
+    // they draw from, satisfying the Equality->Sort->Range index pattern.
     index('idx_creators_eligible_currency').on(table.payoutEligible, table.payoutCurrency),
     index('idx_creators_phone_hash').on(table.phoneHash),
     index('idx_creators_user_id').on(table.userId),

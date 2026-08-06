@@ -37,7 +37,11 @@ export const withdrawalStatusEnum = pgEnum('withdrawal_status', [
   'QUEUED', // created, balance reserved, waiting for worker to pick up
   'PROCESSING', // worker has called Afriex, awaiting webhook confirmation
   'PAID', // Afriex confirmed disbursement complete
-  'FAILED', // Afriex rejected or errored — balance must be credited back
+  'FAILED', // Afriex rejected the transfer outright — balance credited back
+  'UNKNOWN', // Afriex call errored ambiguously (timeout/5xx/network) — the
+  // transfer may or may not have gone through. Balance is NOT credited back
+  // until an operator reconciles this against Afriex by the withdrawal id
+  // (used as the idempotency key on every transfer we create).
 ]);
 
 // What triggered this withdrawal — kept distinct from status for reporting.

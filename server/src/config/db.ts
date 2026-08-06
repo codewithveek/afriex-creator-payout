@@ -12,3 +12,10 @@ const queryClient = postgres(env.DATABASE_URL, {
 
 export const db = drizzle(queryClient, { schema });
 export type Database = typeof db;
+
+// The type `tx` is given inside `db.transaction(async (tx) => ...)`.
+// Repository methods that need to participate in a caller's transaction
+// accept `Database | Tx` (defaulting to the top-level `db`) so the same
+// method works standalone or inside `db.transaction`.
+export type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
+export type Executor = Database | Tx;

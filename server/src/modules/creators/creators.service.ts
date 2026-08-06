@@ -9,6 +9,7 @@ export type UpdateCreatorProfile = {
 };
 
 export type CreatorProfile = Creator & {
+  availableBalance: string;
   balances: Array<{ currency: string; availableBalance: string }>;
 };
 

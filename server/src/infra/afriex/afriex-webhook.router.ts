@@ -3,12 +3,18 @@ import { WebhookVerifier, WEBHOOK_SIGNATURE_HEADER } from '@afriex/sdk';
 import type { TransactionWebhookPayload } from '@afriex/sdk';
 import { withdrawalsRepository } from '../../modules/withdrawals/withdrawals.repository';
 import { creatorsRepository } from '../../modules/creators/creators.repository';
+import { notifyWithdrawalOutcome } from '../../modules/withdrawals/withdrawal-notifications';
 import { poolAccountsRepository } from '../../modules/pool-accounts/pool-accounts.repository';
 import { env } from '../../config/env';
 import { logger } from '../../config/logger';
 import { ValidationError } from '../../shared/errors';
 
 const webhookVerifier = new WebhookVerifier(env.AFRIEX_WEBHOOK_PUBLIC_KEY);
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUuid(value: string | undefined): value is string {
+  return typeof value === 'string' && UUID_RE.test(value);
+}
 
 async function handleAfriexWebhook(
   request: FastifyRequest<{ Body: Buffer }>,
@@ -29,11 +35,21 @@ async function handleAfriexWebhook(
     return reply.code(200).send({ data: { received: true } });
   }
 
-  const { transactionId, status } = payload.data;
+  const { transactionId, status, meta } = payload.data;
 
-  const withdrawal = await withdrawalsRepository.findByAfriexTransactionId(transactionId);
+  // The worker sends `withdrawal.id` as the transfer's idempotency key
+  // before it ever calls Afriex (see afriexClient.createTransfer /
+  // worker.ts), so it exists in our DB before the request is even sent.
+  // Looking it up here — instead of by `afriexTransactionId`, which is only
+  // written after the transfer call returns — closes the race where a fast
+  // webhook arrives before that write lands and gets silently dropped.
+  const idempotencyKey = meta?.idempotencyKey;
+  const withdrawal = isUuid(idempotencyKey)
+    ? await withdrawalsRepository.findById(idempotencyKey)
+    : await withdrawalsRepository.findByAfriexTransactionId(transactionId);
+
   if (!withdrawal) {
-    logger.warn({ transactionId }, 'Afriex webhook for unknown transaction');
+    logger.warn({ transactionId, idempotencyKey }, 'Afriex webhook for unknown transaction');
     return reply.code(200).send({ data: { received: true } });
   }
 
@@ -45,8 +61,14 @@ async function handleAfriexWebhook(
   if (status === 'COMPLETED' || status === 'SUCCESS') {
     await withdrawalsRepository.markPaid(withdrawal.id);
     logger.info({ withdrawalId: withdrawal.id }, 'Withdrawal confirmed PAID via Afriex webhook');
+    await notifyWithdrawalOutcome(withdrawal.creatorId, {
+      amount: withdrawal.amount,
+      currency: withdrawal.currency,
+      status: 'COMPLETED',
+    });
   } else if (status === 'FAILED' || status === 'CANCELLED' || status === 'REJECTED') {
-    await withdrawalsRepository.markFailed(withdrawal.id, `Afriex reported ${status}`);
+    const reason = `Afriex reported ${status}`;
+    await withdrawalsRepository.markFailed(withdrawal.id, reason);
     await creatorsRepository.incrementBalance(
       withdrawal.creatorId,
       withdrawal.amount,
@@ -54,6 +76,12 @@ async function handleAfriexWebhook(
     );
     await poolAccountsRepository.incrementBalance(withdrawal.poolAccountId, withdrawal.amount);
     logger.warn({ withdrawalId: withdrawal.id }, 'Withdrawal FAILED via Afriex webhook, balances credited back');
+    await notifyWithdrawalOutcome(withdrawal.creatorId, {
+      amount: withdrawal.amount,
+      currency: withdrawal.currency,
+      status: 'FAILED',
+      reason,
+    });
   }
 
   return reply.code(200).send({ data: { received: true } });

@@ -9,12 +9,16 @@ const MINOR_UNITS_PER_MAJOR: Record<string, number> = {
   KES: 100,
 };
 
-/** Converts a major-unit decimal string (e.g. "12.50") to integer minor units (1250). */
+/** Converts a major-unit decimal string (e.g. "12.50" or "-12.50") to integer minor units (1250 or -1250). */
 export function toMinorUnits(amount: string, currency: string): number {
   const factor = MINOR_UNITS_PER_MAJOR[currency] ?? 100;
-  const [whole, fraction = ''] = amount.split('.');
+  const trimmed = amount.trim();
+  const negative = trimmed.startsWith('-');
+  const unsigned = negative ? trimmed.slice(1) : trimmed;
+  const [whole, fraction = ''] = unsigned.split('.');
   const paddedFraction = fraction.padEnd(2, '0').slice(0, 2);
-  return Number(whole) * factor + Number(paddedFraction);
+  const magnitude = Number(whole) * factor + Number(paddedFraction);
+  return negative ? -magnitude : magnitude;
 }
 
 /** Converts integer minor units (1250) back to a major-unit decimal string ("12.50"). */
@@ -33,15 +37,23 @@ export function formatMoney(amount: string, currency: string): string {
   }).format(value);
 }
 
-/** Adds two decimal amount strings without floating-point drift, returns a decimal string. */
+/**
+ * Adds two decimal amount strings, returns a decimal string. Scales to
+ * integer cents first so the *addition* itself is exact integer arithmetic.
+ * Note this still parses through `Number(a) * 100`, which is a
+ * floating-point multiply — it is not decimal-exact arithmetic. It is safe
+ * in practice only because amounts here have at most 2 decimal places and
+ * stay far below Number.MAX_SAFE_INTEGER, so the multiply's representation
+ * error is smaller than 0.5 and `Math.round` discards it. For amounts with
+ * more precision or closer to that limit, use a decimal library instead.
+ */
 export function addAmounts(a: string, b: string): string {
-  // Scale to integer cents, add, scale back — avoids binary float error.
   const aCents = Math.round(Number(a) * 100);
   const bCents = Math.round(Number(b) * 100);
   return ((aCents + bCents) / 100).toFixed(2);
 }
 
-/** Subtracts b from a as decimal amount strings, returns a decimal string. */
+/** Subtracts b from a as decimal amount strings, returns a decimal string. Same float caveat as addAmounts. */
 export function subtractAmounts(a: string, b: string): string {
   const aCents = Math.round(Number(a) * 100);
   const bCents = Math.round(Number(b) * 100);

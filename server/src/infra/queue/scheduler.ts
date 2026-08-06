@@ -10,18 +10,27 @@ import { logger } from '../../config/logger';
 // "every 2 weeks" as a single cron string); "monthly" runs on the 1st.
 const CADENCE_CRON: Record<typeof env.SCHEDULED_DISBURSEMENT_CADENCE, string> = {
   weekly: '0 9 * * 1',
-  biweekly: '0 9 * * 1', // fires weekly; isBiweeklyWindow() below skips alternate weeks
+  biweekly: '0 9 * * 1', // fires weekly; shouldRunBiweeklySweep() below skips alternate weeks
   monthly: '0 9 1 * *',
 };
 
-function isBiweeklyWindow(date: Date): boolean {
-  // ISO week number parity determines whether this Monday counts as a
-  // "biweekly" disbursement week. Simple and deterministic — no external
-  // state needed to track which week was last run.
-  const firstJanFour = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
-  const dayDiff = (date.getTime() - firstJanFour.getTime()) / 86_400_000;
-  const week = 1 + Math.round((dayDiff - ((firstJanFour.getUTCDay() + 6) % 7)) / 7);
-  return week % 2 === 0;
+const BIWEEKLY_LAST_RUN_KEY = 'scheduler:biweekly:last-run-at';
+// 13 days, not 14: a cron that fires a few minutes early (or a worker
+// restart that reschedules slightly off-beat) must never get skipped for
+// an extra week. Tracking a persisted last-run timestamp (instead of
+// deriving "is this an even/odd week" from the calendar) is what makes this
+// immune to year boundaries — a year with 53 ISO weeks flips calendar-week
+// parity and either doubles up or skips a sweep under the old approach.
+const BIWEEKLY_INTERVAL_MS = 13 * 24 * 60 * 60 * 1000;
+
+async function shouldRunBiweeklySweep(now: Date): Promise<boolean> {
+  const lastRunIso = await redisConnection.get(BIWEEKLY_LAST_RUN_KEY);
+  if (!lastRunIso) return true;
+  return now.getTime() - new Date(lastRunIso).getTime() >= BIWEEKLY_INTERVAL_MS;
+}
+
+async function recordBiweeklySweepRun(now: Date): Promise<void> {
+  await redisConnection.set(BIWEEKLY_LAST_RUN_KEY, now.toISOString());
 }
 
 const SCHEDULER_QUEUE_NAME = 'scheduled-disbursement-sweep';
@@ -47,11 +56,17 @@ export async function registerScheduledSweep(): Promise<void> {
 export const schedulerWorker = new Worker(
   SCHEDULER_QUEUE_NAME,
   async () => {
-    if (env.SCHEDULED_DISBURSEMENT_CADENCE === 'biweekly' && !isBiweeklyWindow(new Date())) {
-      logger.info('Biweekly cadence configured, this week is off-cycle, skipping sweep');
+    const now = new Date();
+    if (env.SCHEDULED_DISBURSEMENT_CADENCE === 'biweekly' && !(await shouldRunBiweeklySweep(now))) {
+      logger.info('Biweekly cadence configured, last sweep was under 13 days ago, skipping this week');
       return;
     }
+
     await withdrawalsService.runScheduledSweep();
+
+    if (env.SCHEDULED_DISBURSEMENT_CADENCE === 'biweekly') {
+      await recordBiweeklySweepRun(now);
+    }
   },
   { connection: redisConnection },
 );
