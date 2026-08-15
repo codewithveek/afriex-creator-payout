@@ -58,7 +58,7 @@ async function handleAfriexWebhook(
     return reply.code(200).send({ data: { received: true } });
   }
 
-  if (status === 'COMPLETED' || status === 'SUCCESS') {
+ if (status === 'SUCCESS') {
     await withdrawalsRepository.markPaid(withdrawal.id);
     logger.info({ withdrawalId: withdrawal.id }, 'Withdrawal confirmed PAID via Afriex webhook');
     await notifyWithdrawalOutcome(withdrawal.creatorId, {

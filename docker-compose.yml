@@ -31,6 +31,78 @@ services:
       timeout: 5s
       retries: 10
 
+  # One-shot: runs schema migrations and provisions the per-currency pool
+  # accounts, then exits. The seed script skips pool accounts that already
+  # exist, so re-running is safe.
+  # NOTE: better-auth manages its own tables with its own migration CLI;
+  # run that step manually the first time (see the README).
+  migrate:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    working_dir: /repo/server
+    # Calls the binaries directly rather than the db:migrate / db:seed scripts:
+    # those pass `tsx --env-file=.env`, and .env is deliberately kept out of the
+    # image (see .dockerignore). Compose already injects the same vars below.
+    command: sh -c "pnpm exec drizzle-kit migrate && pnpm exec tsx src/infra/database/seed.ts"
+    env_file: server/.env
+    environment:
+      DATABASE_URL: postgresql://afriex:afriex_dev_password@postgres:5432/afriex_creator_payout
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: afriex-creator-server
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    env_file: server/.env
+    environment:
+      # Override localhost values from .env with compose service hostnames
+      DATABASE_URL: postgresql://afriex:afriex_dev_password@postgres:5432/afriex_creator_payout
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: afriex-creator-worker
+    restart: unless-stopped
+    command: ['node', 'server/dist/infra/queue/worker.js']
+    env_file: server/.env
+    environment:
+      DATABASE_URL: postgresql://afriex:afriex_dev_password@postgres:5432/afriex_creator_payout
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        # Must be reachable from the BROWSER, hence localhost, not "server"
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    container_name: afriex-creator-client
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    depends_on:
+      - server
+
 volumes:
   postgres-data:
   redis-data:

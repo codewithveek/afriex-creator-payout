@@ -1,0 +1,35 @@
+# The build context for every image is the repo root (see docker-compose.yml).
+#
+# Without this file the context is >1GB, and — far worse — `COPY server/ server/`
+# copies the HOST's server/node_modules over the one pnpm just installed in the
+# image. The host's pnpm links are Windows junctions pointing at host paths, so
+# inside the container they resolve to nothing and the build dies with
+# "Cannot find module '/repo/server/node_modules/typescript/bin/tsc'".
+**/node_modules
+.git
+.gitignore
+
+# Build output: regenerated inside the image
+**/dist
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+
+# Secrets never belong in image layers; compose injects them via env_file
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local editor / OS noise
+**/.DS_Store
+**/Thumbs.db
+**/.vscode
+**/.idea
+**/*.log
+
+# Not needed inside the image
+**/Dockerfile
+.dockerignore
+docker-compose*.yml
+README.md
