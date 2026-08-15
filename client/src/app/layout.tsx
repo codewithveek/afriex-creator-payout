@@ -17,15 +17,15 @@ const display = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Afriex Creators — Buy from creators. Sell what you know.',
+    default: 'Afriex Creators — Find what you need. Sell what you know.',
     template: '%s · Afriex Creators',
   },
   description:
-    'A marketplace for digital work. Buyers get instant downloads and a receipt they can trust. Creators publish in minutes, price in their own currency, and cash out to their bank.',
+    'A marketplace for digital products',
   openGraph: {
     title: 'Afriex Creators',
     description:
-      'Buy from creators. Sell what you know. Instant downloads for buyers, real payouts for creators.',
+      'Find what you need. Sell what you know.',
     type: 'website',
   },
 }

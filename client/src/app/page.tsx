@@ -20,34 +20,34 @@ const marquee = [
 
 const buyerPoints = [
   {
-    title: 'The file is yours the second you pay',
-    body: 'No waiting for someone to email it to you in the morning. The download link appears on screen and in your inbox at the same time.',
+    title: 'Instant access after payment',
+    body: '',
   },
   {
     title: 'Pay the way you already pay',
-    body: 'Card, bank transfer, or mobile money — in the currency the price is listed in. Checkout is encrypted end to end and takes about a minute.',
+    body: 'Card, bank transfer, or mobile money.',
   },
   {
-    title: 'Lost the link? It is not gone',
-    body: 'Every purchase lives on your orders page. Re-issue a fresh download link yourself, any time, without emailing support.',
+    title: "Lost the link? It's not gone",
+    body: 'Access your purchases from the orders page.',
   },
 ]
 
 const sellerPoints = [
   {
     icon: ArrowDownToLine,
-    title: 'Publish in one sitting',
-    body: 'Upload the file, name your price, hit publish. You get a link you can drop in a bio, a status, a newsletter, or a group chat.',
+    title: 'Publish in ten minutes',
+    body: 'Upload the product, name your price, hit publish. You get a link you can share on social media, a newsletter, or a group chat.',
   },
   {
     icon: ShieldCheck,
     title: 'Delivery handles itself',
-    body: 'Buyers are charged, receipted, and sent their download automatically. You are not the fulfilment department at 2am.',
+    body: "Buyers are charged, receipted, and sent their download automatically.",
   },
   {
     icon: Landmark,
     title: 'Cash out to your own bank',
-    body: 'Your balance is real money you can move. Register a bank account once, then withdraw whenever you like, in your local currency.',
+    body: 'Register a bank account once, then withdraw whenever you like, in your local currency.',
   },
 ]
 
@@ -64,7 +64,7 @@ const faqs = [
   {
     audience: 'Buying',
     q: 'What exactly do I get?',
-    a: 'A digital file — the one described on the product page. After payment you get an instant download link on screen, a receipt by email, and a permanent record on your orders page.',
+    a: 'A digital file described on the product page. After payment you get an instant download link on screen, a receipt by email, and a permanent record on your orders page.',
   },
   {
     audience: 'Buying',
@@ -74,22 +74,22 @@ const faqs = [
   {
     audience: 'Buying',
     q: 'Something was wrong with the file. Now what?',
-    a: 'Reply to your receipt. Every order is tied to a named creator and a payment record, so refunds and re-deliveries can be traced and resolved.',
+    a: 'Reply to your receipt. so refunds and re-deliveries can be traced and resolved.',
   },
   {
     audience: 'Selling',
     q: 'What does it cost to sell?',
-    a: 'Nothing to open a shop, nothing monthly, nothing per product. A flat 10% comes out of each sale you actually make — that is the whole pricing page.',
+    a: "Nothing to open a shop, nothing monthly, nothing per product. A flat fee of 10% is charged on each sale you actually make.",
   },
   {
     audience: 'Selling',
     q: 'How fast do I get my money?',
-    a: 'Earnings land in your balance as soon as a sale is confirmed. From there you request a withdrawal to your verified bank account whenever the balance is worth moving.',
+    a: 'Earnings land in your balance as soon as a sale is confirmed. You can request a withdrawal to your verified bank account whenever you want.',
   },
   {
     audience: 'Selling',
     q: 'Can I sell to buyers outside my country?',
-    a: 'Yes. Price in USD, NGN, GHS, or KES, sell to anyone, and still withdraw into your local bank account. Cross-border is the normal case here, not the exception.',
+    a: 'Yes. Price in USD, NGN, GHS, or KES, sell to anyone, and still withdraw into your local bank account.',
   },
 ]
 
@@ -106,9 +106,8 @@ export default function HomePage() {
             <span className="block text-signal">Sell it in ten minutes.</span>
           </h1>
           <p className="rise stagger-2 on-ink prose-lede mt-8 max-w-2xl text-fg-on-inverse-muted">
-            A marketplace for digital work — templates, presets, beat packs, courses, study
-            material. Buyers download the moment they pay. The people who made it keep the profit
-            and move it to their own bank.
+            A marketplace for digital products — templates, presets, beat packs, courses, study
+            material, and more.
           </p>
           <div className="rise stagger-3 mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button href="/discover" size="lg" variant="signal">
@@ -150,8 +149,8 @@ export default function HomePage() {
             </span>
             <h2 className="display-lg mt-5 text-fg">Pay once. Download now. Keep it forever.</h2>
             <p className="prose-lede mt-4 max-w-md text-fg-muted">
-              Everything here is made by a person you can name, priced in a currency you recognise,
-              and delivered before you close the tab.
+              Products made by real people, priced in a currency you recognise,
+              and delivered instantly.
             </p>
             <Button href="/discover" size="lg" className="mt-8">
               Browse the marketplace
@@ -175,7 +174,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="display-md max-w-md text-fg">
-              Somebody has already made the thing you were about to build from scratch
+              Someone has already made the thing you were about to build from scratch
             </h2>
             <Link
               href="/discover"
@@ -217,11 +216,11 @@ export default function HomePage() {
               For creators
             </span>
             <h2 className="display-lg mt-5 text-fg-on-inverse">
-              You made it. You should be the one holding the money.
+              You made it. You should get paid for it.
             </h2>
             <p className="on-ink prose-lede mt-4 text-fg-on-inverse-muted">
-              Selling digital work should not require a company, a merchant account, or a friend
-              abroad to receive payments for you. Publish, sell, withdraw. That is the whole loop.
+              Selling what you make shouldn&apos;t require a company, or a friend
+              abroad to receive payments for you. Publish, sell, withdraw..
             </p>
           </div>
 
@@ -268,11 +267,10 @@ export default function HomePage() {
                 </div>
               </dl>
               <p className="on-ink mt-6 text-sm text-fg-on-inverse-muted">
-                No monthly fee, no listing fee, no charge for the days you do not sell. Every sale
-                shows you the same three lines, so nothing about your balance is a surprise.
+                No monthly fee, no listing fee, no charge for the days you don&apos;t sell.
               </p>
               <Button href="/signup" variant="signal" size="lg" className="mt-7 w-full">
-                Start selling free
+                Open your shop free
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </div>
@@ -283,7 +281,7 @@ export default function HomePage() {
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
         <h2 className="display-md max-w-lg text-fg">
-          The questions people actually ask before their first order
+          Questions people ask before their first order
         </h2>
         <div className="mt-10 grid gap-x-12 gap-y-1 md:grid-cols-2">
           {faqs.map((faq) => (
@@ -317,7 +315,7 @@ export default function HomePage() {
           <div className="rounded-t-2xl border border-border bg-bg-elevated p-8 sm:p-10 md:rounded-l-2xl md:rounded-tr-none md:border-r-0">
             <h2 className="display-md text-fg">Here to buy?</h2>
             <p className="mt-3 max-w-sm leading-relaxed text-fg-muted">
-              Find something that saves you a weekend of work, and have it on your machine before
+              Find something that saves you a weekend of work, and have it before
               you finish your coffee.
             </p>
             <Button href="/discover" size="lg" className="mt-7">
@@ -328,8 +326,7 @@ export default function HomePage() {
           <div className="rounded-b-2xl border border-border-inverse bg-bg-inverse p-8 text-fg-on-inverse sm:p-10 md:rounded-r-2xl md:rounded-bl-none">
             <h2 className="display-md text-fg-on-inverse">Here to sell?</h2>
             <p className="on-ink mt-3 max-w-sm text-fg-on-inverse-muted">
-              You already know something worth paying for. Put it up today and let the first sale
-              tell you the rest.
+              You already know something worth paying for. Put it up today and make your first sale.
             </p>
             <Button href="/signup" variant="signal" size="lg" className="mt-7">
               Open your shop free

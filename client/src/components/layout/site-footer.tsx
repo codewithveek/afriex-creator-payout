@@ -37,8 +37,8 @@ export function SiteFooter() {
           <div>
             <Logo tone="light" />
             <p className="on-ink mt-4 max-w-xs text-sm text-fg-on-inverse-muted">
-              A marketplace for digital work. Buy something useful in two taps, or turn what you
-              know into income that actually reaches your bank.
+              A marketplace for digital products. Buy something useful in two taps, or turn what you
+              know into an income.
             </p>
           </div>
           {columns.map((col) => (
@@ -61,7 +61,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-border-inverse pt-6 text-xs text-fg-on-inverse-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Afriex Creators. All rights reserved.</p>
-          <p>Encrypted checkout · Instant delivery · Payouts to your own bank account</p>
+          <p>Instant delivery · Payouts to your local bank account</p>
         </div>
       </div>
     </footer>

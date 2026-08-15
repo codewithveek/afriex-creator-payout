@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: product.name,
     description:
       product.description?.slice(0, 155) ??
-      `${product.name} — ${price}. Instant download the moment your payment clears.`,
+      `${product.name} — ${price}. Instant download the moment your payment is confirmed.`,
     openGraph: {
       title: `${product.name} · ${price}`,
       description: product.description?.slice(0, 155) ?? 'Instant digital download.',
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const assurances = [
-  { icon: Zap, text: 'Download unlocks the moment payment clears' },
+  { icon: Zap, text: 'Download unlocks the moment payment is confirmed' },
   { icon: Lock, text: 'Encrypted checkout — your card details never touch this site' },
   { icon: RefreshCw, text: 'Link expired? Re-issue it yourself from your orders page' },
 ]
