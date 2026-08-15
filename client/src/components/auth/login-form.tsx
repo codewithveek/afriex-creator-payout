@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 export function LoginForm() {
   const router = useRouter()
@@ -27,49 +26,57 @@ export function LoginForm() {
       router.push('/dashboard')
       router.refresh()
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Login failed')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not sign you in. Check your email and password.',
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-sm shadow-lift">
-      <CardHeader>
-        <Link href="/" className="mb-2 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-xs font-bold text-fg-on-accent">
-            AC
-          </span>
-          <span className="text-sm font-semibold text-fg">Afriex Creators</span>
-        </Link>
-        <h1 className="text-xl font-semibold text-fg">Creator sign in</h1>
-        <p className="text-sm text-fg-muted">Access your dashboard, products, and Afriex payouts</p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-              {error}
-            </div>
-          )}
-          <Input label="Email" name="email" type="email" autoComplete="email" required />
-          <Input label="Password" name="password" type="password" autoComplete="current-password" required />
-          <div className="flex items-center justify-end">
-            <Link href="/forgot-password" className="text-sm font-medium text-accent hover:text-accent-hover">
-              Forgot password?
-            </Link>
+    <div>
+      <h1 className="display-md text-fg">Welcome back</h1>
+      <p className="mt-2 text-fg-muted">Your shop, your sales, and your balance are waiting.</p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        {error && (
+          <div
+            className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+            role="alert"
+          >
+            {error}
           </div>
-          <Button type="submit" loading={loading} className="w-full">
-            Sign in
-          </Button>
-          <p className="text-center text-sm text-fg-muted">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-medium text-accent hover:text-accent-hover">
-              Sign up
-            </Link>
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+        )}
+        <Input label="Email" name="email" type="email" autoComplete="email" required />
+        <Input
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="rounded text-sm font-semibold text-accent underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        </div>
+        <Button type="submit" size="lg" loading={loading} className="w-full">
+          Sign in
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-fg-muted">
+        No shop yet?{' '}
+        <Link href="/signup" className="font-semibold text-accent underline-offset-4 hover:underline">
+          Open one free
+        </Link>
+      </p>
+    </div>
   )
 }

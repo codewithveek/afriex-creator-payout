@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { CountrySelect } from '@/components/ui/country-select'
+import { PageHeader } from '@/components/dashboard/page-header'
 
 const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
 
@@ -36,32 +37,46 @@ export function SettingsClient({ creator }: Props) {
 
     try {
       await api.patch('/api/creators/me', { phone, country, payoutCurrency })
-      setSuccess('Settings saved')
+      setSuccess('Saved. Your next withdrawal will use these details.')
       router.refresh()
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to save settings')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not save that. Check the details and try again.',
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-fg">Settings</h1>
-        <p className="mt-1 text-sm text-fg-muted">Manage your profile and payout preferences</p>
-      </div>
+    <div className="max-w-xl space-y-8">
+      <PageHeader
+        title="Settings"
+        description="Your contact details and the currency your earnings are paid in."
+      />
 
       {error && (
-        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">{error}</div>
+        <div
+          className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
+          {error}
+        </div>
       )}
       {success && (
-        <div className="rounded-lg bg-success-muted p-3 text-sm text-success" role="status">{success}</div>
+        <div
+          className="rounded-lg border border-success/30 bg-success-muted p-3 text-sm font-medium text-success"
+          role="status"
+        >
+          {success}
+        </div>
       )}
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-fg">Profile</h2>
+          <h2 className="font-display text-lg text-fg">Your details</h2>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,23 +87,26 @@ export function SettingsClient({ creator }: Props) {
               type="tel"
               placeholder="+2348012345678"
               required
+              hint="Used to confirm it is really you before money moves."
             />
             <CountrySelect value={country} onChange={setCountry} required />
 
             <Select
-              label="Default payout currency"
+              label="Pay me in"
               id="payoutCurrency"
               value={payoutCurrency}
               onChange={(e) => setPayoutCurrency(e.target.value)}
-              hint="This determines the currency used for payouts. Ensure you have a payout method in this currency."
+              hint="Make sure you have a bank account saved in this currency."
             >
               {currencies.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </Select>
 
-            <Button type="submit" loading={loading}>
-              Save Settings
+            <Button type="submit" size="lg" loading={loading}>
+              Save changes
             </Button>
           </form>
         </CardContent>

@@ -5,6 +5,7 @@ import { formatMoney, formatDate } from '@/lib/utils'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton, CardSkeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { PageHeader } from '@/components/dashboard/page-header'
 import type { Withdrawal, Creator } from '@/lib/types'
 import { WithdrawalsClient } from './client'
 
@@ -32,6 +33,15 @@ function statusVariant(status: string): 'success' | 'warning' | 'error' | 'info'
   return 'default'
 }
 
+const statusLabel: Record<string, string> = {
+  QUEUED: 'Queued',
+  PENDING: 'Pending',
+  PROCESSING: 'On its way',
+  PAID: 'Paid',
+  COMPLETED: 'Landed',
+  FAILED: 'Failed',
+}
+
 async function WithdrawalsContent() {
   const cookie = await getCookieHeader()
   const [creatorRes, { data: withdrawals }] = await Promise.all([
@@ -47,71 +57,79 @@ async function WithdrawalsContent() {
       : []
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-fg">Withdrawals</h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Payouts go to your bank via Afriex. Each currency has its own balance.
-          </p>
-        </div>
-        <WithdrawalsClient
-          balances={balances}
-          payoutCurrency={creator?.payoutCurrency ?? 'USD'}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <PageHeader
+          title="Cash out"
+          description="Move your balance into your own bank account, in your own currency. Request it whenever the amount is worth moving — there is no schedule to wait for."
         />
+        <WithdrawalsClient balances={balances} payoutCurrency={creator?.payoutCurrency ?? 'USD'} />
       </div>
 
       {balances.length > 1 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border lg:grid-cols-4">
           {balances.map((b) => (
-            <Card key={b.currency}>
-              <CardContent className="p-4">
-                <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">
-                  {b.currency}
-                </p>
-                <p className="mt-1 font-display text-xl font-semibold text-fg">
-                  {formatMoney(b.availableBalance, b.currency)}
-                </p>
-              </CardContent>
-            </Card>
+            <div key={b.currency} className="bg-bg-elevated p-5">
+              <dt className="text-sm font-semibold text-fg-muted">{b.currency}</dt>
+              <dd className="tabular font-display mt-1 text-xl text-fg">
+                {formatMoney(b.availableBalance, b.currency)}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       )}
 
       {withdrawals.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-fg-muted">
-            No withdrawals yet. Request a payout when your available balance is ready.
+          <CardContent className="py-14 text-center">
+            <p className="font-display text-lg text-fg">No withdrawals yet</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-fg-muted">
+              Once you request one, you will see it here moving from requested to landed, with the
+              date it arrived.
+            </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-fg">Withdrawal history</h2>
+            <h2 className="font-display text-lg text-fg">Withdrawal history</h2>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <table className="w-full text-sm" aria-label="Withdrawal history">
               <thead>
                 <tr className="border-b border-border-light text-left text-fg-muted">
-                  <th className="px-4 py-3 font-medium sm:px-6">Amount</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Status</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Date</th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Amount
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Currency
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Requested
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {withdrawals.map((w) => (
                   <tr key={w.id} className="border-b border-border-light last:border-0">
-                    <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                    <td className="tabular px-4 py-3 font-semibold text-fg sm:px-6">
                       {formatMoney(w.amount, w.currency)}
                     </td>
                     <td className="px-4 py-3 text-fg-muted sm:px-6">{w.currency}</td>
                     <td className="px-4 py-3 sm:px-6">
-                      <Badge variant={statusVariant(w.status)}>{w.status}</Badge>
+                      <Badge variant={statusVariant(w.status)}>
+                        {statusLabel[w.status] ?? w.status}
+                      </Badge>
+                      {w.status === 'FAILED' && (w.errorMessage || w.failureReason) && (
+                        <span className="mt-1 block text-xs text-error">
+                          {w.errorMessage || w.failureReason}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-fg-subtle sm:px-6">
-                      {formatDate(w.createdAt)}
-                    </td>
+                    <td className="px-4 py-3 text-fg-muted sm:px-6">{formatDate(w.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -127,10 +145,10 @@ export default function WithdrawalsPage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6">
-          <div className="space-y-1">
+        <div className="space-y-8">
+          <div className="space-y-2">
             <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-72" />
           </div>
           <CardSkeleton />
         </div>

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { PageHeader } from '@/components/dashboard/page-header'
 
 type Tab = 'creators' | 'withdrawals' | 'sales' | 'pool-accounts'
 
@@ -75,7 +76,7 @@ export default function AdminPage() {
     error instanceof ApiClientError
       ? error.message
       : error
-        ? 'Failed to load admin data'
+        ? 'We could not load that data. Try refreshing.'
         : ''
 
   const sweepMutation = useMutation({
@@ -95,39 +96,46 @@ export default function AdminPage() {
   const pools = poolsQuery.data ?? []
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-fg">Admin</h1>
-          <p className="mt-1 text-sm text-fg-muted">Platform overview and management</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {sweepMutation.isSuccess && (
-            <p className="text-sm text-success">
-              {sweepMutation.data?.message || 'Sweep triggered successfully'}
-            </p>
-          )}
-          {sweepMutation.isError && (
-            <p className="text-sm text-error">
-              {sweepMutation.error instanceof ApiClientError
-                ? sweepMutation.error.message
-                : 'Failed to trigger sweep'}
-            </p>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => sweepMutation.mutate()}
-            loading={sweepMutation.isPending}
-          >
-            Trigger sweep
-          </Button>
-          <Button variant="secondary" onClick={refreshAll} loading={loading}>
-            Refresh
-          </Button>
-        </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Platform"
+        description="Read-only oversight of creators, sales, withdrawals, and pool balances."
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => sweepMutation.mutate()}
+              loading={sweepMutation.isPending}
+            >
+              Run sweep
+            </Button>
+            <Button variant="secondary" onClick={refreshAll} loading={loading}>
+              Refresh
+            </Button>
+          </>
+        }
+      />
+
+      <div aria-live="polite">
+        {sweepMutation.isSuccess && (
+          <p className="rounded-lg bg-success-muted p-3 text-sm font-medium text-success">
+            {sweepMutation.data?.message || 'Sweep triggered.'}
+          </p>
+        )}
+        {sweepMutation.isError && (
+          <p className="rounded-lg bg-error-muted p-3 text-sm font-medium text-error">
+            {sweepMutation.error instanceof ApiClientError
+              ? sweepMutation.error.message
+              : 'The sweep could not be triggered.'}
+          </p>
+        )}
       </div>
 
-      <div role="tablist" aria-label="Admin sections" className="flex gap-1 border-b border-border-light">
+      <div
+        role="tablist"
+        aria-label="Admin sections"
+        className="flex gap-1 overflow-x-auto border-b border-border"
+      >
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -137,10 +145,10 @@ export default function AdminPage() {
             aria-selected={tab === t.key}
             aria-controls={`panel-${t.key}`}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset ${
+            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset ${
               tab === t.key
-                ? 'border-b-2 border-accent text-accent'
-                : 'text-fg-muted hover:text-fg'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-fg-muted hover:text-fg'
             }`}
           >
             {t.label}
@@ -149,7 +157,10 @@ export default function AdminPage() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
+        <div
+          className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
           {errorMessage}
         </div>
       )}
@@ -168,24 +179,24 @@ export default function AdminPage() {
           {tab === 'creators' && (
             <Card role="tabpanel" id="panel-creators" aria-labelledby="tab-creators">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">Creators ({creators.length})</h2>
+                <h2 className="font-display text-lg text-fg">Creators ({creators.length})</h2>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
                 <table className="w-full text-sm" aria-label="Creators">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 py-3 font-medium sm:px-6">Name</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Email</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Balance</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Eligible</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Joined</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Name</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Email</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Balance</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Currency</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Eligible</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Joined</th>
                     </tr>
                   </thead>
                   <tbody>
                     {creators.map((c) => (
                       <tr key={c.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 py-3 font-medium text-fg sm:px-6">{c.user.name}</td>
+                        <td className="px-4 py-3 font-semibold text-fg sm:px-6">{c.user.name}</td>
                         <td className="px-4 py-3 text-fg-muted sm:px-6">{c.user.email}</td>
                         <td className="px-4 py-3 text-fg sm:px-6">
                           {formatMoney(c.availableBalance, c.payoutCurrency)}
@@ -196,7 +207,7 @@ export default function AdminPage() {
                             {c.payoutEligible ? 'Yes' : 'No'}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">
                           {formatDate(c.createdAt)}
                         </td>
                       </tr>
@@ -217,7 +228,7 @@ export default function AdminPage() {
           {tab === 'withdrawals' && (
             <Card role="tabpanel" id="panel-withdrawals" aria-labelledby="tab-withdrawals">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">
+                <h2 className="font-display text-lg text-fg">
                   Withdrawals ({withdrawals.length})
                 </h2>
               </CardHeader>
@@ -225,27 +236,27 @@ export default function AdminPage() {
                 <table className="w-full text-sm" aria-label="Withdrawals">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 py-3 font-medium sm:px-6">Amount</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Status</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Error</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Date</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Amount</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Currency</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Status</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Error</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {withdrawals.map((w) => (
                       <tr key={w.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                        <td className="tabular px-4 py-3 font-semibold text-fg sm:px-6">
                           {formatMoney(w.amount, w.currency)}
                         </td>
                         <td className="px-4 py-3 text-fg-muted sm:px-6">{w.currency}</td>
                         <td className="px-4 py-3 sm:px-6">
                           <Badge variant={statusVariant(w.status)}>{w.status}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">
                           {w.errorMessage || '—'}
                         </td>
-                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">
                           {formatDate(w.createdAt)}
                         </td>
                       </tr>
@@ -266,16 +277,16 @@ export default function AdminPage() {
           {tab === 'sales' && (
             <Card role="tabpanel" id="panel-sales" aria-labelledby="tab-sales">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">Sales ({sales.length})</h2>
+                <h2 className="font-display text-lg text-fg">Sales ({sales.length})</h2>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
                 <table className="w-full text-sm" aria-label="Sales">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 py-3 font-medium sm:px-6">Amount</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Description</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Date</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Amount</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Currency</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Description</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Date</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -283,14 +294,14 @@ export default function AdminPage() {
                       const amount = s.grossAmount ?? s.amount ?? '0'
                       return (
                         <tr key={s.id} className="border-b border-border-light last:border-0">
-                          <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                          <td className="tabular px-4 py-3 font-semibold text-fg sm:px-6">
                             {formatMoney(amount, s.currency)}
                           </td>
                           <td className="px-4 py-3 text-fg-muted sm:px-6">{s.currency}</td>
                           <td className="px-4 py-3 text-fg-muted sm:px-6">
                             {s.description || '—'}
                           </td>
-                          <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                          <td className="px-4 py-3 text-fg-muted sm:px-6">
                             {formatDate(s.createdAt)}
                           </td>
                         </tr>
@@ -312,7 +323,7 @@ export default function AdminPage() {
           {tab === 'pool-accounts' && (
             <Card role="tabpanel" id="panel-pool-accounts" aria-labelledby="tab-pool-accounts">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-fg">
+                <h2 className="font-display text-lg text-fg">
                   Pool Accounts ({pools.length})
                 </h2>
               </CardHeader>
@@ -320,19 +331,19 @@ export default function AdminPage() {
                 <table className="w-full text-sm" aria-label="Pool accounts">
                   <thead>
                     <tr className="border-b border-border-light text-left text-fg-muted">
-                      <th className="px-4 py-3 font-medium sm:px-6">Currency</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Balance</th>
-                      <th className="px-4 py-3 font-medium sm:px-6">Updated</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Currency</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Balance</th>
+                      <th scope="col" className="px-4 py-3 font-semibold sm:px-6">Updated</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pools.map((p) => (
                       <tr key={p.id} className="border-b border-border-light last:border-0">
-                        <td className="px-4 py-3 font-medium text-fg sm:px-6">{p.currency}</td>
+                        <td className="tabular px-4 py-3 font-semibold text-fg sm:px-6">{p.currency}</td>
                         <td className="px-4 py-3 text-fg sm:px-6">
                           {formatMoney(p.balance, p.currency)}
                         </td>
-                        <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                        <td className="px-4 py-3 text-fg-muted sm:px-6">
                           {formatDate(p.updatedAt)}
                         </td>
                       </tr>

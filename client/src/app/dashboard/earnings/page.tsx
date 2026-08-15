@@ -3,8 +3,10 @@ import { apiFetch } from '@/lib/api-client'
 import { getCookieHeader } from '@/lib/cookies'
 import { formatMoney, formatDate } from '@/lib/utils'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Skeleton, CardSkeleton, TableSkeleton } from '@/components/ui/skeleton'
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/dashboard/page-header'
 import type { SaleRecord, Withdrawal, Creator } from '@/lib/types'
 
 function saleAmount(sale: SaleRecord): number {
@@ -53,78 +55,78 @@ async function EarningsContent() {
     .reduce((s, w) => s + Number.parseFloat(w.amount), 0)
   const available = Number.parseFloat(creatorRes?.data?.availableBalance ?? '0')
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-fg">Earnings</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          Gross sales, platform fee (~{feePercent}%), and what you can withdraw via Afriex.
-        </p>
-      </div>
+  const stats = [
+    { label: 'Buyers paid', value: formatMoney(totalGross, currency), tone: 'default' as const },
+    {
+      label: `Platform fee (${feePercent}%)`,
+      value: `−${formatMoney(estimatedFee, currency)}`,
+      tone: 'muted' as const,
+    },
+    { label: 'Yours', value: formatMoney(estimatedNet, currency), tone: 'success' as const },
+    {
+      label: 'Withdrawn so far',
+      value: formatMoney(totalPaid, currency),
+      tone: 'default' as const,
+    },
+  ]
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <p className="text-sm font-medium text-fg-muted">Gross sales</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-semibold text-fg">
-              {formatMoney(totalGross, currency)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <p className="text-sm font-medium text-fg-muted">Est. platform fee</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-semibold text-fg">
-              {formatMoney(estimatedFee, currency)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <p className="text-sm font-medium text-fg-muted">Est. net earnings</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-semibold text-success">
-              {formatMoney(estimatedNet, currency)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-accent/20 bg-accent-muted/30">
-          <CardHeader>
-            <p className="text-sm font-medium text-fg-muted">Available to withdraw</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-2xl font-semibold text-fg">
-              {formatMoney(available, currency)}
-            </p>
-            <p className="mt-1 text-xs text-fg-subtle">
-              Paid out: {formatMoney(totalPaid, currency)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        title="Earnings"
+        description="What buyers paid, what the flat fee took, and what is left for you. Same numbers your balance is built from."
+        actions={
+          <Button href="/dashboard/withdrawals" size="sm">
+            Cash out {formatMoney(available, currency)}
+          </Button>
+        }
+      />
+
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border lg:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-bg-elevated p-5">
+            <dt className="text-sm font-semibold text-fg-muted">{stat.label}</dt>
+            <dd
+              className={`tabular font-display mt-1.5 text-2xl ${
+                stat.tone === 'success'
+                  ? 'text-success'
+                  : stat.tone === 'muted'
+                    ? 'text-fg-muted'
+                    : 'text-fg'
+              }`}
+            >
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold text-fg">Sales history</h2>
+          <h2 className="font-display text-lg text-fg">Every sale, line by line</h2>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {sales.data.length === 0 ? (
-            <p className="px-6 py-10 text-center text-sm text-fg-muted">
-              No sales yet. Once a buyer pays, it shows up here with fee breakdown on your balance.
+            <p className="px-6 py-12 text-center text-sm text-fg-muted">
+              Nothing sold yet. When a buyer pays, the gross, the fee, and your share all show up
+              here.
             </p>
           ) : (
             <table className="w-full text-sm" aria-label="Sales history">
               <thead>
                 <tr className="border-b border-border-light text-left text-fg-muted">
-                  <th className="px-4 py-3 font-medium sm:px-6">Gross</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Est. net</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Status</th>
-                  <th className="px-4 py-3 font-medium sm:px-6">Date</th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Buyer paid
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Your share
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -133,18 +135,18 @@ async function EarningsContent() {
                   const net = gross * (1 - feePercent / 100)
                   return (
                     <tr key={sale.id} className="border-b border-border-light last:border-0">
-                      <td className="px-4 py-3 font-medium text-fg sm:px-6">
+                      <td className="tabular px-4 py-3 font-semibold text-fg sm:px-6">
                         {formatMoney(gross, sale.currency)}
                       </td>
-                      <td className="px-4 py-3 text-fg-muted sm:px-6">
+                      <td className="tabular px-4 py-3 font-semibold text-success sm:px-6">
                         {formatMoney(net, sale.currency)}
                       </td>
                       <td className="px-4 py-3 sm:px-6">
                         <Badge variant={sale.status === 'PAID' ? 'success' : 'default'}>
-                          {sale.status}
+                          {sale.status === 'PAID' ? 'Paid' : sale.status}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-fg-subtle sm:px-6">
+                      <td className="px-4 py-3 text-fg-muted sm:px-6">
                         {formatDate(sale.createdAt)}
                       </td>
                     </tr>
@@ -163,17 +165,12 @@ export default function EarningsPage() {
   return (
     <Suspense
       fallback={
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-4 w-48" />
+        <div className="space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-72" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-          </div>
+          <Skeleton className="h-28 rounded-2xl" />
           <Card>
             <TableSkeleton rows={4} />
           </Card>

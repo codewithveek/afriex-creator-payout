@@ -1,34 +1,28 @@
 import Link from 'next/link'
+import { Logo } from './logo'
 
 const columns = [
   {
-    title: 'Product',
+    title: 'Buy',
     links: [
-      { href: '/discover', label: 'Discover products' },
+      { href: '/discover', label: 'Browse everything' },
+      { href: '/customer/orders', label: 'Your orders & downloads' },
+      { href: '/how-it-works', label: 'How buying works' },
+    ],
+  },
+  {
+    title: 'Sell',
+    links: [
+      { href: '/signup', label: 'Open your shop' },
+      { href: '/pricing', label: 'What it costs' },
+      { href: '/dashboard', label: 'Creator dashboard' },
+      { href: '/dashboard/withdrawals', label: 'Cash out' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
       { href: '/how-it-works', label: 'How it works' },
-      { href: '/pricing', label: 'Pricing' },
-      { href: '/signup', label: 'Start selling' },
-    ],
-  },
-  {
-    title: 'Creators',
-    links: [
-      { href: '/dashboard', label: 'Dashboard' },
-      { href: '/dashboard/products', label: 'Your products' },
-      { href: '/dashboard/withdrawals', label: 'Withdrawals' },
-      { href: '/dashboard/payout-methods', label: 'Payout methods' },
-    ],
-  },
-  {
-    title: 'Buyers',
-    links: [
-      { href: '/customer/orders', label: 'Your orders' },
-      { href: '/discover', label: 'Discover products' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
       { href: '/terms', label: 'Terms of service' },
       { href: '/privacy', label: 'Privacy policy' },
     ],
@@ -37,32 +31,25 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-bg-muted">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-1">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-xs font-bold text-fg-on-accent">
-                AC
-              </span>
-              <span className="font-semibold text-fg">Afriex Creators</span>
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-fg-muted">
-              The marketplace where creators sell digital products and get paid at home,
-              wherever home is. Buyers pay with Paystack, Flutterwave, or Afriex Checkout.
+    <footer className="border-t border-border-inverse bg-bg-inverse text-fg-on-inverse">
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div>
+            <Logo tone="light" />
+            <p className="on-ink mt-4 max-w-xs text-sm text-fg-on-inverse-muted">
+              A marketplace for digital work. Buy something useful in two taps, or turn what you
+              know into income that actually reaches your bank.
             </p>
           </div>
           {columns.map((col) => (
             <div key={col.title}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">
-                {col.title}
-              </p>
-              <ul className="mt-3 space-y-2">
+              <p className="font-display text-sm text-fg-on-inverse">{col.title}</p>
+              <ul className="mt-3 space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-fg-muted transition-colors hover:text-fg"
+                      className="text-sm text-fg-on-inverse-muted underline-offset-4 transition-colors hover:text-fg-on-inverse hover:underline"
                     >
                       {link.label}
                     </Link>
@@ -72,9 +59,9 @@ export function SiteFooter() {
             </div>
           ))}
         </div>
-        <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-border-inverse pt-6 text-xs text-fg-on-inverse-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Afriex Creators. All rights reserved.</p>
-          <p>Payouts powered by Afriex · Payments via Paystack, Flutterwave & Afriex Checkout</p>
+          <p>Encrypted checkout · Instant delivery · Payouts to your own bank account</p>
         </div>
       </div>
     </footer>

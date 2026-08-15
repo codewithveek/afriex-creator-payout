@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download, Package } from 'lucide-react'
+import { Download, Package, RefreshCw } from 'lucide-react'
 import { ApiClientError } from '@/lib/api-client'
 import { formatMoney, formatDate, API_BASE } from '@/lib/utils'
 import { queryKeys } from '@/lib/queries/keys'
@@ -15,7 +15,6 @@ import {
   renewCustomerDownload,
 } from '@/lib/queries/orders'
 import { MarketingShell } from '@/components/layout/marketing-shell'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +27,13 @@ const statusVariant: Record<string, 'success' | 'warning' | 'error' | 'default'>
   COMPLETED: 'success',
   REFUNDED: 'error',
   FAILED: 'default',
+}
+
+const statusLabel: Record<string, string> = {
+  PENDING: 'Payment confirming',
+  COMPLETED: 'Paid',
+  REFUNDED: 'Refunded',
+  FAILED: 'Payment failed',
 }
 
 function readToken(): string | null {
@@ -86,7 +92,7 @@ function OrdersContent() {
       : signupMutation.error instanceof ApiClientError
         ? signupMutation.error.message
         : loginMutation.error || signupMutation.error
-          ? 'Authentication failed'
+          ? 'That did not work. Check the email and password and try again.'
           : ''
 
   const sessionExpired =
@@ -121,93 +127,110 @@ function OrdersContent() {
 
   if (!token || sessionExpired) {
     return (
-      <div className="mx-auto max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="font-display text-2xl font-semibold text-fg">Your orders</h1>
-          <p className="mt-2 text-sm text-fg-muted">
+      <div className="mx-auto grid max-w-4xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16">
+        <div>
+          <h1 className="display-lg text-fg">Everything you have bought, in one place</h1>
+          <p className="prose-lede mt-4 text-fg-muted">
             {sessionExpired
-              ? 'Your session expired. Log in again to view downloads.'
-              : 'Log in with the email you used at checkout to download your purchases. Guest checkout works without an account; create one here to keep a permanent history.'}
+              ? 'Your session timed out. Log back in to get to your downloads.'
+              : 'Sign in with the email you used at checkout to re-download anything you have paid for — including purchases you made as a guest.'}
           </p>
+          <ul className="mt-7 space-y-3 text-sm text-fg-muted">
+            <li className="flex gap-3">
+              <Download className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
+              Every file you have paid for, ready to download again
+            </li>
+            <li className="flex gap-3">
+              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
+              Expired link? Issue yourself a new one in a click
+            </li>
+          </ul>
         </div>
 
-        {authError && (
-          <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-            {authError}
-          </div>
-        )}
+        <div className="rounded-2xl border border-border bg-bg-elevated p-7 shadow-card">
+          <h2 className="font-display text-xl text-fg">
+            {signingUp ? 'Create a buyer account' : 'Sign in'}
+          </h2>
+          <p className="mt-1.5 text-sm text-fg-muted">
+            {signingUp
+              ? 'Use the same email you checked out with and your past orders come with you.'
+              : 'No account yet? Making one takes a moment.'}
+          </p>
 
-        <Card className="shadow-card">
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-fg">
-              {signingUp ? 'Create a buyer account' : 'Log in'}
-            </h2>
-          </CardHeader>
-          <CardContent>
-            {signingUp ? (
-              <form onSubmit={handleSignup} className="space-y-4">
-                <Input label="Name" name="name" required autoComplete="name" />
-                <Input
-                  label="Email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  defaultValue={prefillEmail}
-                />
-                <Input
-                  label="Password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
-                <Button type="submit" loading={authPending} className="w-full">
-                  Sign up
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <Input
-                  label="Email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  defaultValue={prefillEmail}
-                />
-                <Input
-                  label="Password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                />
-                <Button type="submit" loading={authPending} className="w-full">
-                  Log in
-                </Button>
-              </form>
-            )}
-            <p className="mt-4 text-center text-sm text-fg-muted">
-              {signingUp ? 'Already have an account?' : 'No account yet?'}{' '}
-              <button
-                type="button"
-                onClick={() => setSigningUp(!signingUp)}
-                className="font-medium text-accent hover:text-accent-hover"
-              >
-                {signingUp ? 'Log in' : 'Sign up'}
-              </button>
-            </p>
-          </CardContent>
-        </Card>
+          {authError && (
+            <div
+              className="mt-5 rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+              role="alert"
+            >
+              {authError}
+            </div>
+          )}
 
-        <p className="text-center text-sm text-fg-subtle">
-          Looking for a product?{' '}
-          <Link href="/discover" className="font-medium text-accent hover:underline">
-            Explore Discover
-          </Link>
-        </p>
+          {signingUp ? (
+            <form onSubmit={handleSignup} className="mt-5 space-y-4">
+              <Input label="Name" name="name" required autoComplete="name" />
+              <Input
+                label="Email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                defaultValue={prefillEmail}
+              />
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                hint="At least 8 characters."
+              />
+              <Button type="submit" size="lg" loading={authPending} className="w-full">
+                Create account
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin} className="mt-5 space-y-4">
+              <Input
+                label="Email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                defaultValue={prefillEmail}
+              />
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+              />
+              <Button type="submit" size="lg" loading={authPending} className="w-full">
+                Sign in
+              </Button>
+            </form>
+          )}
+
+          <p className="mt-5 text-center text-sm text-fg-muted">
+            {signingUp ? 'Already have an account?' : 'First time here?'}{' '}
+            <button
+              type="button"
+              onClick={() => setSigningUp(!signingUp)}
+              className="rounded font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            >
+              {signingUp ? 'Sign in instead' : 'Create an account'}
+            </button>
+          </p>
+
+          <p className="mt-5 border-t border-border-light pt-5 text-center text-sm text-fg-muted">
+            Looking for something to buy?{' '}
+            <Link href="/discover" className="font-semibold text-accent hover:underline">
+              Browse the marketplace
+            </Link>
+          </p>
+        </div>
       </div>
     )
   }
@@ -217,16 +240,18 @@ function OrdersContent() {
     ordersQuery.error instanceof ApiClientError
       ? ordersQuery.error.message
       : ordersQuery.isError
-        ? 'Failed to load orders'
+        ? 'We could not load your orders just now. Try again in a moment.'
         : ''
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-8 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-fg">Your orders</h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Downloads for purchases you made on Afriex Creators.
+          <h1 className="display-md text-fg">Your orders</h1>
+          <p className="mt-1.5 text-sm text-fg-muted">
+            {orders.length > 0
+              ? 'Download anything here as many times as you need.'
+              : 'Your purchases and downloads will show up here.'}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -235,7 +260,10 @@ function OrdersContent() {
       </div>
 
       {listError && (
-        <div className="mb-4 rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
+        <div
+          className="mb-5 rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
           {listError}
         </div>
       )}
@@ -245,57 +273,55 @@ function OrdersContent() {
           <div
             className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"
             role="status"
-            aria-label="Loading orders"
+            aria-label="Loading your orders"
           />
         </div>
       ) : orders.length === 0 ? (
         <EmptyState
           icon={<Package className="h-6 w-6" />}
-          title="No orders yet"
-          description="When you buy a product, it will appear here with a download button."
-          action={<Button href="/discover">Discover products</Button>}
+          title="Nothing bought yet"
+          description="When you buy something, it lands here with a download button that keeps working."
+          action={<Button href="/discover">Browse the marketplace</Button>}
         />
       ) : (
-        <div className="space-y-4">
+        <ul className="space-y-4">
           {orders.map((order) => (
-            <Card key={order.id} className="shadow-card">
-              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold text-fg">
-                      {order.product?.name || 'Digital product'}
-                    </h2>
-                    <Badge variant={statusVariant[order.status] ?? 'default'}>{order.status}</Badge>
-                  </div>
-                  <p className="mt-1 text-sm text-fg-muted">
-                    {formatMoney(order.amount, order.currency)} · {formatDate(order.createdAt)}
-                  </p>
+            <li
+              key={order.id}
+              className="flex flex-col gap-4 rounded-xl border border-border bg-bg-elevated p-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-display text-lg text-fg">
+                    {order.product?.name || 'Digital product'}
+                  </h2>
+                  <Badge variant={statusVariant[order.status] ?? 'default'}>
+                    {statusLabel[order.status] ?? order.status}
+                  </Badge>
                 </div>
-                {order.status === 'COMPLETED' && order.downloadToken && !order.downloadExpired && (
-                  <Button
-                    href={`${API_BASE}/api/download/${order.id}/${order.downloadToken}`}
-                    className="gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                )}
-                {order.status === 'COMPLETED' &&
-                  (order.downloadExpired || !order.downloadToken) && (
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      loading={renewMutation.isPending && renewMutation.variables === order.id}
-                      onClick={() => renewMutation.mutate(order.id)}
-                    >
-                      <Download className="h-4 w-4" />
-                      Get new download link
-                    </Button>
-                  )}
-              </CardContent>
-            </Card>
+                <p className="tabular mt-1 text-sm text-fg-muted">
+                  {formatMoney(order.amount, order.currency)} · {formatDate(order.createdAt)}
+                </p>
+              </div>
+              {order.status === 'COMPLETED' && order.downloadToken && !order.downloadExpired && (
+                <Button href={`${API_BASE}/api/download/${order.id}/${order.downloadToken}`}>
+                  <Download className="h-4 w-4" aria-hidden />
+                  Download
+                </Button>
+              )}
+              {order.status === 'COMPLETED' && (order.downloadExpired || !order.downloadToken) && (
+                <Button
+                  variant="outline"
+                  loading={renewMutation.isPending && renewMutation.variables === order.id}
+                  onClick={() => renewMutation.mutate(order.id)}
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  Get a fresh link
+                </Button>
+              )}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )
@@ -304,17 +330,19 @@ function OrdersContent() {
 export default function CustomerOrdersPage() {
   return (
     <MarketingShell>
-      <div className="px-4 py-12 sm:px-6">
-        <Suspense
-          fallback={
-            <div className="flex justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
-            </div>
-          }
-        >
-          <OrdersContent />
-        </Suspense>
-      </div>
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-16">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent"
+              role="status"
+              aria-label="Loading"
+            />
+          </div>
+        }
+      >
+        <OrdersContent />
+      </Suspense>
     </MarketingShell>
   )
 }

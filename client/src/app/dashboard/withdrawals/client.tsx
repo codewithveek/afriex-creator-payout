@@ -39,7 +39,7 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
       return
     }
     if (num > availableNum) {
-      setError(`You can withdraw up to ${formatMoney(available, currency)}.`)
+      setError(`You can withdraw up to ${formatMoney(available, currency)} right now.`)
       return
     }
     setConfirming(true)
@@ -56,48 +56,52 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
       setConfirming(false)
       setAmount('')
       setSuccess(
-        `Withdrawal of ${formatMoney(withdrawAmount, currency)} requested. You can track it below.`,
+        `${formatMoney(withdrawAmount, currency)} is on its way to your bank. Track it in the list below.`,
       )
       router.refresh()
     } catch (err) {
       setConfirming(false)
-      setError(err instanceof ApiClientError ? err.message : 'Failed to request withdrawal')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not start that withdrawal. Try again shortly.',
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="w-full max-w-md space-y-3 rounded-xl border border-border bg-bg-elevated p-4 shadow-card">
-      <p className="text-sm text-fg-muted">
-        Available in {currency}:{' '}
-        <span className="font-semibold text-fg">{formatMoney(available, currency)}</span>
+    <div className="w-full max-w-md rounded-2xl border border-border bg-bg-elevated p-5 shadow-card">
+      <p className="text-sm font-semibold text-fg-muted">Ready to move</p>
+      <p className="tabular font-display mt-1 text-3xl text-fg">
+        {formatMoney(available, currency)}
       </p>
+
       {balances.length > 1 && (
-        <p className="text-xs text-fg-subtle">
-          Earnings are kept per currency. Withdraw only from a currency that matches your verified
-          payout method.
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
+          Each currency keeps its own balance. Withdraw into a bank account that matches it.
         </p>
       )}
+
       {confirming ? (
-        <div className="space-y-3 rounded-lg border border-border bg-bg p-3">
-          <p className="text-sm text-fg">
-            Withdraw{' '}
-            <span className="font-semibold">{formatMoney(withdrawAmount, currency)}</span> to your
-            default payout method?
+        <div className="mt-5 space-y-4 rounded-xl border border-accent/30 bg-accent-muted/40 p-4">
+          <p className="text-sm leading-relaxed text-fg">
+            Send <span className="tabular font-semibold">{formatMoney(withdrawAmount, currency)}</span>{' '}
+            to your default bank account?
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={confirmWithdrawal} loading={loading}>
-              Confirm withdrawal
+              Yes, send it
             </Button>
             <Button variant="outline" disabled={loading} onClick={() => setConfirming(false)}>
-              Go back
+              Not yet
             </Button>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleReview} className="flex flex-col gap-3">
-          {balances.length > 0 && (
+        <form onSubmit={handleReview} className="mt-5 flex flex-col gap-4">
+          {balances.length > 1 && (
             <Select
               label="Currency"
               id="withdraw-currency"
@@ -111,32 +115,42 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
               ))}
             </Select>
           )}
-          <div className="space-y-1">
-            <Input
-              name="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              max={availableNum > 0 ? available : undefined}
-              label="Amount"
-              placeholder="Full balance"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <p className="text-xs text-fg-subtle">Leave blank to withdraw your full balance.</p>
-          </div>
-          <Button type="submit" disabled={availableNum <= 0}>
+          <Input
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0.01"
+            max={availableNum > 0 ? available : undefined}
+            label="How much?"
+            placeholder="Whole balance"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            hint="Leave it blank to move everything."
+          />
+          <Button type="submit" size="lg" disabled={availableNum <= 0}>
             Review withdrawal
           </Button>
+          {availableNum <= 0 && (
+            <p className="text-xs text-fg-muted">
+              Nothing to withdraw yet — your balance fills up as sales come in.
+            </p>
+          )}
         </form>
       )}
+
       {success && (
-        <p className="text-sm text-success" role="status">
+        <p
+          className="mt-4 rounded-lg bg-success-muted p-3 text-sm font-medium text-success"
+          role="status"
+        >
           {success}
         </p>
       )}
       {error && (
-        <p className="text-sm text-error" role="alert">
+        <p
+          className="mt-4 rounded-lg bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
           {error}
         </p>
       )}

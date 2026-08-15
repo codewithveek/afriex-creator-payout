@@ -4,21 +4,32 @@ import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { clsx } from 'clsx'
-import { LayoutDashboard, Wallet, Banknote, ArrowUpRight, Package, Settings, Shield, LogOut, Menu, X } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Wallet,
+  Landmark,
+  ArrowUpRight,
+  Package,
+  Settings,
+  Shield,
+  LogOut,
+  Menu,
+  X,
+  Store,
+} from 'lucide-react'
 import { api } from '@/lib/api-client'
+import { Logo } from '@/components/layout/logo'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/earnings', label: 'Earnings', icon: Wallet },
-  { href: '/dashboard/payout-methods', label: 'Payout Methods', icon: Banknote },
-  { href: '/dashboard/withdrawals', label: 'Withdrawals', icon: ArrowUpRight },
   { href: '/dashboard/products', label: 'Products', icon: Package },
+  { href: '/dashboard/earnings', label: 'Earnings', icon: Wallet },
+  { href: '/dashboard/withdrawals', label: 'Cash out', icon: ArrowUpRight },
+  { href: '/dashboard/payout-methods', label: 'Bank accounts', icon: Landmark },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
-const adminItems = [
-  { href: '/dashboard/admin', label: 'Admin', icon: Shield },
-]
+const adminItems = [{ href: '/dashboard/admin', label: 'Admin', icon: Shield }]
 
 interface Props {
   role: 'CREATOR' | 'ADMIN'
@@ -48,20 +59,33 @@ export function Sidebar({ role }: Props) {
     router.refresh()
   }
 
+  const linkClass = (isActive: boolean, tone: 'default' | 'admin' = 'default') =>
+    clsx(
+      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-150',
+      isActive
+        ? tone === 'admin'
+          ? 'bg-warning-muted text-warning'
+          : 'bg-signal text-fg'
+        : 'text-sidebar-fg-muted hover:bg-sidebar-hover hover:text-sidebar-fg',
+    )
+
   const nav = (
     <>
-      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-          <span className="text-sm font-bold text-fg-on-accent">AC</span>
-        </div>
-        <span className="text-base font-semibold text-fg">Afriex Creators</span>
+      <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border px-5">
+        <Link
+          href="/"
+          onClick={() => setMobileOpen(false)}
+          className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-4 focus-visible:ring-offset-sidebar-bg"
+          aria-label="Afriex Creators, home"
+        >
+          <Logo tone="light" />
+        </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4" aria-label="Dashboard navigation">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Dashboard">
         {navItems.map((item) => {
-          const isActive = item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(item.href)
+          const isActive =
+            item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href)
           const Icon = item.icon
 
           return (
@@ -69,25 +93,20 @@ export function Sidebar({ role }: Props) {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={clsx(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-accent-muted text-accent'
-                  : 'text-fg-muted hover:bg-bg-muted hover:text-fg',
-              )}
+              aria-current={isActive ? 'page' : undefined}
+              className={linkClass(isActive)}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5" aria-hidden />
               {item.label}
             </Link>
           )
         })}
+
         {role === 'ADMIN' && (
           <>
-            <div className="pt-4 pb-2">
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-fg-muted">
-                Admin
-              </p>
-            </div>
+            <p className="px-3 pb-2 pt-5 text-xs font-semibold uppercase tracking-wide text-sidebar-fg-muted">
+              Platform
+            </p>
             {adminItems.map((item) => {
               const isActive = pathname.startsWith(item.href)
               const Icon = item.icon
@@ -96,14 +115,10 @@ export function Sidebar({ role }: Props) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={clsx(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-warning-muted text-warning'
-                      : 'text-fg-muted hover:bg-bg-muted hover:text-fg',
-                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={linkClass(isActive, 'admin')}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" aria-hidden />
                   {item.label}
                 </Link>
               )
@@ -112,13 +127,20 @@ export function Sidebar({ role }: Props) {
         )}
       </nav>
 
-      <div className="border-t border-sidebar-border p-4">
+      <div className="shrink-0 space-y-1 border-t border-sidebar-border p-4">
+        <Link
+          href="/discover"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-sidebar-fg-muted transition-colors duration-150 hover:bg-sidebar-hover hover:text-sidebar-fg"
+        >
+          <Store className="h-5 w-5" aria-hidden />
+          View the marketplace
+        </Link>
         <button
           onClick={handleLogout}
-          aria-label="Sign out"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-muted hover:text-fg"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-sidebar-fg-muted transition-colors duration-150 hover:bg-sidebar-hover hover:text-sidebar-fg"
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="h-5 w-5" aria-hidden />
           Sign out
         </button>
       </div>
@@ -127,35 +149,30 @@ export function Sidebar({ role }: Props) {
 
   return (
     <>
-      {/* Mobile header */}
-      <div className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-sidebar-border bg-sidebar-bg px-4 lg:hidden">
+      {/* Mobile bar */}
+      <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-sidebar-border bg-sidebar-bg px-3 lg:hidden">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={mobileOpen}
-          className="rounded-lg p-2.5 text-fg-muted hover:bg-bg-muted"
+          className="rounded-lg p-2.5 text-sidebar-fg-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-fg"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent">
-          <span className="text-xs font-bold text-fg-on-accent">AC</span>
-        </div>
-        <span className="text-base font-semibold text-fg">Afriex Creators</span>
+        <Logo tone="light" markClassName="h-8 w-8" />
       </div>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-fg/20 lg:hidden"
+          className="fixed inset-0 z-60 bg-fg/40 lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile drawer */}
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar-bg transition-transform duration-200 ease-out lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-70 flex w-72 flex-col bg-sidebar-bg transition-transform duration-200 ease-out lg:static lg:w-64 lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >

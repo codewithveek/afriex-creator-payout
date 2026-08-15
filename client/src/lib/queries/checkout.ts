@@ -17,7 +17,7 @@ const FALLBACK_COLLECTORS: PaymentCollector[] = [
   {
     id: 'afriex-checkout',
     name: 'Afriex Checkout',
-    description: 'Hosted checkout via Afriex (virtual bank account & mobile money)',
+    description: 'Bank transfer to a one-time account, or mobile money',
     primary: false,
   },
 ]

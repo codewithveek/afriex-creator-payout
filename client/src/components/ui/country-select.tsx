@@ -108,7 +108,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
 
   return (
     <div ref={containerRef} className="relative">
-      <span id={`${baseId}-label`} className="mb-1 block text-sm font-medium text-fg-muted">
+      <span id={`${baseId}-label`} className="mb-1.5 block text-sm font-semibold text-fg">
         Country
       </span>
       <button
@@ -118,7 +118,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-labelledby={`${baseId}-label`}
-        className="flex min-h-10 w-full items-center gap-2 rounded-lg border border-border bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-accent"
+        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-border bg-bg-elevated px-3.5 py-2 text-sm text-fg transition-[border-color,box-shadow] duration-150 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/35"
       >
         {selected ? (
           <>
@@ -128,7 +128,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
             <span>{selected.name}</span>
           </>
         ) : (
-          <span className="text-fg-subtle">Select a country</span>
+          <span className="text-fg-muted">Select a country</span>
         )}
       </button>
       {required && !value && (
@@ -143,7 +143,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
         />
       )}
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-bg shadow-lift">
+        <div className="absolute z-60 mt-1 w-full rounded-lg border border-border bg-bg-elevated shadow-lift">
           <div className="border-b border-border-light p-2">
             <input
               ref={searchRef}
@@ -188,7 +188,7 @@ export function CountrySelect({ value, onChange, required }: Props) {
                     onMouseEnter={() => setActiveIndex(index)}
                     className={`flex min-h-10 cursor-pointer items-center gap-2 px-3 text-sm transition-colors ${
                       isSelected
-                        ? 'bg-accent-muted font-medium text-accent'
+                        ? 'bg-accent-muted font-semibold text-accent-deep'
                         : isActive
                           ? 'bg-accent-muted/50 text-fg'
                           : 'text-fg'

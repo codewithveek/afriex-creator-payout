@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Landmark } from 'lucide-react'
 import type { PayoutMethod } from '@/lib/types'
 
 const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
@@ -42,7 +44,11 @@ export function PayoutMethodsClient({ initial }: Props) {
       setShowForm(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to add payout method')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not save that account. Check the details and try again.',
+      )
     } finally {
       setLoading(false)
     }
@@ -55,7 +61,9 @@ export function PayoutMethodsClient({ initial }: Props) {
       await api.delete(`/api/payout-methods/${id}`)
       setMethods((prev) => prev.filter((m) => m.id !== id))
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to delete payout method')
+      setError(
+        err instanceof ApiClientError ? err.message : 'We could not remove that account just now.',
+      )
     } finally {
       setDeleting(null)
       setConfirmingId(null)
@@ -65,23 +73,37 @@ export function PayoutMethodsClient({ initial }: Props) {
   const formContent = (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold text-fg">Add Payout Method</h2>
+        <h2 className="font-display text-lg text-fg">Add a bank account</h2>
+        <p className="mt-1 text-sm text-fg-muted">
+          Use an account in your own name. We only ever store it encrypted, and buyers never see it.
+        </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Account Number" name="accountNumber" required />
-          <Input label="Bank Code" name="bankCode" required />
-          <Input label="Bank Name" name="bankName" required />
-          <Select label="Currency" id="currency" name="currency" required>
+        <form onSubmit={handleSubmit} className="max-w-md space-y-4">
+          <Input label="Account number" name="accountNumber" required inputMode="numeric" />
+          <Input
+            label="Bank code"
+            name="bankCode"
+            required
+            hint="The sort or bank code your bank uses for transfers."
+          />
+          <Input label="Bank name" name="bankName" required />
+          <Select
+            label="Currency"
+            id="currency"
+            name="currency"
+            required
+            hint="Match this to the balance you plan to withdraw."
+          >
             {currencies.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
           </Select>
-          <div className="flex gap-3">
-            <Button type="submit" loading={loading}>
-              Save
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" size="lg" loading={loading}>
+              Save this account
             </Button>
             <Button
               type="button"
@@ -102,66 +124,91 @@ export function PayoutMethodsClient({ initial }: Props) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
+        <div
+          className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
           {error}
         </div>
       )}
 
       {methods.length === 0 && !showForm && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-12">
-            <p className="text-sm text-fg-muted">
-              No payout methods yet. Add a bank account to receive payouts.
-            </p>
-            <Button onClick={() => setShowForm(true)}>Add payout method</Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<Landmark className="h-6 w-6" />}
+          title="No bank account on file"
+          description="Add one now and it will be verified before you ever need it — so your first withdrawal is not the first time anything gets checked."
+          action={<Button onClick={() => setShowForm(true)}>Add a bank account</Button>}
+          footnote="Stored encrypted. Never shown to buyers."
+        />
       )}
 
       {showForm && formContent}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {methods.length > 0 && (
-          <Button onClick={() => { setShowForm(!showForm); setError('') }}>
-            {showForm ? 'Cancel' : 'Add payout method'}
-          </Button>
-        )}
-      </div>
+      {methods.length > 0 && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            setShowForm(!showForm)
+            setError('')
+          }}
+        >
+          {showForm ? 'Cancel' : 'Add another account'}
+        </Button>
+      )}
 
       {methods.length > 0 && (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-fg">Saved Accounts</h2>
+            <h2 className="font-display text-lg text-fg">Saved accounts</h2>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             <table className="w-full text-sm" aria-label="Saved payout methods">
               <thead>
                 <tr className="border-b border-border-light text-left text-fg-muted">
-                  <th className="px-4 sm:px-6 py-3 font-medium">Bank</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">Currency</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">Default</th>
-                  <th className="px-4 sm:px-6 py-3 font-medium">Added</th>
-                  <th className="px-4 sm:px-6 py-3" />
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Bank
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Currency
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Default
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold sm:px-6">
+                    Added
+                  </th>
+                  <th className="px-4 py-3 sm:px-6">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {methods.map((method) => (
                   <tr key={method.id} className="border-b border-border-light last:border-0">
-                    <td className="px-4 sm:px-6 py-3 text-fg">
-                      {(method.details as { bankName?: string })?.bankName || '—'}
+                    <td className="px-4 py-3 sm:px-6">
+                      <span className="font-semibold text-fg">
+                        {method.bankName ||
+                          (method.details as { bankName?: string })?.bankName ||
+                          'Bank account'}
+                      </span>
+                      {method.maskedAccountNumber && (
+                        <span className="tabular mt-0.5 block text-xs text-fg-muted">
+                          {method.maskedAccountNumber}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-fg-muted">{method.currency}</td>
-                    <td className="px-4 sm:px-6 py-3">
+                    <td className="px-4 py-3 text-fg-muted sm:px-6">{method.currency}</td>
+                    <td className="px-4 py-3 sm:px-6">
                       {method.isDefault ? (
                         <Badge variant="accent">Default</Badge>
                       ) : (
-                        <span className="text-fg-subtle">—</span>
+                        <span className="text-fg-muted">—</span>
                       )}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-fg-subtle">
+                    <td className="px-4 py-3 text-fg-muted sm:px-6">
                       {new Date(method.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-right">
+                    <td className="px-4 py-3 text-right sm:px-6">
                       {confirmingId === method.id ? (
                         <div className="flex items-center justify-end gap-2">
                           <Button
@@ -170,7 +217,7 @@ export function PayoutMethodsClient({ initial }: Props) {
                             loading={deleting === method.id}
                             onClick={() => handleDelete(method.id)}
                           >
-                            Confirm delete
+                            Yes, remove it
                           </Button>
                           <Button
                             variant="outline"
@@ -190,7 +237,7 @@ export function PayoutMethodsClient({ initial }: Props) {
                             setError('')
                           }}
                         >
-                          Delete
+                          Remove
                         </Button>
                       )}
                     </td>

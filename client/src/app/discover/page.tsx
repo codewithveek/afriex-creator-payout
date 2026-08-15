@@ -7,9 +7,9 @@ import { DiscoverClient } from './discover-client'
 import type { Product } from '@/lib/types'
 
 export const metadata: Metadata = {
-  title: 'Discover',
+  title: 'Browse the marketplace',
   description:
-    'Browse ebooks, courses, templates, and more from independent creators. Pay with Paystack, Flutterwave, or Afriex Checkout and download instantly.',
+    'Templates, presets, courses, beat packs and study material from independent creators. Pay in the listed currency and download the moment it clears.',
 }
 
 async function getProducts() {
@@ -30,16 +30,22 @@ export default function DiscoverPage() {
     <MarketingShell>
       <Suspense
         fallback={
-          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-            <Skeleton className="mb-2 h-4 w-24" />
-            <Skeleton className="mb-2 h-10 w-64" />
-            <Skeleton className="mb-10 h-5 w-96 max-w-full" />
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <Skeleton className="h-64 rounded-xl" />
-              <Skeleton className="h-64 rounded-xl" />
-              <Skeleton className="h-64 rounded-xl" />
+          <>
+            <div className="border-b border-border bg-bg-muted">
+              <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14">
+                <Skeleton className="mb-3 h-10 w-full max-w-xl" />
+                <Skeleton className="mb-8 h-5 w-96 max-w-full" />
+                <Skeleton className="h-11 w-full max-w-sm rounded-lg" />
+              </div>
             </div>
-          </div>
+            <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-72 rounded-xl" />
+                <Skeleton className="h-72 rounded-xl" />
+                <Skeleton className="h-72 rounded-xl" />
+              </div>
+            </div>
+          </>
         }
       >
         <DiscoverContent />

@@ -15,9 +15,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {label && (
-          <label htmlFor={selectId} className="block text-sm font-medium text-fg-muted">
+          <label htmlFor={selectId} className="block text-sm font-semibold text-fg">
             {label}
           </label>
         )}
@@ -26,8 +26,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={clsx(
-              'block min-h-10 w-full appearance-none rounded-lg border bg-bg py-2 pl-3 pr-9 text-sm text-fg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0',
-              error ? 'border-error focus:ring-error' : 'border-border focus:ring-accent',
+              'block min-h-11 w-full appearance-none rounded-lg border bg-bg-elevated py-2 pl-3.5 pr-9 text-sm text-fg transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-2 focus:ring-offset-0',
+              error
+                ? 'border-error focus:border-error focus:ring-error/40'
+                : 'border-border focus:border-accent focus:ring-accent/35',
               className,
             )}
             aria-invalid={error ? 'true' : undefined}
@@ -41,7 +43,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-hidden
           />
         </div>
-        {hint && !error && <p className="text-xs text-fg-subtle">{hint}</p>}
+        {hint && !error && <p className="text-xs text-fg-muted">{hint}</p>}
         {error && (
           <p id={`${selectId}-error`} className="text-sm text-error" role="alert">
             {error}

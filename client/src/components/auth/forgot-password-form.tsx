@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { MailCheck } from 'lucide-react'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 export function ForgotPasswordForm() {
   const [sent, setSent] = useState(false)
@@ -27,7 +27,11 @@ export function ForgotPasswordForm() {
       })
       setSent(true)
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to send reset email')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not send that email. Try again in a moment.',
+      )
     } finally {
       setLoading(false)
     }
@@ -35,41 +39,50 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <Card className="w-full max-w-sm">
-        <CardContent className="py-8 text-center">
-          <h1 className="text-xl font-semibold text-fg">Check your email</h1>
-          <p className="mt-2 text-sm text-fg-muted">
-            If an account exists with that email, we&apos;ve sent a password reset link.
-          </p>
-        </CardContent>
-      </Card>
+      <div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-muted text-success">
+          <MailCheck className="h-6 w-6" aria-hidden />
+        </div>
+        <h1 className="display-md mt-5 text-fg">Check your inbox</h1>
+        <p className="mt-2 leading-relaxed text-fg-muted">
+          If an account uses that email, a reset link is on its way. It expires shortly, so use it
+          soon.
+        </p>
+        <Button href="/login" variant="outline" size="lg" className="mt-7 w-full">
+          Back to sign in
+        </Button>
+      </div>
     )
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <h1 className="text-xl font-semibold text-fg">Forgot password</h1>
-        <p className="text-sm text-fg-muted">Enter your email to receive a reset link</p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-              {error}
-            </div>
-          )}
-          <Input label="Email" name="email" type="email" autoComplete="email" required />
-          <Button type="submit" loading={loading} className="w-full">
-            Send reset link
-          </Button>
-          <p className="text-center text-sm text-fg-muted">
-            <Link href="/login" className="font-medium text-accent hover:text-accent-hover">
-              Back to sign in
-            </Link>
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+    <div>
+      <h1 className="display-md text-fg">Reset your password</h1>
+      <p className="mt-2 text-fg-muted">
+        Tell us the email on your account and we will send you a link to set a new password.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        {error && (
+          <div
+            className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+        <Input label="Email" name="email" type="email" autoComplete="email" required />
+        <Button type="submit" size="lg" loading={loading} className="w-full">
+          Send the reset link
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-fg-muted">
+        Remembered it?{' '}
+        <Link href="/login" className="font-semibold text-accent underline-offset-4 hover:underline">
+          Back to sign in
+        </Link>
+      </p>
+    </div>
   )
 }

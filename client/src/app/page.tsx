@@ -1,274 +1,341 @@
 import Link from 'next/link'
-import {
-  ArrowRight,
-  Banknote,
-  Download,
-  Globe2,
-  Package,
-  ShieldCheck,
-  Sparkles,
-  Wallet,
-} from 'lucide-react'
+import { ArrowRight, ArrowDownToLine, Landmark, ShieldCheck } from 'lucide-react'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
 
-const steps = [
+const marquee = [
+  'Notion templates',
+  'Lightroom presets',
+  'Beat packs',
+  'CV & cover letter kits',
+  'Figma UI kits',
+  'Sourdough courses',
+  'Past questions',
+  'Wedding invite suites',
+  'Sample packs',
+  'Business plan packs',
+  'Photo LUTs',
+  'Excel models',
+]
+
+const buyerPoints = [
   {
-    icon: Package,
-    title: 'List your product',
-    body: 'Upload an ebook, template, course pack, or any digital file. Set your price in USD, NGN, GHS, or KES.',
+    title: 'The file is yours the second you pay',
+    body: 'No waiting for someone to email it to you in the morning. The download link appears on screen and in your inbox at the same time.',
   },
   {
-    icon: Banknote,
-    title: 'Buyers pay locally',
-    body: 'Customers check out with Paystack or Flutterwave: cards, bank transfer, USSD, and mobile money.',
+    title: 'Pay the way you already pay',
+    body: 'Card, bank transfer, or mobile money — in the currency the price is listed in. Checkout is encrypted end to end and takes about a minute.',
   },
   {
-    icon: Wallet,
-    title: 'Withdraw with Afriex',
-    body: 'Earnings land in your balance. Request a payout to your bank account through Afriex whenever you are ready.',
+    title: 'Lost the link? It is not gone',
+    body: 'Every purchase lives on your orders page. Re-issue a fresh download link yourself, any time, without emailing support.',
   },
 ]
 
-const features = [
+const sellerPoints = [
   {
-    icon: Globe2,
-    title: 'Local payments, global reach',
-    body: 'Sell to buyers anywhere. They pay with methods they already use, and cross-border payouts actually arrive.',
-  },
-  {
-    icon: Download,
-    title: 'Instant digital delivery',
-    body: 'After payment, buyers get a secure download link by email and on their orders page. No manual fulfilment.',
+    icon: ArrowDownToLine,
+    title: 'Publish in one sitting',
+    body: 'Upload the file, name your price, hit publish. You get a link you can drop in a bio, a status, a newsletter, or a group chat.',
   },
   {
     icon: ShieldCheck,
-    title: 'Clear money trail',
-    body: 'See gross sales, platform fee, and net earnings per sale. Request withdrawals with full history.',
+    title: 'Delivery handles itself',
+    body: 'Buyers are charged, receipted, and sent their download automatically. You are not the fulfilment department at 2am.',
   },
   {
-    icon: Sparkles,
-    title: 'Simple fee, no surprises',
-    body: 'A transparent platform fee on each sale. No monthly lock-in. You keep the rest of every payment.',
+    icon: Landmark,
+    title: 'Cash out to your own bank',
+    body: 'Your balance is real money you can move. Register a bank account once, then withdraw whenever you like, in your local currency.',
   },
 ]
 
-const stats = [
-  { label: 'Platform fee', value: '10%' },
-  { label: 'Payout rails', value: 'Afriex' },
-  { label: 'Checkout', value: 'Paystack · Flutterwave · Afriex' },
-  { label: 'Currencies', value: 'USD · NGN · GHS · KES' },
+const categories = [
+  { label: 'Templates & docs', example: 'Pitch decks, CVs, contracts', from: 'from ₦2,500' },
+  { label: 'Design assets', example: 'UI kits, fonts, LUTs, mockups', from: 'from $6' },
+  { label: 'Music & audio', example: 'Beat packs, sample libraries', from: 'from ₦5,000' },
+  { label: 'Courses & guides', example: 'Video lessons, playbooks, ebooks', from: 'from GH₵80' },
+  { label: 'Study material', example: 'Past questions, revision packs', from: 'from KSh 300' },
+  { label: 'Photo & video', example: 'Presets, overlays, stock packs', from: 'from $4' },
+]
+
+const faqs = [
+  {
+    audience: 'Buying',
+    q: 'What exactly do I get?',
+    a: 'A digital file — the one described on the product page. After payment you get an instant download link on screen, a receipt by email, and a permanent record on your orders page.',
+  },
+  {
+    audience: 'Buying',
+    q: 'Do I need an account to buy?',
+    a: 'No. You can check out as a guest with just your name and email. Creating an account later keeps every purchase and download in one place.',
+  },
+  {
+    audience: 'Buying',
+    q: 'Something was wrong with the file. Now what?',
+    a: 'Reply to your receipt. Every order is tied to a named creator and a payment record, so refunds and re-deliveries can be traced and resolved.',
+  },
+  {
+    audience: 'Selling',
+    q: 'What does it cost to sell?',
+    a: 'Nothing to open a shop, nothing monthly, nothing per product. A flat 10% comes out of each sale you actually make — that is the whole pricing page.',
+  },
+  {
+    audience: 'Selling',
+    q: 'How fast do I get my money?',
+    a: 'Earnings land in your balance as soon as a sale is confirmed. From there you request a withdrawal to your verified bank account whenever the balance is worth moving.',
+  },
+  {
+    audience: 'Selling',
+    q: 'Can I sell to buyers outside my country?',
+    a: 'Yes. Price in USD, NGN, GHS, or KES, sell to anyone, and still withdraw into your local bank account. Cross-border is the normal case here, not the exception.',
+  },
 ]
 
 export default function HomePage() {
   return (
     <MarketingShell>
-      {/* Hero */}
-      <section className="surface-grain relative overflow-hidden border-b border-border">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:py-28">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-elevated px-3 py-1 text-xs font-medium text-fg-muted shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden />
-              Marketplace + Afriex payouts
-            </p>
-            <h1 className="font-display mt-6 text-4xl font-semibold leading-[1.1] tracking-tight text-fg sm:text-5xl lg:text-[3.25rem]">
-              Sell digital products.
-              <span className="block text-accent">Get paid anywhere.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-fg-muted">
-              Start with what you know. Package it as an ebook, template, or course, and sell it to
-              anyone. Buyers pay with Paystack, Flutterwave, or Afriex Checkout, and you withdraw
-              to your bank through Afriex.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button href="/signup" size="lg" className="gap-2">
-                Start selling free
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button href="/discover" size="lg" variant="outline">
-                Discover products
-              </Button>
-            </div>
-            <p className="mt-4 text-sm text-fg-subtle">
-              No setup fee. Publish in minutes. Withdraw when you hit the minimum.
-            </p>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-border-inverse bg-bg-inverse text-fg-on-inverse">
+        <div className="ink-glow absolute inset-0" aria-hidden />
+        <div className="ledger-lines absolute inset-0" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-28 lg:py-36">
+          <h1 className="rise display-xl max-w-4xl text-fg-on-inverse">
+            Buy it in two taps.
+            <span className="block text-signal">Sell it in ten minutes.</span>
+          </h1>
+          <p className="rise stagger-2 on-ink prose-lede mt-8 max-w-2xl text-fg-on-inverse-muted">
+            A marketplace for digital work — templates, presets, beat packs, courses, study
+            material. Buyers download the moment they pay. The people who made it keep the profit
+            and move it to their own bank.
+          </p>
+          <div className="rise stagger-3 mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button href="/discover" size="lg" variant="signal">
+              Browse the marketplace
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+            <Button href="/signup" size="lg" variant="outline-inverse">
+              Open your shop free
+            </Button>
           </div>
-
-          <div className="relative">
-            <div className="rounded-2xl border border-border bg-bg-elevated p-6 shadow-lift">
-              <div className="flex items-center justify-between border-b border-border-light pb-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">
-                    Available balance
-                  </p>
-                  <p className="mt-1 font-display text-3xl font-semibold text-fg">₦248,500.00</p>
-                </div>
-                <span className="rounded-full bg-success-muted px-2.5 py-1 text-xs font-medium text-success">
-                  Ready to withdraw
-                </span>
-              </div>
-              <ul className="mt-4 space-y-3">
-                {[
-                  { name: 'Brand Strategy Playbook', amount: '₦15,000', status: 'Paid' },
-                  { name: 'Notion Content OS', amount: '₦8,500', status: 'Paid' },
-                  { name: 'UI Kit for Fintech', amount: '₦22,000', status: 'Paid' },
-                ].map((sale) => (
-                  <li
-                    key={sale.name}
-                    className="flex items-center justify-between rounded-lg bg-bg-muted px-3 py-2.5"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-fg">{sale.name}</p>
-                      <p className="text-xs text-fg-subtle">{sale.status}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-fg">{sale.amount}</p>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 rounded-lg border border-dashed border-border bg-accent-muted/40 px-3 py-3 text-sm text-accent-deep">
-                Payouts go to your bank via Afriex. Buyers never see your account details.
-              </div>
-            </div>
-          </div>
+          <p className="rise stagger-4 mt-6 text-sm text-fg-on-inverse-muted">
+            Free to join · No monthly fee · You only pay when you sell
+          </p>
         </div>
       </section>
 
-      {/* Stats strip */}
-      <section className="border-b border-border bg-bg-inverse text-fg-on-accent" aria-label="At a glance">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:grid-cols-4 sm:px-6">
-          {stats.map((s) => (
-            <div key={s.label}>
-              <p className="text-xs font-medium uppercase tracking-wider text-fg-on-accent/60">
-                {s.label}
-              </p>
-              <p className="mt-1 text-sm font-semibold sm:text-base">{s.value}</p>
-            </div>
+      {/* ── What people sell here ────────────────────────────────────────── */}
+      <section className="ticker overflow-hidden border-b border-border bg-bg-muted py-4">
+        <h2 className="sr-only">Popular categories</h2>
+        <div className="ticker-track gap-8" aria-hidden>
+          {[...marquee, ...marquee].map((item, i) => (
+            <span
+              key={`${item}-${i}`}
+              className="flex shrink-0 items-center gap-8 text-sm font-semibold whitespace-nowrap text-fg-muted"
+            >
+              {item}
+              <span className="h-1 w-1 rounded-full bg-accent/50" />
+            </span>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="max-w-2xl">
-          <p className="text-sm font-semibold text-accent">How it works</p>
-          <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
-            From upload to bank deposit
-          </h2>
-          <p className="mt-3 text-fg-muted">
-            Three steps. No plugins. No confusing merchant accounts.
-          </p>
-        </div>
-        <ol className="mt-12 grid gap-6 md:grid-cols-3">
-          {steps.map((step, i) => {
-            const Icon = step.icon
-            return (
-              <li
-                key={step.title}
-                className="relative rounded-xl border border-border bg-bg-elevated p-6 shadow-card"
-              >
-                <span className="absolute right-4 top-4 font-display text-3xl font-semibold text-bg-subtle">
-                  {i + 1}
-                </span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-muted text-accent">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-fg">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-fg-muted">{step.body}</p>
-              </li>
-            )
-          })}
-        </ol>
-      </section>
-
-      {/* Features */}
-      <section className="border-y border-border bg-bg-muted/60">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-accent">Why creators switch</p>
-            <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
-              Storefront that respects how your buyers pay
-            </h2>
+      {/* ── Buyers ───────────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+          <div className="rise-in-view lg:sticky lg:top-28 lg:self-start">
+            <span className="inline-flex rounded-full bg-accent-muted px-3 py-1 text-sm font-semibold text-accent-deep">
+              For buyers
+            </span>
+            <h2 className="display-lg mt-5 text-fg">Pay once. Download now. Keep it forever.</h2>
+            <p className="prose-lede mt-4 max-w-md text-fg-muted">
+              Everything here is made by a person you can name, priced in a currency you recognise,
+              and delivered before you close the tab.
+            </p>
+            <Button href="/discover" size="lg" className="mt-8">
+              Browse the marketplace
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
           </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
-            {features.map((f) => {
-              const Icon = f.icon
-              return (
-                <div key={f.title} className="flex gap-4 rounded-xl bg-bg-elevated p-6 shadow-card">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-subtle text-accent">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-fg">{f.title}</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">{f.body}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
 
-      {/* Collectors callout */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-card">
-          <div className="grid lg:grid-cols-2">
-            <div className="border-b border-border p-8 lg:border-b-0 lg:border-r lg:p-10">
-              <p className="text-sm font-semibold text-accent">For buyers</p>
-              <h2 className="font-display mt-2 text-2xl font-semibold text-fg">
-                Pay with tools you already trust
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-fg-muted">
-                At checkout, pick <strong className="font-medium text-fg">Paystack</strong>,{' '}
-                <strong className="font-medium text-fg">Flutterwave</strong>, or{' '}
-                <strong className="font-medium text-fg">Afriex Checkout</strong>. Cards, transfers,
-                USSD, and mobile money are supported where each collector operates.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="rounded-lg bg-[var(--color-paystack)]/10 px-3 py-2 text-sm font-semibold text-[var(--color-paystack)]">
-                  Paystack
-                </span>
-                <span className="rounded-lg bg-[var(--color-flutterwave)]/10 px-3 py-2 text-sm font-semibold text-[var(--color-flutterwave)]">
-                  Flutterwave
-                </span>
-                <span className="rounded-lg bg-accent-muted px-3 py-2 text-sm font-semibold text-accent-deep">
-                  Afriex Checkout
-                </span>
+          <dl className="divide-y divide-border border-t border-border">
+            {buyerPoints.map((point) => (
+              <div key={point.title} className="rise-in-view py-7 first:pt-8">
+                <dt className="font-display text-xl text-fg">{point.title}</dt>
+                <dd className="mt-2.5 max-w-prose leading-relaxed text-fg-muted">{point.body}</dd>
               </div>
-            </div>
-            <div className="bg-bg-inverse p-8 text-fg-on-accent lg:p-10">
-              <p className="text-sm font-semibold text-fg-on-accent/70">For creators</p>
-              <h2 className="font-display mt-2 text-2xl font-semibold">
-                Afriex is your only payout rail
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-fg-on-accent/75">
-                We separate collection from payout on purpose. Buyers pay through trusted
-                collectors. You withdraw earnings exclusively through Afriex to your verified bank
-                account. Clean books. Clear responsibility.
-              </p>
-              <Link href="/how-it-works" className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-fg-on-accent underline-offset-4 hover:underline">
-                See the full money flow
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="border-t border-border bg-accent-muted/30">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-16 sm:flex-row sm:items-center sm:px-6">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-fg sm:text-3xl">
-              Ready to sell your next product?
+      {/* ── Categories ───────────────────────────────────────────────────── */}
+      <section className="border-y border-border bg-bg-muted">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="display-md max-w-md text-fg">
+              Somebody has already made the thing you were about to build from scratch
             </h2>
-            <p className="mt-2 text-fg-muted">
-              Create a free account, upload a file, and share your product link today.
+            <Link
+              href="/discover"
+              className="group inline-flex items-center gap-1.5 text-sm font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              See everything on sale
+              <ArrowRight
+                className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                aria-hidden
+              />
+            </Link>
+          </div>
+
+          <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((cat) => (
+              <li key={cat.label}>
+                <Link
+                  href="/discover"
+                  className="flex h-full flex-col justify-between gap-6 bg-bg-elevated p-6 transition-colors duration-150 hover:bg-accent-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                >
+                  <div>
+                    <p className="font-display text-lg text-fg">{cat.label}</p>
+                    <p className="mt-1.5 text-sm text-fg-muted">{cat.example}</p>
+                  </div>
+                  <p className="tabular text-sm font-semibold text-accent">{cat.from}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ── Creators ─────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-bg-inverse text-fg-on-inverse">
+        <div className="ledger-lines absolute inset-0" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+          <div className="max-w-2xl">
+            <span className="inline-flex rounded-full bg-signal px-3 py-1 text-sm font-semibold text-fg">
+              For creators
+            </span>
+            <h2 className="display-lg mt-5 text-fg-on-inverse">
+              You made it. You should be the one holding the money.
+            </h2>
+            <p className="on-ink prose-lede mt-4 text-fg-on-inverse-muted">
+              Selling digital work should not require a company, a merchant account, or a friend
+              abroad to receive payments for you. Publish, sell, withdraw. That is the whole loop.
             </p>
           </div>
-          <Button href="/signup" size="lg" className="gap-2 whitespace-nowrap">
-            Create creator account
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+
+          <div className="mt-14 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+            <ol className="space-y-8">
+              {sellerPoints.map((point, i) => {
+                const Icon = point.icon
+                return (
+                  <li key={point.title} className="rise-in-view flex gap-5">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border-inverse bg-bg-inverse-soft text-signal">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    <div>
+                      <h3 className="font-display text-xl text-fg-on-inverse">
+                        <span className="tabular mr-2 text-signal">{i + 1}</span>
+                        {point.title}
+                      </h3>
+                      <p className="on-ink mt-2 max-w-prose text-fg-on-inverse-muted">
+                        {point.body}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+
+            {/* Worked example — the money, in plain arithmetic */}
+            <div className="rise-in-view rounded-2xl border border-border-inverse bg-bg-inverse-soft/60 p-7">
+              <p className="font-display text-sm text-fg-on-inverse">
+                A ₦20,000 sale, all the way through
+              </p>
+              <dl className="mt-6 space-y-4 text-sm">
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-fg-on-inverse-muted">Your listed price</dt>
+                  <dd className="tabular text-fg-on-inverse">₦20,000.00</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-fg-on-inverse-muted">Platform fee (10%)</dt>
+                  <dd className="tabular text-fg-on-inverse-muted">−₦2,000.00</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 border-t border-border-inverse pt-4">
+                  <dt className="font-semibold text-fg-on-inverse">Credited to you</dt>
+                  <dd className="tabular font-display text-2xl text-signal">₦18,000.00</dd>
+                </div>
+              </dl>
+              <p className="on-ink mt-6 text-sm text-fg-on-inverse-muted">
+                No monthly fee, no listing fee, no charge for the days you do not sell. Every sale
+                shows you the same three lines, so nothing about your balance is a surprise.
+              </p>
+              <Button href="/signup" variant="signal" size="lg" className="mt-7 w-full">
+                Start selling free
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+        <h2 className="display-md max-w-lg text-fg">
+          The questions people actually ask before their first order
+        </h2>
+        <div className="mt-10 grid gap-x-12 gap-y-1 md:grid-cols-2">
+          {faqs.map((faq) => (
+            <details
+              key={faq.q}
+              className="group border-b border-border py-5 [&_summary::-webkit-details-marker]:hidden"
+            >
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 rounded-md font-semibold text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-bg">
+                <span>
+                  <span className="mr-2 text-xs font-semibold uppercase tracking-wide text-accent">
+                    {faq.audience}
+                  </span>
+                  {faq.q}
+                </span>
+                <span
+                  className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border text-fg-muted transition-transform duration-200 group-open:rotate-45"
+                  aria-hidden
+                >
+                  +
+                </span>
+              </summary>
+              <p className="mt-3 max-w-prose pr-9 leading-relaxed text-fg-muted">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Two doors ────────────────────────────────────────────────────── */}
+      <section className="border-t border-border bg-bg-muted">
+        <div className="mx-auto grid max-w-6xl gap-px overflow-hidden px-4 py-20 sm:px-6 md:grid-cols-2">
+          <div className="rounded-t-2xl border border-border bg-bg-elevated p-8 sm:p-10 md:rounded-l-2xl md:rounded-tr-none md:border-r-0">
+            <h2 className="display-md text-fg">Here to buy?</h2>
+            <p className="mt-3 max-w-sm leading-relaxed text-fg-muted">
+              Find something that saves you a weekend of work, and have it on your machine before
+              you finish your coffee.
+            </p>
+            <Button href="/discover" size="lg" className="mt-7">
+              Browse the marketplace
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
+          <div className="rounded-b-2xl border border-border-inverse bg-bg-inverse p-8 text-fg-on-inverse sm:p-10 md:rounded-r-2xl md:rounded-bl-none">
+            <h2 className="display-md text-fg-on-inverse">Here to sell?</h2>
+            <p className="on-ink mt-3 max-w-sm text-fg-on-inverse-muted">
+              You already know something worth paying for. Put it up today and let the first sale
+              tell you the rest.
+            </p>
+            <Button href="/signup" variant="signal" size="lg" className="mt-7">
+              Open your shop free
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
         </div>
       </section>
     </MarketingShell>

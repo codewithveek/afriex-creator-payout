@@ -36,7 +36,11 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 export function CardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-bg p-6" aria-label="Loading card" role="status">
+    <div
+      className="rounded-xl border border-border bg-bg-elevated p-6"
+      aria-label="Loading card"
+      role="status"
+    >
       <Skeleton className="mb-2 h-4 w-24" />
       <Skeleton className="h-8 w-32" />
     </div>

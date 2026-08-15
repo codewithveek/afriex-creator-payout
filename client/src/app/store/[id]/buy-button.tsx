@@ -14,13 +14,6 @@ interface Props {
   product: Product
 }
 
-function collectorLabel(id: PaymentCollector['id']): string {
-  if (id === 'flutterwave') return 'Flutterwave'
-  if (id === 'afriex-checkout') return 'Afriex Checkout'
-  if (id === 'stripe') return 'Stripe'
-  return 'Paystack'
-}
-
 export function BuyButton({ product }: Props) {
   const [open, setOpen] = useState(false)
   const [provider, setProvider] = useState<PaymentCollector['id'] | null>(null)
@@ -60,9 +53,14 @@ export function BuyButton({ product }: Props) {
 
   if (!open) {
     return (
-      <Button size="lg" className="w-full sm:w-auto" onClick={() => setOpen(true)}>
-        Buy now · {formatMoney(product.price, product.currency)}
-      </Button>
+      <div>
+        <Button size="lg" className="w-full" onClick={() => setOpen(true)}>
+          Buy now · {formatMoney(product.price, product.currency)}
+        </Button>
+        <p className="mt-3 text-center text-xs text-fg-muted">
+          No account needed. Your email is only used for the receipt and the download.
+        </p>
+      </div>
     )
   }
 
@@ -70,49 +68,50 @@ export function BuyButton({ product }: Props) {
     checkoutMutation.error instanceof ApiClientError
       ? checkoutMutation.error.message
       : checkoutMutation.error
-        ? 'Checkout failed. Please try again.'
+        ? 'We could not start checkout. Check your details and try again.'
         : ''
 
   return (
-    <form
-      onSubmit={handleBuy}
-      className="w-full space-y-4 rounded-xl border border-border bg-bg-elevated p-5 shadow-card"
-    >
+    <form onSubmit={handleBuy} className="space-y-5">
       <div>
-        <h3 className="text-sm font-semibold text-fg">Complete your purchase</h3>
-        <p className="mt-1 text-xs text-fg-muted">
-          You will be redirected to a secure checkout. Download access is emailed after payment.
+        <h2 className="font-display text-lg text-fg">Where should we send it?</h2>
+        <p className="mt-1 text-sm leading-relaxed text-fg-muted">
+          You will pay on a secure page, then land back here with your download.
         </p>
       </div>
 
       {errorMessage && (
-        <div className="rounded-lg bg-error-muted p-3 text-xs text-error" role="alert">
+        <div
+          className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+          role="alert"
+        >
           {errorMessage}
         </div>
       )}
 
-      <Input label="Full name" name="name" autoComplete="name" required />
+      <Input label="Your name" name="name" autoComplete="name" required />
       <Input
-        label="Email for receipt & download"
+        label="Email"
         name="email"
         type="email"
         autoComplete="email"
         required
+        hint="Your receipt and download link go here."
       />
 
-      <fieldset>
-        <legend className="mb-2 text-sm font-medium text-fg">Pay with</legend>
-        {collectorsQuery.isLoading ? (
-          <p className="text-xs text-fg-subtle">Loading payment options…</p>
-        ) : (
+      {collectorsQuery.isLoading ? (
+        <p className="text-sm text-fg-muted">Loading payment options…</p>
+      ) : collectors.length > 1 ? (
+        <fieldset>
+          <legend className="mb-2 text-sm font-semibold text-fg">Pay with</legend>
           <div className="grid gap-2">
             {collectors.map((c) => (
               <label
                 key={c.id}
                 className={cn(
-                  'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
+                  'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors duration-150',
                   selectedProvider === c.id
-                    ? 'border-accent bg-accent-muted/50'
+                    ? 'border-accent bg-accent-muted/60'
                     : 'border-border hover:bg-bg-muted',
                 )}
               >
@@ -122,47 +121,45 @@ export function BuyButton({ product }: Props) {
                   value={c.id}
                   checked={selectedProvider === c.id}
                   onChange={() => setProvider(c.id)}
-                  className="mt-1 accent-[var(--color-accent)]"
+                  className="mt-1 accent-(--color-accent)"
                 />
                 <span>
-                  <span className="flex items-center gap-2 text-sm font-semibold text-fg">
-                    {c.name}
-                    {c.primary && (
-                      <span className="rounded-full bg-accent-muted px-1.5 py-0.5 text-[10px] font-medium text-accent-deep">
-                        Popular
-                      </span>
-                    )}
+                  <span className="block text-sm font-semibold text-fg">{c.name}</span>
+                  <span className="block text-xs leading-relaxed text-fg-muted">
+                    {c.description}
                   </span>
-                  <span className="block text-xs text-fg-muted">{c.description}</span>
                 </span>
               </label>
             ))}
           </div>
-        )}
-        <p className="mt-2 text-xs text-fg-subtle">
-          Paystack and Flutterwave are primary collectors. Afriex Checkout is also available.
-          Creator withdrawals always go through Afriex payouts.
-        </p>
-      </fieldset>
+        </fieldset>
+      ) : null}
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2">
         <Button
           type="submit"
+          size="lg"
           loading={checkoutMutation.isPending}
           disabled={collectorsQuery.isLoading || collectors.length === 0}
-          className="flex-1"
+          className="w-full"
         >
-          Continue to {collectorLabel(selectedProvider)}
+          Pay {formatMoney(product.price, product.currency)}
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={() => setOpen(false)}
           disabled={checkoutMutation.isPending}
+          className="w-full"
         >
-          Cancel
+          Not yet
         </Button>
       </div>
+
+      <p className="text-xs leading-relaxed text-fg-muted">
+        Payment is encrypted end to end. We never see or store your card details, and the creator
+        never sees them either.
+      </p>
     </form>
   )
 }

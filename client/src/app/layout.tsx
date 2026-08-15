@@ -1,35 +1,31 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, Fraunces, Geist_Mono } from 'next/font/google'
+import { Bricolage_Grotesque, Schibsted_Grotesk } from 'next/font/google'
 import { QueryProvider } from '@/components/providers/query-provider'
 import './globals.css'
 
-const body = Plus_Jakarta_Sans({
+const body = Schibsted_Grotesk({
   variable: '--font-body',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  display: 'swap',
 })
 
-const display = Fraunces({
+const display = Bricolage_Grotesque({
   variable: '--font-display',
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
-})
-
-const mono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Afriex Creators: Sell digital products. Get paid anywhere.',
+    default: 'Afriex Creators — Buy from creators. Sell what you know.',
     template: '%s · Afriex Creators',
   },
   description:
-    'The marketplace where creators everywhere sell ebooks, courses, templates, and more. Buyers pay with Paystack, Flutterwave, or Afriex Checkout. Creators withdraw straight to their bank via Afriex.',
+    'A marketplace for digital work. Buyers get instant downloads and a receipt they can trust. Creators publish in minutes, price in their own currency, and cash out to their bank.',
   openGraph: {
     title: 'Afriex Creators',
-    description: 'Sell digital products and get paid anywhere.',
+    description:
+      'Buy from creators. Sell what you know. Instant downloads for buyers, real payouts for creators.',
     type: 'website',
   },
 }
@@ -42,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${body.variable} ${display.variable} ${mono.variable} h-full antialiased`}
+      className={`${body.variable} ${display.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-bg font-sans text-fg">
         <a href="#main-content" className="skip-link">

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 interface Props {
   token: string
@@ -26,13 +25,13 @@ export function ResetPasswordForm({ token }: Props) {
     const confirm = form.get('confirm') as string
 
     if (newPassword !== confirm) {
-      setError('Passwords do not match')
+      setError('Those two passwords are not the same.')
       setLoading(false)
       return
     }
 
     if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters')
+      setError('Use at least 8 characters.')
       setLoading(false)
       return
     }
@@ -41,32 +40,52 @@ export function ResetPasswordForm({ token }: Props) {
       await api.post('/api/auth/reset-password', { newPassword, token })
       router.push('/login')
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to reset password')
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'We could not reset your password. The link may have expired.',
+      )
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <h1 className="text-xl font-semibold text-fg">Reset password</h1>
-        <p className="text-sm text-fg-muted">Enter your new password</p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-error-muted p-3 text-sm text-error" role="alert">
-              {error}
-            </div>
-          )}
-          <Input label="New Password" name="password" type="password" autoComplete="new-password" required />
-          <Input label="Confirm Password" name="confirm" type="password" autoComplete="new-password" required />
-          <Button type="submit" loading={loading} className="w-full">
-            Reset password
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div>
+      <h1 className="display-md text-fg">Set a new password</h1>
+      <p className="mt-2 text-fg-muted">
+        Pick something you have not used elsewhere — this account can move money.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        {error && (
+          <div
+            className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+        <Input
+          label="New password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          hint="At least 8 characters."
+        />
+        <Input
+          label="Confirm new password"
+          name="confirm"
+          type="password"
+          autoComplete="new-password"
+          required
+        />
+        <Button type="submit" size="lg" loading={loading} className="w-full">
+          Save new password
+        </Button>
+      </form>
+    </div>
   )
 }

@@ -2,49 +2,87 @@
 
 /*
   Design system — Afriex Creators
-  Scene: creators anywhere checking sales on a phone in warm daylight;
-  trust and money clarity over cold SaaS chrome.
-  Strategy: committed warm terracotta accent on paper-tinted neutrals.
+
+  Scene: a creator checks a sale alert on her phone at 11pm; a buyer opens a
+  product page on the bus at noon on a cheap LCD. Daylight legibility wins the
+  base surface; brand presence comes from drenched ink bands, not decoration.
+
+  Strategy: Committed. Vivid ultramarine ink carries the marketing surface and
+  the dashboard rail. Warm amber is reserved for action. Money states are the
+  only other saturated color on screen.
 */
 
 @theme inline {
-  --color-bg: oklch(0.985 0.008 75);
-  --color-bg-muted: oklch(0.965 0.012 70);
-  --color-bg-subtle: oklch(0.94 0.016 65);
-  --color-bg-elevated: oklch(0.995 0.004 75);
-  --color-bg-inverse: oklch(0.22 0.02 45);
-  --color-fg: oklch(0.22 0.02 45);
-  --color-fg-muted: oklch(0.45 0.02 50);
-  --color-fg-subtle: oklch(0.58 0.015 55);
-  --color-fg-on-accent: oklch(0.99 0.005 75);
-  --color-border: oklch(0.88 0.015 65);
-  --color-border-light: oklch(0.93 0.01 70);
-  --color-accent: oklch(0.55 0.155 42);
-  --color-accent-hover: oklch(0.48 0.16 40);
-  --color-accent-muted: oklch(0.94 0.04 50);
-  --color-accent-deep: oklch(0.38 0.1 38);
-  --color-success: oklch(0.52 0.12 155);
-  --color-success-muted: oklch(0.94 0.035 155);
-  --color-warning: oklch(0.68 0.14 80);
-  --color-warning-muted: oklch(0.95 0.04 85);
-  --color-error: oklch(0.55 0.18 28);
-  --color-error-muted: oklch(0.94 0.04 28);
-  --color-info: oklch(0.5 0.08 230);
-  --color-info-muted: oklch(0.94 0.02 230);
-  --color-sidebar-bg: oklch(0.98 0.006 70);
-  --color-sidebar-border: oklch(0.92 0.012 65);
-  --color-sidebar-fg-muted: oklch(0.5 0.015 50);
-  --color-paystack: oklch(0.45 0.12 160);
-  --color-flutterwave: oklch(0.55 0.16 280);
-  --font-sans: var(--font-body), system-ui, sans-serif;
-  --font-display: var(--font-display), Georgia, serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --shadow-card: 0 1px 2px oklch(0.3 0.02 45 / 0.04), 0 4px 16px oklch(0.3 0.02 45 / 0.06);
-  --shadow-lift: 0 4px 8px oklch(0.3 0.02 45 / 0.06), 0 12px 32px oklch(0.3 0.02 45 / 0.1);
+  /* Surfaces — cool neutrals tinted toward the brand hue, never warm-by-default */
+  --color-bg: oklch(0.985 0.006 267);
+  --color-bg-muted: oklch(0.96 0.009 267);
+  --color-bg-subtle: oklch(0.925 0.013 267);
+  --color-bg-elevated: oklch(1 0 0);
+  --color-bg-inverse: oklch(0.26 0.098 267);
+  --color-bg-inverse-soft: oklch(0.32 0.09 267);
+
+  /* Ink */
+  --color-fg: oklch(0.22 0.045 267);
+  --color-fg-muted: oklch(0.42 0.035 267);
+  --color-fg-subtle: oklch(0.48 0.03 267);
+  --color-fg-on-accent: oklch(0.99 0.004 267);
+  --color-fg-on-inverse: oklch(0.97 0.008 267);
+  --color-fg-on-inverse-muted: oklch(0.79 0.028 267);
+
+  --color-border: oklch(0.885 0.014 267);
+  --color-border-light: oklch(0.93 0.01 267);
+  --color-border-inverse: oklch(0.36 0.075 267);
+
+  /* Brand */
+  --color-accent: oklch(0.48 0.2 267);
+  --color-accent-hover: oklch(0.41 0.19 267);
+  --color-accent-muted: oklch(0.93 0.035 267);
+  --color-accent-deep: oklch(0.3 0.13 267);
+
+  /* Signal — action on dark, never body text on light */
+  --color-signal: oklch(0.82 0.16 76);
+  --color-signal-hover: oklch(0.76 0.16 74);
+  --color-signal-deep: oklch(0.42 0.1 70);
+  --color-signal-muted: oklch(0.95 0.05 80);
+
+  /* Money & state */
+  --color-success: oklch(0.5 0.13 155);
+  --color-success-muted: oklch(0.93 0.05 155);
+  --color-warning: oklch(0.52 0.12 70);
+  --color-warning-muted: oklch(0.94 0.05 78);
+  --color-error: oklch(0.48 0.19 27);
+  --color-error-muted: oklch(0.94 0.04 25);
+  --color-info: oklch(0.48 0.13 240);
+  --color-info-muted: oklch(0.94 0.03 240);
+
+  /* Dashboard rail — the one Committed surface inside the product */
+  --color-sidebar-bg: oklch(0.24 0.075 267);
+  --color-sidebar-hover: oklch(0.3 0.085 267);
+  --color-sidebar-border: oklch(0.32 0.07 267);
+  --color-sidebar-fg: oklch(0.97 0.01 267);
+  --color-sidebar-fg-muted: oklch(0.74 0.03 267);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px oklch(0.25 0.06 267 / 0.05), 0 4px 16px oklch(0.25 0.06 267 / 0.06);
+  --shadow-lift: 0 4px 10px oklch(0.25 0.06 267 / 0.07), 0 16px 40px oklch(0.25 0.06 267 / 0.12);
+  --shadow-inset: inset 0 1px 0 oklch(1 0 0 / 0.06);
+
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* z-scale */
+  --z-sticky: 40;
+  --z-nav: 50;
+  --z-overlay: 60;
+  --z-drawer: 70;
 }
 
 :root {
@@ -52,24 +90,97 @@
   --fg: var(--color-fg);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Money and quantities never reflow while they update */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .font-display {
   font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* ── Display scale ────────────────────────────────────────────────────────
+   Fluid on marketing surfaces only. The dashboard uses fixed rem steps. */
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.75rem, 1.9rem + 3.9vw, 4.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 1.5rem + 2.3vw, 3.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.prose-lede {
+  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* Light type on ink needs more air */
+.on-ink {
+  line-height: 1.65;
+}
+
+/* ── Surfaces ─────────────────────────────────────────────────────────── */
+
+/* Ledger rules: the visual memory of a paper record, under an ink band */
+.ledger-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    oklch(1 0 0 / 0.032) 0,
+    oklch(1 0 0 / 0.032) 1px,
+    transparent 1px,
+    transparent 3rem
+  );
+}
+
+.ink-glow {
+  background-image: radial-gradient(
+      ellipse 70% 60% at 15% 0%,
+      oklch(0.55 0.19 275 / 0.55),
+      transparent 70%
+    ),
+    radial-gradient(ellipse 50% 50% at 95% 15%, oklch(0.6 0.15 200 / 0.28), transparent 70%);
+}
+
+.hairline-grid {
+  background-image: linear-gradient(to right, var(--color-border-light) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border-light) 1px, transparent 1px);
+  background-size: 4rem 4rem;
 }
 
 .skip-link {
@@ -78,22 +189,120 @@ body {
   left: 0.5rem;
   z-index: 1000;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-md);
   background: var(--color-accent);
   color: var(--color-fg-on-accent);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
-  transition: top 0.15s;
+  transition: top 0.15s var(--ease-out-quart);
 }
 
 .skip-link:focus {
   top: 0.5rem;
 }
 
-/* Soft grain for landing depth without glassmorphism */
-.surface-grain {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, oklch(0.75 0.08 50 / 0.18), transparent),
-    radial-gradient(ellipse 60% 40% at 90% 10%, oklch(0.8 0.05 155 / 0.12), transparent);
+/* ── Motion ───────────────────────────────────────────────────────────────
+   Reveals enhance an already-visible default: nothing starts at opacity 0, so
+   a crawler, a hidden tab, or a browser without scroll timelines still renders
+   readable content. */
+
+@keyframes rise {
+  from {
+    opacity: 0.35;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scroll-linked reveals never touch opacity: a full-page capture, a print, or a
+   browser without view timelines must still render every word at full contrast. */
+@keyframes lift {
+  from {
+    transform: translateY(1.5rem);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.rise {
+  animation: rise 0.7s var(--ease-out-expo) both;
+}
+
+.rise-in-view {
+  animation: lift 1s linear both;
+  animation-timeline: view();
+  animation-range: entry 5% cover 26%;
+}
+
+.stagger-1 {
+  animation-delay: 0.06s;
+}
+.stagger-2 {
+  animation-delay: 0.12s;
+}
+.stagger-3 {
+  animation-delay: 0.18s;
+}
+.stagger-4 {
+  animation-delay: 0.24s;
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker 42s linear infinite;
+}
+
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .rise,
+  .rise-in-view {
+    animation: fade-in 0.01ms both;
+    animation-timeline: auto;
+  }
+
+  .ticker-track {
+    animation: none;
+    transform: none;
+  }
 }
