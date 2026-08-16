@@ -42,7 +42,7 @@ const sellerFlow = [
   },
   {
     title: 'Move the money to your bank',
-    body: 'Register a bank account once, then withdraw whenever you like.',
+    body: 'Register a bank account once, then withdraw whenever you like, in your local currency.',
   },
 ]
 

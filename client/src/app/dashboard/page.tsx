@@ -97,16 +97,19 @@ async function DashboardContent() {
         <div className="relative overflow-hidden rounded-2xl bg-bg-inverse p-6 text-fg-on-inverse sm:p-7">
           <div className="ledger-lines absolute inset-0" aria-hidden />
           <div className="relative">
-            <p className="text-sm font-semibold text-fg-on-inverse-muted">Yours to withdraw</p>
+            <p className="text-sm font-semibold text-fg-on-inverse-muted">
+              Yours to withdraw ({currency})
+            </p>
             <p className="tabular font-display mt-2 text-4xl text-fg-on-inverse sm:text-5xl">
               {formatMoney(balance, currency)}
             </p>
 
             {multiBalances && multiBalances.length > 0 && (
-              <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
+              <ul className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                <li className="text-sm text-fg-on-inverse-muted">Also held:</li>
                 {multiBalances.map((b) => (
-                  <li key={b.currency} className="tabular text-sm text-fg-on-inverse-muted">
-                    + {formatMoney(b.availableBalance, b.currency)}
+                  <li key={b.currency} className="tabular text-sm text-fg-on-inverse">
+                    {formatMoney(b.availableBalance, b.currency)}
                   </li>
                 ))}
               </ul>

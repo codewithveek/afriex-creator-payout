@@ -54,7 +54,7 @@ export function Sidebar({ role }: Props) {
   }, [mobileOpen])
 
   async function handleLogout() {
-    await api.post('/api/auth/logout')
+    await api.post('/api/auth/sign-out')
     router.push('/login')
     router.refresh()
   }

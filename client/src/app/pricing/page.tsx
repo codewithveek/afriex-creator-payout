@@ -14,7 +14,7 @@ const included = [
   'Automatic delivery and buyer receipts',
   'Sales, fees, and balance in one ledger',
   'Withdrawals to your own bank account',
-  'Prices and payouts in US dollars',
+  'Sell in US dollars, get paid in your local currency',
   'Sale alerts as they happen',
   'No monthly subscription',
 ]
@@ -40,7 +40,7 @@ const notes = [
   },
   {
     q: 'Which currency am I paid in?',
-    a: 'US dollars. Prices, balances, and withdrawals all use the same currency, so nothing is lost to a conversion you didn’t choose.',
+    a: 'Products are listed in US dollars. Withdrawals arrive in the payout currency you pick in settings, straight into your local bank account.',
   },
 ]
 

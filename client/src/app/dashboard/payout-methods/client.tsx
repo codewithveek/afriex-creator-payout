@@ -40,7 +40,7 @@ export function PayoutMethodsClient({ initial }: Props) {
         accountNumber: form.get('accountNumber'),
         bankCode: form.get('bankCode'),
         bankName: form.get('bankName'),
-        currency: 'USD',
+        currency: form.get('currency'),
       })
       setShowForm(false)
       router.refresh()
@@ -76,8 +76,7 @@ export function PayoutMethodsClient({ initial }: Props) {
       <CardHeader>
         <h2 className="font-display text-lg text-fg">Add a bank account</h2>
         <p className="mt-1 text-sm text-fg-muted">
-          Use an account in your own name that can receive US dollars. It&apos;s stored encrypted
-          and never shown to buyers.
+          Use an account in your own name. It&apos;s stored encrypted and never shown to buyers.
         </p>
       </CardHeader>
       <CardContent>
@@ -90,6 +89,19 @@ export function PayoutMethodsClient({ initial }: Props) {
             hint="The sort or bank code your bank uses for transfers."
           />
           <Input label="Bank name" name="bankName" required />
+          <Select
+            label="Account currency"
+            id="currency"
+            name="currency"
+            required
+            hint="The currency this account receives. Withdrawals convert into it."
+          >
+            {payoutCurrencies.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" size="lg" loading={loading}>
               Save this account

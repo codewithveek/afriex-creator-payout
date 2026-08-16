@@ -47,7 +47,7 @@ const sellerPoints = [
   {
     icon: Landmark,
     title: 'Cash out to your own bank',
-    body: 'Register a bank account once, then withdraw whenever you like.',
+    body: 'Register a bank account once, then withdraw whenever you like, in your local currency.',
   },
 ]
 
@@ -89,7 +89,7 @@ const faqs = [
   {
     audience: 'Selling',
     q: 'Can I sell to buyers outside my country?',
-    a: 'Yes. Everything is priced in US dollars, so you can sell to anyone and still withdraw into your bank account.',
+    a: 'Yes. Everything is listed in US dollars, so you can sell anywhere, and withdrawals arrive in your local currency.',
   },
 ]
 

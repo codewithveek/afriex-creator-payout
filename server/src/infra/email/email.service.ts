@@ -126,6 +126,29 @@ export async function sendPasswordResetEmail(params: {
   }
 }
 
+export async function sendVerificationEmail(params: {
+  user: { email: string; name: string };
+  url: string;
+}): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: ensureFrom(),
+      to: params.user.email,
+      subject: 'Confirm your email address',
+      html: `
+        <h1>Confirm your email</h1>
+        <p>Hi ${params.user.name},</p>
+        <p>Confirm this address to finish setting up your shop.</p>
+        <p><a href="${params.url}">${params.url}</a></p>
+        <p>If you didn't sign up, you can safely ignore this email.</p>
+      `,
+    });
+    logger.info({ email: params.user.email }, 'Verification email sent');
+  } catch (err) {
+    logger.error({ err }, 'Failed to send verification email');
+  }
+}
+
 export async function sendBuyerReceiptEmail(params: {
   email: string;
   name: string;

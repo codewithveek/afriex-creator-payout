@@ -7,7 +7,7 @@ import type { Session } from './types'
 export async function getSession(): Promise<Session | null> {
   try {
     const cookie = await getCookieHeader()
-    return await apiFetch<Session>('/api/auth/session', { cookie })
+    return await apiFetch<Session>('/api/auth/get-session', { cookie })
   } catch {
     return null
   }

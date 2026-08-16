@@ -17,8 +17,12 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { cookie, ...fetchOptions } = options
 
+  // Only declare a JSON body when one is actually being sent. Fastify rejects
+  // `Content-Type: application/json` with an empty body outright
+  // (FST_ERR_CTP_EMPTY_JSON_BODY), which is how bodyless POSTs like
+  // /api/auth/sign-out used to fail before reaching their handler.
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(fetchOptions.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     ...Object.fromEntries(new Headers(fetchOptions.headers).entries()),
   }
 

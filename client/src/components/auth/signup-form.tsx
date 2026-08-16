@@ -32,7 +32,7 @@ export function SignupForm() {
     }
 
     try {
-      await api.post('/api/auth/signup', { name, email, password })
+      await api.post('/api/auth/sign-up/email', { name, email, password })
       await api.post('/api/onboarding/provision-creator', { phone, country })
       router.push('/dashboard')
       router.refresh()

@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { userRoleEnum } from './enums';
 import { creators } from './creators';
@@ -19,6 +19,10 @@ export const users = pgTable(
     name: varchar('name', { length: 150 }).notNull(),
     role: userRoleEnum('role').notNull().default('CREATOR'),
     emailVerified: boolean('email_verified').notNull().default(false),
+    // Part of better-auth's core user model — the adapter reads and writes it
+    // on every user row, so the column has to exist even though nothing in
+    // the product surfaces an avatar yet.
+    image: text('image'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

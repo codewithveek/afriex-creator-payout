@@ -2,23 +2,43 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../../config/db';
 import { env } from '../../config/env';
-import * as schema from '../../infra/database/schema';
+import { users, sessions, accounts, verifications } from '../../infra/database/schema';
 import { logger } from '../../config/logger';
-import { sendWelcomeEmail } from '../../infra/email/email.service';
+import { sendWelcomeEmail, sendVerificationEmail } from '../../infra/email/email.service';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
-    schema,
+    // Mapped explicitly rather than passing `import * as schema`. The adapter
+    // resolves a model by direct key lookup (`schema[model]`) with no
+    // singular/plural fallback, so a barrel export of `users`/`sessions`/...
+    // leaves it unable to find "user" and every auth call 500s.
+    schema: {
+      user: users,
+      session: sessions,
+      account: accounts,
+      verification: verifications,
+    },
   }),
 
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    // Gated on the environment: outside production RESEND_API_KEY is a
+    // placeholder, so no verification mail can actually be delivered and
+    // requiring it would lock every local account out of sign-in.
+    requireEmailVerification: env.NODE_ENV === 'production',
     autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {
       const { sendPasswordResetEmail } = await import('../../infra/email/email.service');
       await sendPasswordResetEmail({ user, url });
+    },
+  },
+
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail({ user, url });
     },
   },
 
@@ -71,6 +91,12 @@ export const auth = betterAuth({
   },
 
   advanced: {
+    // `users.id` and the auth tables are `uuid ... defaultRandom()`. better-auth's
+    // own generator emits short non-UUID strings that postgres rejects on
+    // insert; 'uuid' makes it omit the column and let the default fire.
+    database: {
+      generateId: 'uuid',
+    },
     disableCSRFCheck: false,
     useSecureCookies: env.NODE_ENV === 'production',
     cookiePrefix: 'acp',
@@ -84,11 +110,14 @@ export const auth = betterAuth({
     },
   },
 
+  // Hooks receive the affected row itself, not a `{ data, oldData }` wrapper.
+  // These were previously written against the latter shape, so the user
+  // create.after hook threw on `params.data.name` and turned every single
+  // sign-up into a 500 — after the row had already been inserted.
   databaseHooks: {
     user: {
       create: {
-        after: async (params: Record<string, unknown>) => {
-          const user = params.data as { id: string; email: string; name?: string };
+        after: async (user: { id: string; email: string; name?: string }) => {
           if (user.name) {
             await sendWelcomeEmail({ id: user.id, email: user.email, name: user.name });
           }
@@ -96,25 +125,21 @@ export const auth = betterAuth({
         },
       },
       update: {
-        after: async (params: Record<string, unknown>) => {
-          const user = params.data as { id: string; email: string };
-          const old = params.oldData as { email?: string } | undefined;
-          if (old?.email !== user.email) {
-            logger.info({ userId: user.id, oldEmail: old?.email, newEmail: user.email }, 'Email changed');
-          }
+        after: async (user: { id: string; email: string }) => {
+          // The previous row isn't passed to this hook, so "did the email
+          // change" can't be answered here — log the current value only.
+          logger.info({ userId: user.id, email: user.email }, 'User updated');
         },
       },
     },
     session: {
       create: {
-        after: async (params: Record<string, unknown>) => {
-          const session = params.data as { userId: string; id: string };
+        after: async (session: { userId: string; id: string }) => {
           logger.info({ userId: session.userId, sessionId: session.id }, 'Session created');
         },
       },
       delete: {
-        before: async (params: Record<string, unknown>) => {
-          const session = params.data as { id: string };
+        before: async (session: { id: string }) => {
           logger.info({ sessionId: session.id }, 'Session deleted');
         },
       },

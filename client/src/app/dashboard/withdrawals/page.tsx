@@ -61,7 +61,7 @@ async function WithdrawalsContent() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <PageHeader
           title="Cash out"
-          description="Move your balance into your own bank account. There's no schedule to wait for."
+          description="Move your balance into your own bank account, in your local currency. There's no schedule to wait for."
         />
         <WithdrawalsClient balances={balances} payoutCurrency={creator?.payoutCurrency ?? 'USD'} />
       </div>

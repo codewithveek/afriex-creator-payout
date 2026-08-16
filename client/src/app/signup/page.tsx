@@ -19,7 +19,7 @@ export default async function SignupPage() {
       points={[
         'Upload, price, share the link',
         'Buyers are charged, receipted, and sent their download automatically',
-        'Withdraw to your own bank account',
+        'Withdraw to your own bank, in your local currency',
       ]}
     >
       <SignupForm />

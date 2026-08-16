@@ -22,7 +22,7 @@ export function LoginForm() {
     const password = form.get('password') as string
 
     try {
-      await api.post('/api/auth/login', { email, password })
+      await api.post('/api/auth/sign-in/email', { email, password })
       router.push('/dashboard')
       router.refresh()
     } catch (err) {

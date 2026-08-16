@@ -1,5 +1,6 @@
 export * from './enums';
 export * from './users';
+export * from './auth';
 export * from './creators';
 export * from './creator-balances';
 export * from './payout-methods';
