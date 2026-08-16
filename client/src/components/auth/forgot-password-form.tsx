@@ -30,7 +30,7 @@ export function ForgotPasswordForm() {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not send that email. Try again in a moment.',
+          : 'We couldn’t send that email. Try again in a moment.',
       )
     } finally {
       setLoading(false)
@@ -45,8 +45,7 @@ export function ForgotPasswordForm() {
         </div>
         <h1 className="display-md mt-5 text-fg">Check your inbox</h1>
         <p className="mt-2 leading-relaxed text-fg-muted">
-          If an account uses that email, a reset link is on its way. It expires shortly, so use it
-          soon.
+          If an account uses that email, a reset link is on its way. It expires shortly.
         </p>
         <Button href="/login" variant="outline" size="lg" className="mt-7 w-full">
           Back to sign in
@@ -59,7 +58,7 @@ export function ForgotPasswordForm() {
     <div>
       <h1 className="display-md text-fg">Reset your password</h1>
       <p className="mt-2 text-fg-muted">
-        Tell us the email on your account and we will send you a link to set a new password.
+        Enter the email on your account and we&apos;ll send you a reset link.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">

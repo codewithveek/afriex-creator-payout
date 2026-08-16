@@ -50,11 +50,11 @@ function SuccessContent() {
   const loadError = !session
     ? email
       ? 'Payment received. Open your orders with this email to pick up the download.'
-      : 'We are missing the payment reference. Your receipt email has the download link, or open your orders.'
+      : 'The payment reference is missing. Your receipt email has the download link.'
     : orderQuery.isError
       ? orderQuery.error instanceof ApiClientError
         ? orderQuery.error.message
-        : 'We could not load this order yet. Your receipt will arrive by email shortly.'
+        : 'We couldn’t load this order yet. Your receipt will arrive by email shortly.'
       : ''
 
   return (
@@ -77,10 +77,10 @@ function SuccessContent() {
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-signal text-fg">
                   <Check className="h-7 w-7" strokeWidth={3} aria-hidden />
                 </div>
-                <h1 className="display-md mt-5 text-fg-on-inverse">Paid. It is yours.</h1>
+                <h1 className="display-md mt-5 text-fg-on-inverse">Paid. It&apos;s yours.</h1>
                 <p className="on-ink mt-2 text-sm text-fg-on-inverse-muted">
-                  Thanks{order.customerName ? `, ${order.customerName.split(' ')[0]}` : ''} — the
-                  creator has been credited and your copy is ready.
+                  Thanks{order.customerName ? `, ${order.customerName.split(' ')[0]}` : ''}. Your
+                  copy is ready.
                 </p>
               </div>
             </div>
@@ -114,8 +114,7 @@ function SuccessContent() {
 
               {order.downloadExpired && (
                 <p className="mt-6 rounded-lg bg-warning-muted p-3 text-sm font-medium text-warning">
-                  This download link has expired. Open your orders to issue a fresh one — it takes
-                  one click.
+                  This download link has expired. Open your orders to issue a fresh one.
                 </p>
               )}
 
@@ -143,7 +142,7 @@ function SuccessContent() {
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-fg-muted">
               {loadError ||
-                'This usually takes a few seconds. Your receipt and download link are on their way to your inbox either way.'}
+                'This usually takes a few seconds. Your receipt and download link are on their way to your inbox.'}
             </p>
             <div className="mt-8 flex flex-col gap-2">
               <Button

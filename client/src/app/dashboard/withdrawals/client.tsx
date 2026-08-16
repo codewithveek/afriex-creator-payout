@@ -39,7 +39,7 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
       return
     }
     if (num > availableNum) {
-      setError(`You can withdraw up to ${formatMoney(available, currency)} right now.`)
+      setError(`You can withdraw up to ${formatMoney(available, currency)}.`)
       return
     }
     setConfirming(true)
@@ -55,16 +55,14 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
       })
       setConfirming(false)
       setAmount('')
-      setSuccess(
-        `${formatMoney(withdrawAmount, currency)} is on its way to your bank. Track it in the list below.`,
-      )
+      setSuccess(`${formatMoney(withdrawAmount, currency)} is on its way to your bank.`)
       router.refresh()
     } catch (err) {
       setConfirming(false)
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not start that withdrawal. Try again shortly.',
+          : 'We couldn’t start that withdrawal. Try again shortly.',
       )
     } finally {
       setLoading(false)
@@ -80,7 +78,7 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
 
       {balances.length > 1 && (
         <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-          Each currency keeps its own balance. Withdraw into a bank account that matches it.
+          Each currency keeps its own balance. Withdraw into a matching bank account.
         </p>
       )}
 
@@ -132,7 +130,7 @@ export function WithdrawalsClient({ balances, payoutCurrency }: Props) {
           </Button>
           {availableNum <= 0 && (
             <p className="text-xs text-fg-muted">
-              Nothing to withdraw yet — your balance fills up as sales come in.
+              Nothing to withdraw yet. Your balance grows as sales come in.
             </p>
           )}
         </form>

@@ -75,7 +75,6 @@ async function ProductContent({ params }: Props) {
 
           <div className="mt-8 flex flex-wrap items-center gap-2">
             <Badge variant="accent">Digital download</Badge>
-            <Badge>{product.currency}</Badge>
             {fileSize && <Badge>{fileSize}</Badge>}
           </div>
 
@@ -86,9 +85,7 @@ async function ProductContent({ params }: Props) {
               {product.description}
             </p>
           ) : (
-            <p className="mt-6 text-fg-muted">
-              The creator has not added a description for this one yet.
-            </p>
+            <p className="mt-6 text-fg-muted">No description added yet.</p>
           )}
         </div>
 
@@ -98,9 +95,7 @@ async function ProductContent({ params }: Props) {
             <p className="tabular font-display mt-1 text-4xl text-fg">
               {formatMoney(product.price, product.currency)}
             </p>
-            <p className="mt-1.5 text-sm text-fg-muted">
-              Pay once, keep it. No subscription attached.
-            </p>
+            <p className="mt-1.5 text-sm text-fg-muted">Pay once, keep it. No subscription.</p>
 
             <div className="mt-6">
               <BuyButton product={product} />

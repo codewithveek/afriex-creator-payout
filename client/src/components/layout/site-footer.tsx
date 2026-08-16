@@ -61,7 +61,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-border-inverse pt-6 text-xs text-fg-on-inverse-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Afriex Creators. All rights reserved.</p>
-          <p>Instant delivery · Payouts to your local bank account</p>
+          <p>Instant delivery · Payouts to your own bank account</p>
         </div>
       </div>
     </footer>

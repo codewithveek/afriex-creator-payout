@@ -76,7 +76,7 @@ export default function AdminPage() {
     error instanceof ApiClientError
       ? error.message
       : error
-        ? 'We could not load that data. Try refreshing.'
+        ? 'We couldn’t load that data. Try refreshing.'
         : ''
 
   const sweepMutation = useMutation({
@@ -126,7 +126,7 @@ export default function AdminPage() {
           <p className="rounded-lg bg-error-muted p-3 text-sm font-medium text-error">
             {sweepMutation.error instanceof ApiClientError
               ? sweepMutation.error.message
-              : 'The sweep could not be triggered.'}
+              : 'The sweep couldn’t be triggered.'}
           </p>
         )}
       </div>

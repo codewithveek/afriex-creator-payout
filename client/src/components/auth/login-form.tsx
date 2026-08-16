@@ -29,7 +29,7 @@ export function LoginForm() {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not sign you in. Check your email and password.',
+          : 'We couldn’t sign you in. Check your email and password.',
       )
     } finally {
       setLoading(false)
@@ -39,7 +39,7 @@ export function LoginForm() {
   return (
     <div>
       <h1 className="display-md text-fg">Welcome back</h1>
-      <p className="mt-2 text-fg-muted">Your shop, your sales, and your balance are waiting.</p>
+      <p className="mt-2 text-fg-muted">Your shop, your sales, and your balance.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         {error && (

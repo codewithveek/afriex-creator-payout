@@ -14,7 +14,7 @@ export default async function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      pitch="Happens to everyone. Let us get you back in."
+      pitch="Happens to everyone. Let's get you back in."
       points={[
         'The reset link goes to the email on your account',
         'It expires quickly, so open it soon',

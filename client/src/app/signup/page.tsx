@@ -6,8 +6,7 @@ import { AuthShell } from '@/components/auth/auth-shell'
 
 export const metadata: Metadata = {
   title: 'Open your shop',
-  description:
-    'Sell your templates, presets, courses or study packs. Free to open, a flat 10% per sale, and withdrawals straight to your bank.',
+  description: 'Sell your templates, presets, courses or study packs. Free to open, a flat 10% per sale.',
 }
 
 export default async function SignupPage() {
@@ -16,11 +15,11 @@ export default async function SignupPage() {
 
   return (
     <AuthShell
-      pitch="Turn the thing you already made into income."
+      pitch="Turn what you already made into income."
       points={[
-        'Publish in one sitting — upload, price, share the link',
-        'Buyers are charged, receipted, and delivered to automatically',
-        'Withdraw to your own bank, in your own currency',
+        'Upload, price, share the link',
+        'Buyers are charged, receipted, and sent their download automatically',
+        'Withdraw to your own bank account',
       ]}
     >
       <SignupForm />

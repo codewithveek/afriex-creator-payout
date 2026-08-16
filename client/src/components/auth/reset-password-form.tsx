@@ -25,7 +25,7 @@ export function ResetPasswordForm({ token }: Props) {
     const confirm = form.get('confirm') as string
 
     if (newPassword !== confirm) {
-      setError('Those two passwords are not the same.')
+      setError('Those two passwords don’t match.')
       setLoading(false)
       return
     }
@@ -43,7 +43,7 @@ export function ResetPasswordForm({ token }: Props) {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not reset your password. The link may have expired.',
+          : 'We couldn’t reset your password. The link may have expired.',
       )
     } finally {
       setLoading(false)
@@ -54,7 +54,7 @@ export function ResetPasswordForm({ token }: Props) {
     <div>
       <h1 className="display-md text-fg">Set a new password</h1>
       <p className="mt-2 text-fg-muted">
-        Pick something you have not used elsewhere — this account can move money.
+        Pick something you haven&apos;t used elsewhere. This account can move money.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">

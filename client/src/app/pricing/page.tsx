@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Pricing',
-  description:
-    'Free to open a shop. No monthly fee, no listing fee. A flat 10% on the sales you actually make — and buyers pay nothing extra.',
+  description: 'Free to open a shop. A flat 10% on each sale. Buyers pay nothing extra.',
 }
 
 const included = [
@@ -15,33 +14,33 @@ const included = [
   'Automatic delivery and buyer receipts',
   'Sales, fees, and balance in one ledger',
   'Withdrawals to your own bank account',
-  'Prices in USD, NGN, GHS, or KES',
+  'Prices and payouts in US dollars',
   'Sale alerts as they happen',
-  'No monthly subscription, ever',
+  'No monthly subscription',
 ]
 
 const examples = [
-  { price: '₦5,000', fee: '₦500', net: '₦4,500' },
-  { price: '₦20,000', fee: '₦2,000', net: '₦18,000' },
+  { price: '$10.00', fee: '$1.00', net: '$9.00' },
   { price: '$25.00', fee: '$2.50', net: '$22.50' },
+  { price: '$50.00', fee: '$5.00', net: '$45.00' },
 ]
 
 const notes = [
   {
     q: 'What does it cost a buyer?',
-    a: 'The listed price and nothing more. No booking fee, no service charge, no surprise line at checkout.',
+    a: 'The listed price and nothing more. No booking fee, no service charge.',
   },
   {
     q: 'When is the fee taken?',
-    a: 'Once, at the moment a sale is confirmed. It comes out of the gross before your balance is credited, and every sale shows the arithmetic.',
+    a: 'Once, when a sale is confirmed. It comes out of the gross before your balance is credited.',
   },
   {
     q: 'Is there a minimum withdrawal?',
-    a: 'A small one — roughly a few dollars — so that transfer costs never eat a payout alive. Above it, you decide the amount and the timing.',
+    a: 'A small one, so transfer costs don’t eat into a payout. Above it, you decide the amount and the timing.',
   },
   {
     q: 'Which currency am I paid in?',
-    a: 'The payout currency you choose in settings. Sell to buyers anywhere and still receive money into your local bank account.',
+    a: 'US dollars. Prices, balances, and withdrawals all use the same currency, so nothing is lost to a conversion you didn’t choose.',
   },
 ]
 
@@ -57,9 +56,8 @@ export default function PricingPage() {
                 We only make money on the days you do
               </h1>
               <p className="on-ink prose-lede mt-5 max-w-lg text-fg-on-inverse-muted">
-                Opening a shop is free. Listing is free. Staying is free. A flat share of each
-                completed sale is the entire business model — and buyers never pay a cent above the
-                listed price.
+                Opening a shop is free. A flat share of each completed sale is the whole business
+                model, and buyers never pay above the listed price.
               </p>
             </div>
             <div className="shrink-0">
@@ -86,7 +84,7 @@ export default function PricingPage() {
             </ul>
 
             <div className="mt-12 rounded-xl border border-border bg-bg-muted p-6 sm:p-8">
-              <h3 className="font-display text-lg text-fg">The arithmetic, on real numbers</h3>
+              <h3 className="font-display text-lg text-fg">The maths, on real numbers</h3>
               <table className="mt-5 w-full text-sm">
                 <caption className="sr-only">Example sales showing price, fee, and payout</caption>
                 <thead>
@@ -121,16 +119,14 @@ export default function PricingPage() {
             <div className="rounded-2xl border border-border bg-bg-elevated p-7 shadow-card sm:p-8">
               <p className="font-display text-xl text-fg">Free to open. Free to keep open.</p>
               <p className="mt-3 text-sm leading-relaxed text-fg-muted">
-                There is no plan to choose and no card to enter. Publish your first product today
-                and the fee only ever applies to money that has already reached you.
+                No plan to choose and no card to enter. The fee only applies to money that has
+                already reached you.
               </p>
               <Button href="/signup" size="lg" className="mt-7 w-full">
                 Open your shop
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
-              <p className="mt-4 text-center text-xs text-fg-muted">
-                Takes about ten minutes, including the upload
-              </p>
+              <p className="mt-4 text-center text-xs text-fg-muted">Takes about ten minutes</p>
             </div>
           </div>
         </div>
@@ -150,7 +146,7 @@ export default function PricingPage() {
           <div>
             <h2 className="display-md text-fg">Just here to buy something?</h2>
             <p className="mt-2 leading-relaxed text-fg-muted">
-              None of this applies to you. You pay the price on the tag and nothing else.
+              None of this applies to you. You pay the price on the tag.
             </p>
           </div>
           <Button href="/discover" variant="outline" size="lg" className="shrink-0">

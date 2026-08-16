@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { CountrySelect } from '@/components/ui/country-select'
 import { PageHeader } from '@/components/dashboard/page-header'
 
-const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
+/** Payout currencies. Products are always priced in USD; payouts convert to this. */
+const payoutCurrencies = ['USD', 'NGN', 'GHS', 'KES'] as const
 
 interface Props {
   creator: {
@@ -37,13 +38,13 @@ export function SettingsClient({ creator }: Props) {
 
     try {
       await api.patch('/api/creators/me', { phone, country, payoutCurrency })
-      setSuccess('Saved. Your next withdrawal will use these details.')
+      setSuccess('Saved. Your next withdrawal uses these details.')
       router.refresh()
     } catch (err) {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not save that. Check the details and try again.',
+          : 'We couldn’t save that. Check the details and try again.',
       )
     } finally {
       setLoading(false)
@@ -54,7 +55,7 @@ export function SettingsClient({ creator }: Props) {
     <div className="max-w-xl space-y-8">
       <PageHeader
         title="Settings"
-        description="Your contact details and the currency your earnings are paid in."
+        description="Your contact details and the currency your earnings are paid out in."
       />
 
       {error && (
@@ -87,7 +88,7 @@ export function SettingsClient({ creator }: Props) {
               type="tel"
               placeholder="+2348012345678"
               required
-              hint="Used to confirm it is really you before money moves."
+              hint="Used to confirm it’s really you before money moves."
             />
             <CountrySelect value={country} onChange={setCountry} required />
 
@@ -96,9 +97,9 @@ export function SettingsClient({ creator }: Props) {
               id="payoutCurrency"
               value={payoutCurrency}
               onChange={(e) => setPayoutCurrency(e.target.value)}
-              hint="Make sure you have a bank account saved in this currency."
+              hint="Your products sell in US dollars. Withdrawals arrive in this currency."
             >
-              {currencies.map((c) => (
+              {payoutCurrencies.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

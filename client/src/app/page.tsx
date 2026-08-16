@@ -47,16 +47,16 @@ const sellerPoints = [
   {
     icon: Landmark,
     title: 'Cash out to your own bank',
-    body: 'Register a bank account once, then withdraw whenever you like, in your local currency.',
+    body: 'Register a bank account once, then withdraw whenever you like.',
   },
 ]
 
 const categories = [
-  { label: 'Templates & docs', example: 'Pitch decks, CVs, contracts', from: 'from ₦2,500' },
+  { label: 'Templates & docs', example: 'Pitch decks, CVs, contracts', from: 'from $3' },
   { label: 'Design assets', example: 'UI kits, fonts, LUTs, mockups', from: 'from $6' },
-  { label: 'Music & audio', example: 'Beat packs, sample libraries', from: 'from ₦5,000' },
-  { label: 'Courses & guides', example: 'Video lessons, playbooks, ebooks', from: 'from GH₵80' },
-  { label: 'Study material', example: 'Past questions, revision packs', from: 'from KSh 300' },
+  { label: 'Music & audio', example: 'Beat packs, sample libraries', from: 'from $5' },
+  { label: 'Courses & guides', example: 'Video lessons, playbooks, ebooks', from: 'from $12' },
+  { label: 'Study material', example: 'Past questions, revision packs', from: 'from $2' },
   { label: 'Photo & video', example: 'Presets, overlays, stock packs', from: 'from $4' },
 ]
 
@@ -74,7 +74,7 @@ const faqs = [
   {
     audience: 'Buying',
     q: 'Something was wrong with the file. Now what?',
-    a: 'Reply to your receipt. so refunds and re-deliveries can be traced and resolved.',
+    a: 'Reply to your receipt. Every order is tied to a creator and a payment record, so refunds and re-deliveries can be traced.',
   },
   {
     audience: 'Selling',
@@ -89,7 +89,7 @@ const faqs = [
   {
     audience: 'Selling',
     q: 'Can I sell to buyers outside my country?',
-    a: 'Yes. Price in USD, NGN, GHS, or KES, sell to anyone, and still withdraw into your local bank account.',
+    a: 'Yes. Everything is priced in US dollars, so you can sell to anyone and still withdraw into your bank account.',
   },
 ]
 
@@ -149,7 +149,7 @@ export default function HomePage() {
             </span>
             <h2 className="display-lg mt-5 text-fg">Pay once. Download now. Keep it forever.</h2>
             <p className="prose-lede mt-4 max-w-md text-fg-muted">
-              Products made by real people, priced in a currency you recognise,
+              Products made by real people, priced in US dollars,
               and delivered instantly.
             </p>
             <Button href="/discover" size="lg" className="mt-8">
@@ -162,7 +162,9 @@ export default function HomePage() {
             {buyerPoints.map((point) => (
               <div key={point.title} className="rise-in-view py-7 first:pt-8">
                 <dt className="font-display text-xl text-fg">{point.title}</dt>
-                <dd className="mt-2.5 max-w-prose leading-relaxed text-fg-muted">{point.body}</dd>
+                {point.body && (
+                  <dd className="mt-2.5 max-w-prose leading-relaxed text-fg-muted">{point.body}</dd>
+                )}
               </div>
             ))}
           </dl>
@@ -219,8 +221,8 @@ export default function HomePage() {
               You made it. You should get paid for it.
             </h2>
             <p className="on-ink prose-lede mt-4 text-fg-on-inverse-muted">
-              Selling what you make shouldn&apos;t require a company, or a friend
-              abroad to receive payments for you. Publish, sell, withdraw..
+              Selling what you make shouldn&apos;t require a company, or a friend abroad to receive
+              payments for you. Publish, sell, withdraw.
             </p>
           </div>
 
@@ -250,20 +252,20 @@ export default function HomePage() {
             {/* Worked example — the money, in plain arithmetic */}
             <div className="rise-in-view rounded-2xl border border-border-inverse bg-bg-inverse-soft/60 p-7">
               <p className="font-display text-sm text-fg-on-inverse">
-                A ₦20,000 sale, all the way through
+                A $50 sale, all the way through
               </p>
               <dl className="mt-6 space-y-4 text-sm">
                 <div className="flex items-baseline justify-between gap-4">
                   <dt className="text-fg-on-inverse-muted">Your listed price</dt>
-                  <dd className="tabular text-fg-on-inverse">₦20,000.00</dd>
+                  <dd className="tabular text-fg-on-inverse">$50.00</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-4">
                   <dt className="text-fg-on-inverse-muted">Platform fee (10%)</dt>
-                  <dd className="tabular text-fg-on-inverse-muted">−₦2,000.00</dd>
+                  <dd className="tabular text-fg-on-inverse-muted">−$5.00</dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-4 border-t border-border-inverse pt-4">
                   <dt className="font-semibold text-fg-on-inverse">Credited to you</dt>
-                  <dd className="tabular font-display text-2xl text-signal">₦18,000.00</dd>
+                  <dd className="tabular font-display text-2xl text-signal">$45.00</dd>
                 </div>
               </dl>
               <p className="on-ink mt-6 text-sm text-fg-on-inverse-muted">

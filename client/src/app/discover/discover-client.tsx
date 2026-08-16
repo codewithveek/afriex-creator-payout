@@ -62,8 +62,8 @@ export function DiscoverClient({ products }: Props) {
             Everything here is made by someone, not scraped from somewhere
           </h1>
           <p className="prose-lede mt-4 max-w-xl text-fg-muted">
-            Templates, presets, courses, study packs and more. Pay in the listed currency, download
-            the second it clears, and keep the file for good.
+            Templates, presets, courses, study packs and more. Pay in the listed currency and
+            download instantly.
           </p>
 
           {products.length > 0 && (
@@ -131,10 +131,9 @@ export function DiscoverClient({ products }: Props) {
           <div className="mt-8">
             <EmptyState
               icon={<Package className="h-6 w-6" />}
-              title="The shelves are still being stocked"
-              description="Nothing is published just yet. Check back shortly — or be the first name on here and put your own work up."
+              title="Nothing published yet"
+              description="Check back shortly, or be the first to put something up."
               action={<Button href="/signup">Open your shop free</Button>}
-              footnote="Free to start. A flat 10% only when you sell."
             />
           </div>
         ) : filtered.length === 0 ? (
@@ -142,7 +141,7 @@ export function DiscoverClient({ products }: Props) {
             <EmptyState
               icon={<Search className="h-6 w-6" />}
               title="Nothing matched that"
-              description="Try a shorter search term, or clear the currency filter to see everything on sale."
+              description="Try a shorter search term, or clear the currency filter."
               action={
                 <Button
                   variant="outline"

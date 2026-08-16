@@ -13,7 +13,7 @@ const sections = [
   },
   {
     title: 'What creators are responsible for',
-    body: 'You must own the rights to everything you list, describe it accurately, and support the people who buy it. Illegal, infringing, or harmful material is not allowed and will be removed.',
+    body: 'You must own the rights to everything you list, describe it accurately, and support the people who buy it. Illegal, infringing, or harmful material isn’t allowed and will be removed.',
   },
   {
     title: 'Payments and fees',
@@ -25,11 +25,11 @@ const sections = [
   },
   {
     title: 'Refunds',
-    body: 'Refund rights for digital goods depend on applicable law and the rules of the payment partner used. A confirmed refund reverses the related earning and adjusts the creator balance accordingly.',
+    body: 'Refund rights for digital goods depend on applicable law and the rules of the payment partner used. A confirmed refund reverses the related earning and adjusts the creator balance.',
   },
   {
     title: 'Buyer downloads',
-    body: 'Download links are tied to a single confirmed order and expire after a period for security. You can issue yourself a new link from your orders page at any time while your order stands.',
+    body: 'Download links are tied to a single confirmed order and expire after a period for security. You can issue yourself a new link from your orders page while your order stands.',
   },
   {
     title: 'Getting in touch',

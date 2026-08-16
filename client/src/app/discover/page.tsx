@@ -9,7 +9,7 @@ import type { Product } from '@/lib/types'
 export const metadata: Metadata = {
   title: 'Browse the marketplace',
   description:
-    'Templates, presets, courses, beat packs and study material from independent creators. Pay in the listed currency and download the moment it clears.',
+    'Templates, presets, courses, beat packs and study material from independent creators.',
 }
 
 async function getProducts() {

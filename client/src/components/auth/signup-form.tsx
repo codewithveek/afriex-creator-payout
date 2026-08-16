@@ -26,7 +26,7 @@ export function SignupForm() {
     const phone = form.get('phone') as string
 
     if (!phone) {
-      setError('We need a phone number to keep your account and payouts secure.')
+      setError('A phone number is required to keep your account and payouts secure.')
       setLoading(false)
       return
     }
@@ -40,7 +40,7 @@ export function SignupForm() {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not create your account. Try again in a moment.',
+          : 'We couldn’t create your account. Try again in a moment.',
       )
     } finally {
       setLoading(false)
@@ -51,7 +51,7 @@ export function SignupForm() {
     <div>
       <h1 className="display-md text-fg">Open your shop</h1>
       <p className="mt-2 text-fg-muted">
-        Free to start. You keep 90% of every sale, and there is nothing to pay until you make one.
+        Free to start. You keep 90% of every sale.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -72,7 +72,7 @@ export function SignupForm() {
           autoComplete="tel"
           placeholder="+2348012345678"
           required
-          hint="Used to verify it is really you before money moves."
+          hint="Used to verify it’s really you before money moves."
         />
         <CountrySelect value={country} onChange={setCountry} required />
         <Input

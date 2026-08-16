@@ -61,7 +61,7 @@ async function WithdrawalsContent() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <PageHeader
           title="Cash out"
-          description="Move your balance into your own bank account, in your own currency. Request it whenever the amount is worth moving — there is no schedule to wait for."
+          description="Move your balance into your own bank account. There's no schedule to wait for."
         />
         <WithdrawalsClient balances={balances} payoutCurrency={creator?.payoutCurrency ?? 'USD'} />
       </div>
@@ -84,8 +84,7 @@ async function WithdrawalsContent() {
           <CardContent className="py-14 text-center">
             <p className="font-display text-lg text-fg">No withdrawals yet</p>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-fg-muted">
-              Once you request one, you will see it here moving from requested to landed, with the
-              date it arrived.
+              Once you request one, you can track it here from requested to landed.
             </p>
           </CardContent>
         </Card>

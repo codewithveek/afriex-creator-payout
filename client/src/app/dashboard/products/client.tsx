@@ -7,15 +7,12 @@ import { api, ApiClientError } from '@/lib/api-client'
 import { formatMoney } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/dashboard/page-header'
 import type { Product } from '@/lib/types'
-
-const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
 
 interface Props {
   initial: Product[]
@@ -72,7 +69,7 @@ export function ProductsClient({ initial }: Props) {
         name: form.get('name'),
         description: form.get('description') || undefined,
         price: form.get('price'),
-        currency: form.get('currency'),
+        currency: 'USD',
         fileUrl: uploadedFile?.url || undefined,
         fileName: uploadedFile?.fileName || undefined,
         fileSize: uploadedFile?.fileSize || undefined,
@@ -82,7 +79,7 @@ export function ProductsClient({ initial }: Props) {
       setUploadedFile(null)
       router.refresh()
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to create product')
+      setError(err instanceof ApiClientError ? err.message : 'We couldn’t create that product. Try again.')
     } finally {
       setLoading(false)
     }
@@ -99,7 +96,7 @@ export function ProductsClient({ initial }: Props) {
         name: form.get('name'),
         description: form.get('description') || undefined,
         price: form.get('price'),
-        currency: form.get('currency'),
+        currency: 'USD',
       }
       if (uploadedFile) {
         body.fileUrl = uploadedFile.url
@@ -112,7 +109,7 @@ export function ProductsClient({ initial }: Props) {
       setUploadedFile(null)
       router.refresh()
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to update product')
+      setError(err instanceof ApiClientError ? err.message : 'We couldn’t save that change. Try again.')
     } finally {
       setLoading(false)
     }
@@ -125,20 +122,19 @@ export function ProductsClient({ initial }: Props) {
       })
       setProducts((prev) => prev.map((p) => (p.id === id ? res.data : p)))
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to update product')
+      setError(err instanceof ApiClientError ? err.message : 'We couldn’t save that change. Try again.')
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this product for good? Buyers who already paid keep their download.'))
-      return
+    if (!confirm('Delete this product? Buyers who already paid keep their download.')) return
     setDeletingId(id)
     setError('')
     try {
       await api.delete(`/api/products/${id}`)
       setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Failed to delete product')
+      setError(err instanceof ApiClientError ? err.message : 'We couldn’t delete that product. Try again.')
     } finally {
       setDeletingId(null)
     }
@@ -178,7 +174,7 @@ export function ProductsClient({ initial }: Props) {
 
       <PageHeader
         title="Products"
-        description="Everything you have for sale. Publish one and you get a link you can share anywhere your audience already is."
+        description="Everything you have for sale. Publish one and you get a link you can share anywhere."
         actions={
           <Button
             onClick={() => {
@@ -220,32 +216,19 @@ export function ProductsClient({ initial }: Props) {
                 name="description"
                 rows={4}
                 defaultValue={editingProduct?.description ?? ''}
-                placeholder="What they get, who it is for, and what format the file is in. Two or three honest lines sell better than a page."
+                placeholder="What they get, who it's for, and what format the file is in."
               />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Input
-                  label="Price"
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  defaultValue={editingProduct?.price}
-                />
-                <Select
-                  label="Currency"
-                  id="currency"
-                  name="currency"
-                  defaultValue={editingProduct?.currency ?? 'NGN'}
-                  required
-                >
-                  {currencies.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              <Input
+                label="Price (USD)"
+                name="price"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                defaultValue={editingProduct?.price}
+                hint="Buyers everywhere pay this amount in US dollars."
+                className="sm:max-w-xs"
+              />
 
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-fg" htmlFor="product-file">
@@ -286,9 +269,9 @@ export function ProductsClient({ initial }: Props) {
         <EmptyState
           icon={<Package className="h-6 w-6" />}
           title="Nothing for sale yet"
-          description="Upload a file, put a price on it, and publish. That is the whole setup — you can edit everything afterwards."
+          description="Upload a file, put a price on it, and publish. You can edit everything afterwards."
           action={<Button onClick={() => openForm('create')}>Add your first product</Button>}
-          footnote="Free to list. A flat 10% only when it sells."
+          footnote="Free to list. A flat 10% per sale."
         />
       )}
 

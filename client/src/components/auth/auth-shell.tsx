@@ -38,7 +38,7 @@ export function AuthShell({ children, pitch, points }: Props) {
         </div>
 
         <p className="relative mt-10 hidden text-xs text-fg-on-inverse-muted lg:block">
-          Free to start · A flat 10% only on the sales you make
+          Free to start · A flat 10% per sale
         </p>
       </aside>
 

@@ -80,7 +80,7 @@ async function DashboardContent() {
           </h1>
           <p className="mt-1.5 text-sm text-fg-muted">
             {sales.data.length > 0
-              ? `${sales.data.length} sale${sales.data.length === 1 ? '' : 's'} so far, and counting.`
+              ? `${sales.data.length} sale${sales.data.length === 1 ? '' : 's'} so far.`
               : 'Everything about your shop, in one place.'}
           </p>
         </div>
@@ -114,8 +114,8 @@ async function DashboardContent() {
 
             <p className="on-ink mt-4 max-w-md text-sm text-fg-on-inverse-muted">
               {creator?.payoutEligible
-                ? 'Your bank account is verified. Cash out whenever the amount is worth moving.'
-                : 'Add a bank account and we will verify it, so your first withdrawal is not the first time we check.'}
+                ? 'Your bank account is verified. Cash out whenever you like.'
+                : 'Add a bank account so it can be verified before your first withdrawal.'}
             </p>
 
             <Button
@@ -165,8 +165,8 @@ async function DashboardContent() {
             <div>
               <p className="font-display text-lg text-fg">Put your first product up</p>
               <p className="mt-1 max-w-md text-sm leading-relaxed text-fg-muted">
-                Upload the file, name a price, publish. You will get a link you can share anywhere
-                your audience already is.
+                Upload the file, name a price, publish. You&apos;ll get a link you can share
+                anywhere.
               </p>
             </div>
           </div>
@@ -190,7 +190,7 @@ async function DashboardContent() {
         <CardContent className="overflow-x-auto p-0">
           {sales.data.length === 0 ? (
             <p className="px-6 py-12 text-center text-sm text-fg-muted">
-              No sales yet. The moment someone buys, it lands here — and so does the money.
+              No sales yet. When someone buys, it lands here.
             </p>
           ) : (
             <table className="w-full text-sm" aria-label="Latest sales">

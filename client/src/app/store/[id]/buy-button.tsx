@@ -58,7 +58,7 @@ export function BuyButton({ product }: Props) {
           Buy now · {formatMoney(product.price, product.currency)}
         </Button>
         <p className="mt-3 text-center text-xs text-fg-muted">
-          No account needed. Your email is only used for the receipt and the download.
+          No account needed. Your email is used for the receipt and the download.
         </p>
       </div>
     )
@@ -68,7 +68,7 @@ export function BuyButton({ product }: Props) {
     checkoutMutation.error instanceof ApiClientError
       ? checkoutMutation.error.message
       : checkoutMutation.error
-        ? 'We could not start checkout. Check your details and try again.'
+        ? 'We couldn’t start checkout. Check your details and try again.'
         : ''
 
   return (
@@ -76,7 +76,7 @@ export function BuyButton({ product }: Props) {
       <div>
         <h2 className="font-display text-lg text-fg">Where should we send it?</h2>
         <p className="mt-1 text-sm leading-relaxed text-fg-muted">
-          You will pay on a secure page, then land back here with your download.
+          You&apos;ll pay on a secure page, then land back here with your download.
         </p>
       </div>
 
@@ -157,8 +157,7 @@ export function BuyButton({ product }: Props) {
       </div>
 
       <p className="text-xs leading-relaxed text-fg-muted">
-        Payment is encrypted end to end. We never see or store your card details, and the creator
-        never sees them either.
+        Payment is encrypted. Your card details are never stored here.
       </p>
     </form>
   )

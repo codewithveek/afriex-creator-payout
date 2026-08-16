@@ -22,7 +22,7 @@ async function PayoutMethodsContent() {
     <div className="space-y-8">
       <PageHeader
         title="Bank accounts"
-        description="Where your earnings land when you cash out. Add the account once, we verify it once, and every withdrawal after that is a single click."
+        description="Where your earnings land when you cash out. Add an account once and every withdrawal after that is a single click."
       />
       <PayoutMethodsClient initial={methods} />
     </div>

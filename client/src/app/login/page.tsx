@@ -6,7 +6,7 @@ import { AuthShell } from '@/components/auth/auth-shell'
 
 export const metadata: Metadata = {
   title: 'Sign in',
-  description: 'Sign in to your shop to check sales, publish products, and withdraw your earnings.',
+  description: 'Check your sales, publish products, and withdraw your earnings.',
 }
 
 export default async function LoginPage() {
@@ -15,10 +15,10 @@ export default async function LoginPage() {
 
   return (
     <AuthShell
-      pitch="Your sales kept selling while you were away."
+      pitch="Your shop kept selling while you were away."
       points={[
-        'See what sold, what it earned, and what is withdrawable',
-        'Publish a new product in a few minutes',
+        'See what sold and what it earned',
+        'Publish a new product in minutes',
         'Move your balance to your own bank account',
       ]}
     >

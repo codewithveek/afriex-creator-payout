@@ -74,7 +74,7 @@ async function EarningsContent() {
     <div className="space-y-8">
       <PageHeader
         title="Earnings"
-        description="What buyers paid, what the flat fee took, and what is left for you. Same numbers your balance is built from."
+        description="What buyers paid, what the fee took, and what's left for you."
         actions={
           <Button href="/dashboard/withdrawals" size="sm">
             Cash out {formatMoney(available, currency)}
@@ -108,8 +108,7 @@ async function EarningsContent() {
         <CardContent className="overflow-x-auto p-0">
           {sales.data.length === 0 ? (
             <p className="px-6 py-12 text-center text-sm text-fg-muted">
-              Nothing sold yet. When a buyer pays, the gross, the fee, and your share all show up
-              here.
+              Nothing sold yet. Each sale shows up here with the gross, the fee, and your share.
             </p>
           ) : (
             <table className="w-full text-sm" aria-label="Sales history">

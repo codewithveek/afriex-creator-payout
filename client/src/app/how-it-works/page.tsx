@@ -5,60 +5,59 @@ import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'How it works',
-  description:
-    'Buying takes a minute: pay, download, keep the receipt. Selling takes an evening: upload, price it, share the link, withdraw your earnings to your bank.',
+  description: 'What happens when you buy, and what happens when you sell.',
 }
 
 const buyerFlow = [
   {
-    title: 'Find something worth the money',
-    body: 'Browse by what you need or search by name. Every listing shows the price in the currency you will actually be charged in, plus what the file is and who made it.',
+    title: 'Find what you need',
+    body: 'Browse by category or search by name. Every listing shows the price you’ll be charged, in US dollars.',
   },
   {
-    title: 'Check out in about a minute',
-    body: 'Name, email, pay. Card, bank transfer, or mobile money — whatever you already use. No account required, though making one keeps your purchases together.',
+    title: 'Check out',
+    body: 'Name, email, pay. No account required.',
   },
   {
     title: 'Download straight away',
-    body: 'The moment payment clears, your download link appears on screen and a receipt lands in your inbox. Nothing to wait for, nobody to chase.',
+    body: 'Your download link appears on screen and a receipt lands in your inbox.',
   },
   {
     title: 'Come back for it any time',
-    body: 'Your orders page keeps every purchase. If a link ever expires, you issue yourself a new one in a single click.',
+    body: 'Your orders page keeps every purchase. If a link expires, issue yourself a new one.',
   },
 ]
 
 const sellerFlow = [
   {
     title: 'Upload what you already have',
-    body: 'An ebook, a template pack, a preset bundle, a recorded course, a set of past questions. If it is a file and it is useful, it can be sold here.',
+    body: 'An ebook, a template pack, a preset bundle, a recorded course, a set of past questions.',
   },
   {
     title: 'Set your own price',
-    body: 'Price in USD, NGN, GHS, or KES. Change it whenever you like. Publish, and you get a link to share anywhere your audience already is.',
+    body: 'Set a price in US dollars, and change it whenever you like.',
   },
   {
     title: 'Get paid while you sleep',
-    body: 'Buyers are charged, receipted, and delivered to automatically. Your balance updates per sale with the gross, the flat 10% fee, and the amount that is yours.',
+    body: 'Your balance updates per sale with the gross, the flat 10% fee, and the amount that’s yours.',
   },
   {
     title: 'Move the money to your bank',
-    body: 'Register a bank account once. Request a withdrawal whenever the balance is worth moving, and it goes to that account in your local currency.',
+    body: 'Register a bank account once, then withdraw whenever you like.',
   },
 ]
 
 const safeguards = [
   {
     title: 'Money is separated from files',
-    body: 'Payment is confirmed before a download link is ever issued, and a link is tied to one order. Nobody gets the file for free, nobody pays for nothing.',
+    body: 'Payment is confirmed before a download link is issued, and a link is tied to one order.',
   },
   {
     title: 'Both sides keep a record',
-    body: 'Buyers get a receipt and a permanent order history. Creators get a per-sale ledger with gross, fee, and net. The same numbers on both screens.',
+    body: 'Buyers get a receipt and a permanent order history. Creators get a per-sale ledger with gross, fee, and net.',
   },
   {
     title: 'Bank details stay private',
-    body: 'Buyers never see where a creator banks. Creators never see a buyer’s card. Payment details are encrypted and never stored in plain text.',
+    body: 'Buyers never see where a creator banks. Creators never see a buyer’s card. Payment details are encrypted.',
   },
 ]
 
@@ -156,12 +155,9 @@ export default function HowItWorksPage() {
     <MarketingShell>
       <section className="border-b border-border bg-bg-muted">
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-          <h1 className="display-lg text-fg">
-            One marketplace, two very different afternoons
-          </h1>
+          <h1 className="display-lg text-fg">One marketplace, two sides</h1>
           <p className="prose-lede mt-5 text-fg-muted">
-            Buying takes about a minute. Selling takes about an evening, once. Here is exactly what
-            happens on each side, in the order it happens.
+            What happens when you buy, and what happens when you sell.
           </p>
         </div>
       </section>
@@ -170,18 +166,18 @@ export default function HowItWorksPage() {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           <Track
             tone="light"
-            label="If you are buying"
+            label="If you're buying"
             title="Pay, download, get on with your day"
-            lede="No shipping, no waiting, no back-and-forth with a stranger about whether the transfer went through."
+            lede="No shipping, no waiting, no back-and-forth about whether the transfer went through."
             steps={buyerFlow}
             cta="Browse the marketplace"
             ctaHref="/discover"
           />
           <Track
             tone="ink"
-            label="If you are selling"
+            label="If you're selling"
             title="Publish once, get paid every time"
-            lede="Set it up in an evening and it keeps working — including on the days you do not open your laptop."
+            lede="Set it up once and it keeps working, including on the days you don't open your laptop."
             steps={sellerFlow}
             cta="Open your shop free"
             ctaHref="/signup"
@@ -191,9 +187,7 @@ export default function HowItWorksPage() {
 
       <section className="border-y border-border bg-bg-muted">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <h2 className="display-md max-w-lg text-fg">
-            What keeps both sides of a sale honest
-          </h2>
+          <h2 className="display-md max-w-lg text-fg">What protects both sides</h2>
           <dl className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-3">
             {safeguards.map((item) => (
               <div key={item.title} className="border-t-2 border-accent pt-5">
@@ -207,9 +201,9 @@ export default function HowItWorksPage() {
 
       <section className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-16 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <h2 className="display-md text-fg">Still deciding which side you are on?</h2>
+          <h2 className="display-md text-fg">Still deciding which side you&apos;re on?</h2>
           <p className="mt-2 max-w-lg leading-relaxed text-fg-muted">
-            Most people arrive to buy one thing and come back to sell one. Both are free to start.
+            Both are free to start.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">

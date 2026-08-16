@@ -13,11 +13,11 @@ const sections = [
   },
   {
     title: 'How we use it',
-    body: 'To run the marketplace: take payments, deliver downloads, send receipts and notifications, calculate earnings, and move money to creators. We do not sell personal data, and we do not share buyer contact details with creators beyond what a receipt requires.',
+    body: 'To run the marketplace: take payments, deliver downloads, send receipts and notifications, calculate earnings, and move money to creators. We don’t sell personal data, and we don’t share buyer contact details with creators beyond what a receipt requires.',
   },
   {
     title: 'Who else touches it',
-    body: 'Licensed payment partners handle card and transfer processing, a transactional email provider sends your receipts and alerts, and cloud storage holds the product files creators upload. Each is bound by contract to use the data only to provide that service. A current list of named processors is available on request.',
+    body: 'Licensed payment partners handle card and transfer processing, a transactional email provider sends receipts and alerts, and cloud storage holds the product files creators upload. Each is bound by contract to use the data only to provide that service. A current list of named processors is available on request.',
   },
   {
     title: 'Card details',
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: 'Your rights',
-    body: 'You can request a copy of your data or ask for your account to be deleted. Some records — sales, refunds, and payouts — must be retained for legal, tax, and fraud-prevention reasons even after an account closes.',
+    body: 'You can request a copy of your data or ask for your account to be deleted. Sales, refunds, and payout records must be retained for legal, tax, and fraud-prevention reasons even after an account closes.',
   },
   {
     title: 'Getting in touch',

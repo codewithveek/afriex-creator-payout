@@ -92,7 +92,7 @@ function OrdersContent() {
       : signupMutation.error instanceof ApiClientError
         ? signupMutation.error.message
         : loginMutation.error || signupMutation.error
-          ? 'That did not work. Check the email and password and try again.'
+          ? 'That didn’t work. Check the email and password and try again.'
           : ''
 
   const sessionExpired =
@@ -129,20 +129,20 @@ function OrdersContent() {
     return (
       <div className="mx-auto grid max-w-4xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16">
         <div>
-          <h1 className="display-lg text-fg">Everything you have bought, in one place</h1>
+          <h1 className="display-lg text-fg">Everything you&apos;ve bought, in one place</h1>
           <p className="prose-lede mt-4 text-fg-muted">
             {sessionExpired
               ? 'Your session timed out. Log back in to get to your downloads.'
-              : 'Sign in with the email you used at checkout to re-download anything you have paid for — including purchases you made as a guest.'}
+              : 'Sign in with the email you used at checkout, including for guest purchases.'}
           </p>
           <ul className="mt-7 space-y-3 text-sm text-fg-muted">
             <li className="flex gap-3">
               <Download className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
-              Every file you have paid for, ready to download again
+              Every file you&apos;ve paid for, ready to download again
             </li>
             <li className="flex gap-3">
               <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
-              Expired link? Issue yourself a new one in a click
+              Expired link? Issue yourself a new one
             </li>
           </ul>
         </div>
@@ -154,7 +154,7 @@ function OrdersContent() {
           <p className="mt-1.5 text-sm text-fg-muted">
             {signingUp
               ? 'Use the same email you checked out with and your past orders come with you.'
-              : 'No account yet? Making one takes a moment.'}
+              : 'No account yet? Creating one takes a moment.'}
           </p>
 
           {authError && (
@@ -240,7 +240,7 @@ function OrdersContent() {
     ordersQuery.error instanceof ApiClientError
       ? ordersQuery.error.message
       : ordersQuery.isError
-        ? 'We could not load your orders just now. Try again in a moment.'
+        ? 'We couldn’t load your orders. Try again in a moment.'
         : ''
 
   return (
@@ -251,7 +251,7 @@ function OrdersContent() {
           <p className="mt-1.5 text-sm text-fg-muted">
             {orders.length > 0
               ? 'Download anything here as many times as you need.'
-              : 'Your purchases and downloads will show up here.'}
+              : 'Your purchases will show up here.'}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -280,7 +280,7 @@ function OrdersContent() {
         <EmptyState
           icon={<Package className="h-6 w-6" />}
           title="Nothing bought yet"
-          description="When you buy something, it lands here with a download button that keeps working."
+          description="When you buy something, it lands here with a download button."
           action={<Button href="/discover">Browse the marketplace</Button>}
         />
       ) : (

@@ -12,7 +12,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Landmark } from 'lucide-react'
 import type { PayoutMethod } from '@/lib/types'
 
-const currencies = ['USD', 'NGN', 'GHS', 'KES'] as const
+/** Payout currencies. Products are always priced in USD; payouts convert to this. */
+const payoutCurrencies = ['USD', 'NGN', 'GHS', 'KES'] as const
 
 interface Props {
   initial: PayoutMethod[]
@@ -39,7 +40,7 @@ export function PayoutMethodsClient({ initial }: Props) {
         accountNumber: form.get('accountNumber'),
         bankCode: form.get('bankCode'),
         bankName: form.get('bankName'),
-        currency: form.get('currency'),
+        currency: 'USD',
       })
       setShowForm(false)
       router.refresh()
@@ -47,7 +48,7 @@ export function PayoutMethodsClient({ initial }: Props) {
       setError(
         err instanceof ApiClientError
           ? err.message
-          : 'We could not save that account. Check the details and try again.',
+          : 'We couldn’t save that account. Check the details and try again.',
       )
     } finally {
       setLoading(false)
@@ -62,7 +63,7 @@ export function PayoutMethodsClient({ initial }: Props) {
       setMethods((prev) => prev.filter((m) => m.id !== id))
     } catch (err) {
       setError(
-        err instanceof ApiClientError ? err.message : 'We could not remove that account just now.',
+        err instanceof ApiClientError ? err.message : 'We couldn’t remove that account.',
       )
     } finally {
       setDeleting(null)
@@ -75,7 +76,8 @@ export function PayoutMethodsClient({ initial }: Props) {
       <CardHeader>
         <h2 className="font-display text-lg text-fg">Add a bank account</h2>
         <p className="mt-1 text-sm text-fg-muted">
-          Use an account in your own name. We only ever store it encrypted, and buyers never see it.
+          Use an account in your own name that can receive US dollars. It&apos;s stored encrypted
+          and never shown to buyers.
         </p>
       </CardHeader>
       <CardContent>
@@ -88,19 +90,6 @@ export function PayoutMethodsClient({ initial }: Props) {
             hint="The sort or bank code your bank uses for transfers."
           />
           <Input label="Bank name" name="bankName" required />
-          <Select
-            label="Currency"
-            id="currency"
-            name="currency"
-            required
-            hint="Match this to the balance you plan to withdraw."
-          >
-            {currencies.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </Select>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" size="lg" loading={loading}>
               Save this account
@@ -136,7 +125,7 @@ export function PayoutMethodsClient({ initial }: Props) {
         <EmptyState
           icon={<Landmark className="h-6 w-6" />}
           title="No bank account on file"
-          description="Add one now and it will be verified before you ever need it — so your first withdrawal is not the first time anything gets checked."
+          description="Add one now so it's verified before your first withdrawal."
           action={<Button onClick={() => setShowForm(true)}>Add a bank account</Button>}
           footnote="Stored encrypted. Never shown to buyers."
         />
