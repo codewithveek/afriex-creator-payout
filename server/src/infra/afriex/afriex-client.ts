@@ -91,6 +91,48 @@ interface ResolveAccountParams {
   countryCode: string;
 }
 
+/**
+ * The SDK types `getInstitutions` as `Institution[]`, but its HTTP client
+ * returns the parsed response body untouched, so what actually arrives is the
+ * API envelope — `{ data: [...] }`. Accept either shape rather than trusting
+ * the declared type, so this keeps working if the SDK is corrected later.
+ */
+/** Same envelope caveat as the institutions list — read through `data` if present. */
+function readRecipientName(response: unknown): string | null {
+  const body = (response as { data?: unknown })?.data ?? response;
+  const name = (body as { recipientName?: unknown })?.recipientName;
+  return typeof name === 'string' && name.trim() ? name : null;
+}
+
+function toInstitutionArray(
+  response: unknown,
+  channel: PayoutChannel,
+  countryCode: string,
+): AfriexInstitution[] {
+  const list = Array.isArray(response)
+    ? response
+    : Array.isArray((response as { data?: unknown })?.data)
+      ? ((response as { data: unknown[] }).data)
+      : null;
+
+  if (!list) {
+    logger.error(
+      { channel, countryCode, received: typeof response },
+      'Afriex returned an unrecognised institutions payload',
+    );
+    throw new Error('Could not read the list of institutions from Afriex');
+  }
+
+  return list
+    .map((item) => item as Partial<AfriexInstitution>)
+    .filter((item) => Boolean(item?.institutionCode && item?.institutionName))
+    .map((item) => ({
+      institutionId: item.institutionId ?? item.institutionCode!,
+      institutionName: item.institutionName!,
+      institutionCode: item.institutionCode!,
+    }));
+}
+
 export const afriexClient = {
   /**
    * Banks (or mobile-money providers) that can receive a payout in this
@@ -101,12 +143,8 @@ export const afriexClient = {
     const cached = institutionsCache.get(key);
     if (cached && cached.expiresAt > Date.now()) return cached.value;
 
-    const institutions = await afriex.paymentMethods.getInstitutions({ channel, countryCode });
-    const value = institutions.map((i) => ({
-      institutionId: i.institutionId,
-      institutionName: i.institutionName,
-      institutionCode: i.institutionCode,
-    }));
+    const response = await afriex.paymentMethods.getInstitutions({ channel, countryCode });
+    const value = toInstitutionArray(response, channel, countryCode);
 
     institutionsCache.set(key, { expiresAt: Date.now() + INSTITUTIONS_TTL_MS, value });
     return value;
@@ -124,7 +162,7 @@ export const afriexClient = {
       institutionCode: params.institutionCode,
       countryCode: params.countryCode,
     });
-    return { accountName: resolved.recipientName ?? null };
+    return { accountName: readRecipientName(resolved) };
   },
 
   async registerRecipient(params: RegisterRecipientParams): Promise<RegisterRecipientResult> {
@@ -150,7 +188,7 @@ export const afriexClient = {
         institutionCode: params.bankCode,
         countryCode: params.countryCode,
       });
-      resolvedAccountName = resolved.recipientName;
+      resolvedAccountName = readRecipientName(resolved) ?? undefined;
       verified = resolvedAccountName ? namesMatch(resolvedAccountName, params.fullName) : false;
     } catch (err) {
       logger.warn(
