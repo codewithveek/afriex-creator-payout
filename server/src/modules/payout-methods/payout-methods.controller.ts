@@ -1,7 +1,11 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { payoutMethodsService } from './payout-methods.service';
 import { creatorsService } from '../creators/creators.service';
-import type { AddPayoutMethodInput } from './payout-methods.schema';
+import type {
+  AddPayoutMethodInput,
+  ListInstitutionsInput,
+  ResolveAccountInput,
+} from './payout-methods.schema';
 import { db } from '../../config/db';
 import { users } from '../../infra/database/schema';
 import { eq } from 'drizzle-orm';
@@ -21,6 +25,27 @@ export const payoutMethodsController = {
       phone: creator.phone,
     });
     return reply.code(201).send({ data: method });
+  },
+
+  async listInstitutions(
+    request: FastifyRequest<{ Querystring: ListInstitutionsInput }>,
+    reply: FastifyReply,
+  ) {
+    const creator = await creatorsService.getByUserId(request.user!.id);
+    const institutions = await payoutMethodsService.listInstitutions(
+      creator.id,
+      request.query.channel,
+    );
+    return reply.code(200).send({ data: institutions });
+  },
+
+  async resolveAccount(
+    request: FastifyRequest<{ Body: ResolveAccountInput }>,
+    reply: FastifyReply,
+  ) {
+    const creator = await creatorsService.getByUserId(request.user!.id);
+    const result = await payoutMethodsService.resolveAccount(creator.id, request.body);
+    return reply.code(200).send({ data: result });
   },
 
   async listMyPayoutMethods(request: FastifyRequest, reply: FastifyReply) {

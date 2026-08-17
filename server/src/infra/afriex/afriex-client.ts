@@ -16,6 +16,9 @@ export const afriex = new AfriexSDK({
 });
 
 
+/** The payout destinations we let creators register. */
+export type PayoutChannel = 'BANK_ACCOUNT' | 'MOBILE_MONEY';
+
 interface RegisterRecipientParams {
   fullName: string;
   email: string;
@@ -24,6 +27,7 @@ interface RegisterRecipientParams {
   accountNumber: string;
   bankCode: string;
   bankName: string;
+  channel?: PayoutChannel;
 }
 
 interface RegisterRecipientResult {
@@ -66,8 +70,65 @@ function namesMatch(resolvedName: string, creatorName: string): boolean {
   return a.length > 0 && a === b;
 }
 
+/**
+ * Institutions change rarely but the "choose your bank" dropdown is fetched on
+ * every visit to the payout form, so a short in-process cache keeps us from
+ * re-asking Afriex for a list that is effectively static.
+ */
+const INSTITUTIONS_TTL_MS = 30 * 60 * 1000;
+const institutionsCache = new Map<string, { expiresAt: number; value: AfriexInstitution[] }>();
+
+export interface AfriexInstitution {
+  institutionId: string;
+  institutionName: string;
+  institutionCode: string;
+}
+
+interface ResolveAccountParams {
+  channel: PayoutChannel;
+  accountNumber: string;
+  institutionCode: string;
+  countryCode: string;
+}
+
 export const afriexClient = {
+  /**
+   * Banks (or mobile-money providers) that can receive a payout in this
+   * country. The creator picks one; we never let them type a bank code.
+   */
+  async getInstitutions(channel: PayoutChannel, countryCode: string): Promise<AfriexInstitution[]> {
+    const key = `${channel}:${countryCode}`;
+    const cached = institutionsCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+    const institutions = await afriex.paymentMethods.getInstitutions({ channel, countryCode });
+    const value = institutions.map((i) => ({
+      institutionId: i.institutionId,
+      institutionName: i.institutionName,
+      institutionCode: i.institutionCode,
+    }));
+
+    institutionsCache.set(key, { expiresAt: Date.now() + INSTITUTIONS_TTL_MS, value });
+    return value;
+  },
+
+  /**
+   * Asks Afriex who owns an account number. Returns the account-holder name so
+   * the creator can confirm it before saving — the same call the registration
+   * flow uses to decide VERIFIED vs PENDING.
+   */
+  async resolveAccount(params: ResolveAccountParams): Promise<{ accountName: string | null }> {
+    const resolved = await afriex.paymentMethods.resolveAccount({
+      channel: params.channel,
+      accountNumber: params.accountNumber,
+      institutionCode: params.institutionCode,
+      countryCode: params.countryCode,
+    });
+    return { accountName: resolved.recipientName ?? null };
+  },
+
   async registerRecipient(params: RegisterRecipientParams): Promise<RegisterRecipientResult> {
+    const channel = params.channel ?? 'BANK_ACCOUNT';
     const customer = await afriex.customers.create({
       fullName: params.fullName,
       email: params.email,
@@ -84,7 +145,7 @@ export const afriexClient = {
     let resolvedAccountName: string | undefined;
     try {
       const resolved = await afriex.paymentMethods.resolveAccount({
-        channel: 'BANK_ACCOUNT',
+        channel,
         accountNumber: params.accountNumber,
         institutionCode: params.bankCode,
         countryCode: params.countryCode,
@@ -99,7 +160,7 @@ export const afriexClient = {
     }
 
     const paymentMethod = await afriex.paymentMethods.create({
-      channel: 'BANK_ACCOUNT',
+      channel,
       customerId: customer.customerId,
       accountName: resolvedAccountName ?? params.fullName,
       accountNumber: params.accountNumber,

@@ -1,5 +1,6 @@
 export const queryKeys = {
   collectors: ['checkout', 'collectors'] as const,
+  institutions: (channel: string) => ['payout-methods', 'institutions', channel] as const,
   orderBySession: (sessionId: string) => ['orders', 'by-session', sessionId] as const,
   customerOrders: (token: string) => ['customers', 'orders', token] as const,
   admin: {

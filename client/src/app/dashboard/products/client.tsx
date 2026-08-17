@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Copy, ExternalLink, Package } from 'lucide-react'
 import { api, ApiClientError } from '@/lib/api-client'
-import { formatMoney } from '@/lib/utils'
+import { formatMoney, formatFileSize } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,18 +27,22 @@ export function ProductsClient({ initial }: Props) {
   const [uploading, setUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [uploadError, setUploadError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [uploadedFile, setUploadedFile] = useState<{
-    url: string
-    fileName: string
-    fileSize: string
-  } | null>(null)
+  /**
+   * The chosen file is held here and only sent when the creator saves. Picking
+   * a file is not a commitment — uploading on change burns their data on a
+   * form they might abandon, and leaves orphaned files behind when they do.
+   */
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const editingProduct = editingId ? products.find((p) => p.id === editingId) : null
 
-  async function handleFileUpload(file: File) {
+  /** Uploads the pending file. Throws with a readable message on failure. */
+  async function uploadSelectedFile(
+    file: File,
+  ): Promise<{ url: string; fileName: string; fileSize: string }> {
     setUploading(true)
-    setError('')
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -46,14 +50,35 @@ export function ProductsClient({ initial }: Props) {
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/upload/product-file`,
         { method: 'POST', credentials: 'include', body: formData },
       )
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error?.message || 'Upload failed')
+
+      // The body is not always JSON — a proxy rejecting an oversized upload
+      // replies with HTML, and blindly calling res.json() would swallow the
+      // real reason and report a parse error instead.
+      const text = await res.text()
+      let payload: { data?: { url: string; fileName: string; fileSize: string }; error?: { message?: string } } = {}
+      try {
+        payload = text ? JSON.parse(text) : {}
+      } catch {
+        payload = {}
       }
-      const json = await res.json()
-      setUploadedFile(json.data)
+
+      if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error(`“${file.name}” is too large to upload. Try a smaller file.`)
+        }
+        throw new Error(
+          payload.error?.message || `Upload failed (${res.status}). Try again in a moment.`,
+        )
+      }
+      if (!payload.data?.url) {
+        throw new Error('The upload finished but no file came back. Try again.')
+      }
+      return payload.data
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      if (err instanceof TypeError) {
+        throw new Error('The upload could not reach the server. Check your connection and retry.')
+      }
+      throw err
     } finally {
       setUploading(false)
     }
@@ -63,20 +88,33 @@ export function ProductsClient({ initial }: Props) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setUploadError('')
     const form = new FormData(e.currentTarget)
+
+    let uploaded: { url: string; fileName: string; fileSize: string } | null = null
+    if (selectedFile) {
+      try {
+        uploaded = await uploadSelectedFile(selectedFile)
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : 'Upload failed.')
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       const res = await api.post<{ data: Product }>('/api/products', {
         name: form.get('name'),
         description: form.get('description') || undefined,
         price: form.get('price'),
         currency: 'USD',
-        fileUrl: uploadedFile?.url || undefined,
-        fileName: uploadedFile?.fileName || undefined,
-        fileSize: uploadedFile?.fileSize || undefined,
+        fileUrl: uploaded?.url || undefined,
+        fileName: uploaded?.fileName || undefined,
+        fileSize: uploaded?.fileSize || undefined,
       })
       setProducts((prev) => [res.data, ...prev])
       setShowForm(false)
-      setUploadedFile(null)
+      setSelectedFile(null)
       router.refresh()
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'We couldn’t create that product. Try again.')
@@ -90,7 +128,20 @@ export function ProductsClient({ initial }: Props) {
     if (!editingId) return
     setLoading(true)
     setError('')
+    setUploadError('')
     const form = new FormData(e.currentTarget)
+
+    let uploaded: { url: string; fileName: string; fileSize: string } | null = null
+    if (selectedFile) {
+      try {
+        uploaded = await uploadSelectedFile(selectedFile)
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : 'Upload failed.')
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       const body: Record<string, unknown> = {
         name: form.get('name'),
@@ -98,15 +149,15 @@ export function ProductsClient({ initial }: Props) {
         price: form.get('price'),
         currency: 'USD',
       }
-      if (uploadedFile) {
-        body.fileUrl = uploadedFile.url
-        body.fileName = uploadedFile.fileName
-        body.fileSize = uploadedFile.fileSize
+      if (uploaded) {
+        body.fileUrl = uploaded.url
+        body.fileName = uploaded.fileName
+        body.fileSize = uploaded.fileSize
       }
       const res = await api.patch<{ data: Product }>(`/api/products/${editingId}`, body)
       setProducts((prev) => prev.map((p) => (p.id === editingId ? res.data : p)))
       setEditingId(null)
-      setUploadedFile(null)
+      setSelectedFile(null)
       router.refresh()
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'We couldn’t save that change. Try again.')
@@ -149,7 +200,8 @@ export function ProductsClient({ initial }: Props) {
 
   function openForm(mode: 'create' | 'edit', product?: Product) {
     setError('')
-    setUploadedFile(null)
+    setSelectedFile(null)
+    setUploadError('')
     if (mode === 'create') {
       setEditingId(null)
       setShowForm(true)
@@ -181,7 +233,8 @@ export function ProductsClient({ initial }: Props) {
               if (formOpen) {
                 setShowForm(false)
                 setEditingId(null)
-                setUploadedFile(null)
+                setSelectedFile(null)
+    setUploadError('')
               } else {
                 openForm('create')
               }
@@ -237,28 +290,45 @@ export function ProductsClient({ initial }: Props) {
                 <input
                   id="product-file"
                   type="file"
+                  aria-describedby={uploadError ? 'product-file-error' : undefined}
+                  aria-invalid={uploadError ? 'true' : undefined}
                   onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) void handleFileUpload(file)
+                    setSelectedFile(e.target.files?.[0] ?? null)
+                    setUploadError('')
                   }}
                   className="block w-full cursor-pointer text-sm text-fg-muted file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-accent-muted file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-accent-deep hover:file:bg-accent-muted/70"
                 />
+
                 <div aria-live="polite">
-                  {uploading && <p className="text-sm font-medium text-accent">Uploading…</p>}
-                  {uploadedFile && (
-                    <p className="text-sm font-medium text-success">
-                      Ready: {uploadedFile.fileName} (
-                      {(Number(uploadedFile.fileSize) / 1024 / 1024).toFixed(1)} MB)
+                  {selectedFile && !uploadError && (
+                    <p className="text-sm text-fg-muted">
+                      {uploading
+                        ? `Uploading ${selectedFile.name}…`
+                        : `${selectedFile.name} (${formatFileSize(selectedFile.size)}) uploads when you save.`}
+                    </p>
+                  )}
+                  {uploadError && (
+                    <p
+                      id="product-file-error"
+                      role="alert"
+                      className="rounded-lg border border-error/30 bg-error-muted p-3 text-sm font-medium text-error"
+                    >
+                      {uploadError}
                     </p>
                   )}
                 </div>
-                {!uploadedFile && editingProduct?.fileName && (
+
+                {!selectedFile && editingProduct?.fileName && (
                   <p className="text-sm text-fg-muted">Current file: {editingProduct.fileName}</p>
                 )}
               </div>
 
               <Button type="submit" size="lg" loading={loading}>
-                {editingId ? 'Save changes' : 'Create product'}
+                {uploading
+                  ? 'Uploading…'
+                  : editingId
+                    ? 'Save changes'
+                    : 'Create product'}
               </Button>
             </form>
           </CardContent>

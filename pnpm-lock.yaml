@@ -63,8 +63,8 @@ importers:
   server:
     dependencies:
       '@afriex/sdk':
-        specifier: ^3.0.0
-        version: 3.0.0(typescript@5.9.3)
+        specifier: ^3.0.1
+        version: 3.0.1(typescript@5.9.3)
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -141,36 +141,36 @@ importers:
 
 packages:
 
-  '@afriex/balance@1.4.0':
-    resolution: {integrity: sha512-bqsGUuzIkTGGmlBDchk8yZzTxqXeDYJqTZ7oxVwSSlsgvUO4WWUMGUGDiEOUC7WnC3nnUVNeXNdQ0y28Aa8IrA==}
+  '@afriex/balance@1.4.1':
+    resolution: {integrity: sha512-joVlJ78vA2fPlz1hE/8y1c8v3ZcrMKil4pWAsD7XbxFY4zQ2lfCi+mg9dRx6E8h6olTO/J1iAbq00ir/l9h/eQ==}
 
-  '@afriex/checkout@2.0.1':
-    resolution: {integrity: sha512-jjFlDoWlCLx8mqdAvulXvKHERN2YglKr4jKQ+2HvYR7xLiwI8jGtnR/62OQ4mkIyBI9TJWtYf7RY7YW9t8E3fw==}
+  '@afriex/checkout@2.0.2':
+    resolution: {integrity: sha512-lEDkvqWJpibp2XMjEeaPUGRd7+jxBYkGasQb9e+W5j+d8phJOmUHFaYII9P3iodgRyBQ8Lmx28N9tw2tkw1o/Q==}
 
-  '@afriex/core@2.0.0':
-    resolution: {integrity: sha512-UY9BVK6t5IEFhM7XtzYH3SaW9l2uix31pSMywSxdFFhJlDIWoKNtQxWDQnkIPxK2mIAFRAWRmyNALE9X9qDrrw==}
+  '@afriex/core@2.0.1':
+    resolution: {integrity: sha512-gplAYhms+iNB6V6euJH8WIma1HtfNg6tf7QYi5lad+uNPYXf8o5CC9Cf49u1Ei/TZ+7SNVGjC2Zsd4U2QUY61w==}
     peerDependencies:
       typescript: '>=5.0.0'
 
-  '@afriex/customers@2.0.0':
-    resolution: {integrity: sha512-1MxD87qBjq9GEIiRa8pjN1Etgc1h9eeVsvYHcCISHy6ssi8bOqrCEvLnk9A9py8zPWHAn4Wa2sBIQYXlcJMY4Q==}
+  '@afriex/customers@2.0.1':
+    resolution: {integrity: sha512-W/9/snnnVYWIvX0mswYC53ozG8hWk3Hvh43NT37w0t7eNAHRwls0pM7u9ayM32PLcl2i9RvWsGjTAFPiiBVbvA==}
 
-  '@afriex/payment-methods@3.0.0':
-    resolution: {integrity: sha512-HooA/xf5XeZU0vrJ4kuQMpI41Gs2ljF3NX1wQCQFJXR8JOTLXn21/xMRneUiH8NeWEXAXDwm/+QnfJfeBrHnDQ==}
+  '@afriex/payment-methods@3.0.1':
+    resolution: {integrity: sha512-A9bOldbGO1vVxVRBM9CDoT33SpWaUJccX9eJsjb/RA0WIsQJlDYkjPTm+TF0HAcQNkgRoE6kL/uRIktcKRxzHw==}
 
-  '@afriex/rates@1.4.1':
-    resolution: {integrity: sha512-jSVMN6dGEc7sbX9TQ+n+jhcpu1RXAgC+XJHCKrpOvw6hC8/lXhkRQZT9Gc8eTmusbVI2GL+MHVLrjeEQCWgXHA==}
+  '@afriex/rates@1.4.2':
+    resolution: {integrity: sha512-JLrU/bpwtLrec3sWF06KHzUbCi7BgKiWEOgC02klmGZIgvFUmohSrRuwJcdlP1ne0PVbLsxZKz0ynjZZYVlYxg==}
 
-  '@afriex/sdk@3.0.0':
-    resolution: {integrity: sha512-zwUl1Wy81ewW6uDNJ3KuIh1Tu78EHOfzR+7MaSa0MUoDPPa8eRsblaXuI4mWa/LqHmNBGgdbhuCw9HZFdV9zcA==}
+  '@afriex/sdk@3.0.1':
+    resolution: {integrity: sha512-V9sExr9PbilwxVettnzUKW2PR7g0P6OBAqrqx3l+XFaQQACjmFKrNrXuzHpl2BHbVfPGrrAz9/pwpb0X4Bnjvw==}
     peerDependencies:
       typescript: '>=5.0.0'
 
-  '@afriex/transactions@2.0.0':
-    resolution: {integrity: sha512-RLA/eEJ0zW8JO5rjWB4O6gCj8DanF527HoCFuENh2uNDen/yjGdg6x1bnIEFNS5uYT9RDHdutlp2sHCS799MCQ==}
+  '@afriex/transactions@2.0.1':
+    resolution: {integrity: sha512-b1r42SrSgzNOQlrfzfgBPuYAbx4SRyLjGnBnSpDCi6PAl9c4YlprkebST0uGww1jPkE1mUmYyRyNcxqkGs11mg==}
 
-  '@afriex/webhooks@1.5.0':
-    resolution: {integrity: sha512-xZgGmp8tzOyOau5f0KRTQ+4N0riieFHWxDpNn9fTEfQTwAzZNjKXnrnIsYcBXrpDmPX0AFAvdjR4+b63xSv4kA==}
+  '@afriex/webhooks@1.5.1':
+    resolution: {integrity: sha512-uKnQlR5ANuQNi4ght2eDtUWedrPGM82HKn4VAkIG+qKUiNPSMFk5hOM5I3kOhl2kGW8SVdhqZnuoTmtONpzq7g==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -4032,62 +4032,62 @@ packages:
 
 snapshots:
 
-  '@afriex/balance@1.4.0(typescript@5.9.3)':
+  '@afriex/balance@1.4.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/checkout@2.0.1(typescript@5.9.3)':
+  '@afriex/checkout@2.0.2(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/core@2.0.0(typescript@5.9.3)':
+  '@afriex/core@2.0.1(typescript@5.9.3)':
     dependencies:
       ky: 2.0.2
       typescript: 5.9.3
 
-  '@afriex/customers@2.0.0(typescript@5.9.3)':
+  '@afriex/customers@2.0.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/payment-methods@3.0.0(typescript@5.9.3)':
+  '@afriex/payment-methods@3.0.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/rates@1.4.1(typescript@5.9.3)':
+  '@afriex/rates@1.4.2(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/sdk@3.0.0(typescript@5.9.3)':
+  '@afriex/sdk@3.0.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/balance': 1.4.0(typescript@5.9.3)
-      '@afriex/checkout': 2.0.1(typescript@5.9.3)
-      '@afriex/core': 2.0.0(typescript@5.9.3)
-      '@afriex/customers': 2.0.0(typescript@5.9.3)
-      '@afriex/payment-methods': 3.0.0(typescript@5.9.3)
-      '@afriex/rates': 1.4.1(typescript@5.9.3)
-      '@afriex/transactions': 2.0.0(typescript@5.9.3)
-      '@afriex/webhooks': 1.5.0(typescript@5.9.3)
+      '@afriex/balance': 1.4.1(typescript@5.9.3)
+      '@afriex/checkout': 2.0.2(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
+      '@afriex/customers': 2.0.1(typescript@5.9.3)
+      '@afriex/payment-methods': 3.0.1(typescript@5.9.3)
+      '@afriex/rates': 1.4.2(typescript@5.9.3)
+      '@afriex/transactions': 2.0.1(typescript@5.9.3)
+      '@afriex/webhooks': 1.5.1(typescript@5.9.3)
       typescript: 5.9.3
 
-  '@afriex/transactions@2.0.0(typescript@5.9.3)':
+  '@afriex/transactions@2.0.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@afriex/webhooks@1.5.0(typescript@5.9.3)':
+  '@afriex/webhooks@1.5.1(typescript@5.9.3)':
     dependencies:
-      '@afriex/core': 2.0.0(typescript@5.9.3)
+      '@afriex/core': 2.0.1(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 

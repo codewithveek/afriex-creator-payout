@@ -4,16 +4,12 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Landmark } from 'lucide-react'
+import { AddAccountForm } from './add-account-form'
 import type { PayoutMethod } from '@/lib/types'
-
-/** Payout currencies. Products are always priced in USD; payouts convert to this. */
-const payoutCurrencies = ['USD', 'NGN', 'GHS', 'KES'] as const
 
 interface Props {
   initial: PayoutMethod[]
@@ -25,35 +21,7 @@ export function PayoutMethodsClient({ initial }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    const form = new FormData(e.currentTarget)
-
-    try {
-      await api.post('/api/payout-methods', {
-        accountNumber: form.get('accountNumber'),
-        bankCode: form.get('bankCode'),
-        bankName: form.get('bankName'),
-        currency: form.get('currency'),
-      })
-      setShowForm(false)
-      router.refresh()
-    } catch (err) {
-      setError(
-        err instanceof ApiClientError
-          ? err.message
-          : 'We couldn’t save that account. Check the details and try again.',
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function handleDelete(id: string) {
     setDeleting(id)
@@ -72,54 +40,17 @@ export function PayoutMethodsClient({ initial }: Props) {
   }
 
   const formContent = (
-    <Card>
-      <CardHeader>
-        <h2 className="font-display text-lg text-fg">Add a bank account</h2>
-        <p className="mt-1 text-sm text-fg-muted">
-          Use an account in your own name. It&apos;s stored encrypted and never shown to buyers.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="max-w-md space-y-4">
-          <Input label="Account number" name="accountNumber" required inputMode="numeric" />
-          <Input
-            label="Bank code"
-            name="bankCode"
-            required
-            hint="The sort or bank code your bank uses for transfers."
-          />
-          <Input label="Bank name" name="bankName" required />
-          <Select
-            label="Account currency"
-            id="currency"
-            name="currency"
-            required
-            hint="The currency this account receives. Withdrawals convert into it."
-          >
-            {payoutCurrencies.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </Select>
-          <div className="flex flex-wrap gap-3">
-            <Button type="submit" size="lg" loading={loading}>
-              Save this account
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowForm(false)
-                setError('')
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <AddAccountForm
+      onSaved={() => {
+        setShowForm(false)
+        setError('')
+        router.refresh()
+      }}
+      onCancel={() => {
+        setShowForm(false)
+        setError('')
+      }}
+    />
   )
 
   return (
@@ -138,7 +69,7 @@ export function PayoutMethodsClient({ initial }: Props) {
           icon={<Landmark className="h-6 w-6" />}
           title="No bank account on file"
           description="Add one now so it's verified before your first withdrawal."
-          action={<Button onClick={() => setShowForm(true)}>Add a bank account</Button>}
+          action={<Button onClick={() => setShowForm(true)}>Add a payout account</Button>}
           footnote="Stored encrypted. Never shown to buyers."
         />
       )}

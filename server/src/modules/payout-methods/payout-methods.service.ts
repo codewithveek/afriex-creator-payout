@@ -1,9 +1,13 @@
 import { payoutMethodsRepository, type PayoutMethod } from './payout-methods.repository';
-import type { AddPayoutMethodServiceInput } from './payout-methods.schema';
-import { afriexClient } from '../../infra/afriex/afriex-client';
+import type {
+  AddPayoutMethodServiceInput,
+  PayoutChannel,
+  ResolveAccountInput,
+} from './payout-methods.schema';
+import { afriexClient, type AfriexInstitution } from '../../infra/afriex/afriex-client';
 import { encryptSecret, maskAccountNumber } from '../../shared/utils/encryption';
 import { creatorsRepository } from '../creators/creators.repository';
-import { NotFoundError } from '../../shared/errors';
+import { NotFoundError, ValidationError } from '../../shared/errors';
 import { logger } from '../../config/logger';
 
 const COUNTRY_MAP: Record<string, string> = {
@@ -17,12 +21,64 @@ function getCountryCode(currency: string): string {
   return COUNTRY_MAP[currency] ?? 'US';
 }
 
+/**
+ * Resolves a submitted institution code against the list Afriex serves for
+ * that country. A code that is not on the list is rejected rather than passed
+ * through, so a malformed or stale selection fails here instead of surfacing
+ * as a failed disbursement days later.
+ */
+async function findInstitution(
+  countryCode: string,
+  channel: PayoutChannel,
+  institutionCode: string,
+): Promise<AfriexInstitution> {
+  const institutions = await afriexClient.getInstitutions(channel, countryCode);
+  const match = institutions.find((i) => i.institutionCode === institutionCode);
+  if (!match) {
+    throw new ValidationError('That institution is not available for your country. Pick one from the list.');
+  }
+  return match;
+}
+
+async function countryForCreator(creatorId: string, fallbackCurrency = 'USD'): Promise<string> {
+  const creator = await creatorsRepository.findById(creatorId);
+  if (!creator) throw new NotFoundError('Creator profile not found');
+  return creator.country || getCountryCode(fallbackCurrency);
+}
+
 export const payoutMethodsService = {
+  /** Banks / mobile-money providers available in the creator's own country. */
+  async listInstitutions(creatorId: string, channel: PayoutChannel): Promise<AfriexInstitution[]> {
+    const countryCode = await countryForCreator(creatorId);
+    return afriexClient.getInstitutions(channel, countryCode);
+  },
+
+  /**
+   * Looks up the account holder's name so the creator can confirm the account
+   * is theirs before saving it.
+   */
+  async resolveAccount(
+    creatorId: string,
+    input: ResolveAccountInput,
+  ): Promise<{ accountName: string | null; institutionName: string }> {
+    const countryCode = await countryForCreator(creatorId);
+    const institution = await findInstitution(countryCode, input.channel, input.institutionCode);
+
+    const { accountName } = await afriexClient.resolveAccount({
+      channel: input.channel,
+      accountNumber: input.accountNumber,
+      institutionCode: input.institutionCode,
+      countryCode,
+    });
+
+    return { accountName, institutionName: institution.institutionName };
+  },
+
   async addPayoutMethod(creatorId: string, input: AddPayoutMethodServiceInput): Promise<PayoutMethod> {
     const { ciphertextBase64, ivBase64 } = encryptSecret(input.accountNumber);
 
-    const creator = await creatorsRepository.findById(creatorId);
-    const countryCode = creator?.country || getCountryCode(input.currency);
+    const countryCode = await countryForCreator(creatorId, input.currency);
+    const institution = await findInstitution(countryCode, input.channel, input.institutionCode);
 
     const afriexResult = await afriexClient.registerRecipient({
       fullName: input.fullName,
@@ -30,8 +86,9 @@ export const payoutMethodsService = {
       phone: input.phone,
       countryCode,
       accountNumber: input.accountNumber,
-      bankCode: input.bankCode,
-      bankName: input.bankName,
+      bankCode: institution.institutionCode,
+      bankName: institution.institutionName,
+      channel: input.channel,
     });
 
     const payoutMethod = await payoutMethodsRepository.create({
@@ -40,7 +97,7 @@ export const payoutMethodsService = {
       afriexPaymentMethodId: afriexResult.afriexPaymentMethodId,
       currency: input.currency,
       maskedAccountNumber: maskAccountNumber(input.accountNumber),
-      bankName: input.bankName,
+      bankName: institution.institutionName,
       encryptedDetailsBlob: ciphertextBase64,
       ivBase64,
       status: afriexResult.verified ? 'VERIFIED' : 'PENDING',
