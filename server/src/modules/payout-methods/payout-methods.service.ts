@@ -22,6 +22,50 @@ function getCountryCode(currency: string): string {
 }
 
 /**
+ * Afriex rejects a customer whose phone is not a phone, and its SDK drops the
+ * API's explanation, so the failure arrives as a bare "An API error occurred"
+ * and surfaces as a 500. Checking here turns that into an instruction the
+ * creator can act on. Deliberately loose: this rules out obvious non-numbers
+ * (an email pasted into the phone field), not unusual national formats.
+ */
+const PLAUSIBLE_PHONE = /^\+?[0-9][0-9()\s-]{6,19}$/;
+
+function assertUsablePhone(phone: string): void {
+  if (!PLAUSIBLE_PHONE.test(phone.trim())) {
+    throw new ValidationError(
+      'Your profile needs a valid phone number before you can add a payout account. Update it in Settings and try again.',
+    );
+  }
+}
+
+interface ProviderError {
+  message?: string;
+  statusCode?: number;
+  errorCode?: string;
+  details?: { friendlyMessage?: string; errorMessage?: string };
+}
+
+/**
+ * Turns a provider failure into something the creator can read. The SDK only
+ * fills in `details` when it managed to parse the error body, so fall back to a
+ * plain statement rather than echoing "An API error occurred".
+ */
+function toReadableProviderError(err: unknown, creatorId: string): Error {
+  const e = err as ProviderError;
+  const friendly = e?.details?.friendlyMessage ?? e?.details?.errorMessage;
+
+  logger.error(
+    { creatorId, statusCode: e?.statusCode, errorCode: e?.errorCode, message: e?.message },
+    'Afriex rejected the payout account registration',
+  );
+
+  if (friendly) return new ValidationError(friendly);
+  return new ValidationError(
+    'The payment provider rejected these account details. Check them and try again.',
+  );
+}
+
+/**
  * Resolves a submitted institution code against the list Afriex serves for
  * that country. A code that is not on the list is rejected rather than passed
  * through, so a malformed or stale selection fails here instead of surfacing
@@ -77,19 +121,26 @@ export const payoutMethodsService = {
   async addPayoutMethod(creatorId: string, input: AddPayoutMethodServiceInput): Promise<PayoutMethod> {
     const { ciphertextBase64, ivBase64 } = encryptSecret(input.accountNumber);
 
+    assertUsablePhone(input.phone);
+
     const countryCode = await countryForCreator(creatorId, input.currency);
     const institution = await findInstitution(countryCode, input.channel, input.institutionCode);
 
-    const afriexResult = await afriexClient.registerRecipient({
-      fullName: input.fullName,
-      email: input.email,
-      phone: input.phone,
-      countryCode,
-      accountNumber: input.accountNumber,
-      bankCode: institution.institutionCode,
-      bankName: institution.institutionName,
-      channel: input.channel,
-    });
+    let afriexResult;
+    try {
+      afriexResult = await afriexClient.registerRecipient({
+        fullName: input.fullName,
+        email: input.email,
+        phone: input.phone,
+        countryCode,
+        accountNumber: input.accountNumber,
+        bankCode: institution.institutionCode,
+        bankName: institution.institutionName,
+        channel: input.channel,
+      });
+    } catch (err) {
+      throw toReadableProviderError(err, creatorId);
+    }
 
     const payoutMethod = await payoutMethodsRepository.create({
       creatorId,
