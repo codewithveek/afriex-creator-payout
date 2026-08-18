@@ -6,6 +6,7 @@ import { ApiClientError } from '@/lib/api-client'
 import { formatMoney, cn } from '@/lib/utils'
 import { queryKeys } from '@/lib/queries/keys'
 import { fetchCollectors, createCheckoutSession } from '@/lib/queries/checkout'
+import { useCustomerAuth } from '@/components/providers/customer-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Product, PaymentCollector } from '@/lib/types'
@@ -17,6 +18,10 @@ interface Props {
 export function BuyButton({ product }: Props) {
   const [open, setOpen] = useState(false)
   const [provider, setProvider] = useState<PaymentCollector['id'] | null>(null)
+  const { customer } = useCustomerAuth()
+  // Snapshot at open time so a late-resolving buyer session can't wipe what
+  // someone has already typed.
+  const [prefill, setPrefill] = useState({ name: '', email: '' })
 
   const collectorsQuery = useQuery({
     queryKey: queryKeys.collectors,
@@ -51,14 +56,21 @@ export function BuyButton({ product }: Props) {
     })
   }
 
+  function handleOpen() {
+    setPrefill({ name: customer?.name ?? '', email: customer?.email ?? '' })
+    setOpen(true)
+  }
+
   if (!open) {
     return (
       <div>
-        <Button size="lg" className="w-full" onClick={() => setOpen(true)}>
+        <Button size="lg" className="w-full" onClick={handleOpen}>
           Buy now · {formatMoney(product.price, product.currency)}
         </Button>
         <p className="mt-3 text-center text-xs text-fg-muted">
-          No account needed. Your email is used for the receipt and the download.
+          {customer
+            ? `Buying as ${customer.email}. It lands in Your orders straight away.`
+            : 'No account needed. Your email is used for the receipt and the download.'}
         </p>
       </div>
     )
@@ -89,13 +101,20 @@ export function BuyButton({ product }: Props) {
         </div>
       )}
 
-      <Input label="Your name" name="name" autoComplete="name" required />
+      <Input
+        label="Your name"
+        name="name"
+        autoComplete="name"
+        required
+        defaultValue={prefill.name}
+      />
       <Input
         label="Email"
         name="email"
         type="email"
         autoComplete="email"
         required
+        defaultValue={prefill.email}
         hint="Your receipt and download link go here."
       />
 

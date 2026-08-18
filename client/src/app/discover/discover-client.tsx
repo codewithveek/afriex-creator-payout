@@ -10,6 +10,8 @@ import type { Product } from '@/lib/types'
 
 interface Props {
   products: Product[]
+  /** Where "be the first to publish" should send the reader. */
+  sellerCta: { href: string; label: string }
 }
 
 /** Each product gets a stable, on-brand cover plate instead of a stock image. */
@@ -36,7 +38,7 @@ function initials(name: string) {
     .join('')
 }
 
-export function DiscoverClient({ products }: Props) {
+export function DiscoverClient({ products, sellerCta }: Props) {
   const [query, setQuery] = useState('')
   const [currency, setCurrency] = useState<string | null>(null)
 
@@ -133,7 +135,7 @@ export function DiscoverClient({ products }: Props) {
               icon={<Package className="h-6 w-6" />}
               title="Nothing published yet"
               description="Check back shortly, or be the first to put something up."
-              action={<Button href="/signup">Open your shop free</Button>}
+              action={<Button href={sellerCta.href}>{sellerCta.label}</Button>}
             />
           </div>
         ) : filtered.length === 0 ? (

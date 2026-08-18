@@ -31,6 +31,19 @@ export const customersController = {
     });
   },
 
+  /** Lets the browser check whether a stored buyer token is still good. */
+  async me(request: FastifyRequest, reply: FastifyReply) {
+    const customer = request.customer!;
+    return reply.code(200).send({
+      data: { id: customer.id, email: customer.email, name: customer.name },
+    });
+  },
+
+  async logout(request: FastifyRequest, reply: FastifyReply) {
+    await customersService.logout(request.customer!.id);
+    return reply.code(204).send();
+  },
+
   async myOrders(request: FastifyRequest, reply: FastifyReply) {
     const customer = request.customer!;
     const pag = parsePagination(request.query as Record<string, unknown>);

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, ArrowDownToLine, Landmark, ShieldCheck } from 'lucide-react'
+import { getSession } from '@/lib/auth'
+import { sellerCta } from '@/lib/seller-cta'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
 
@@ -93,7 +95,9 @@ const faqs = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const seller = sellerCta(await getSession())
+
   return (
     <MarketingShell>
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -114,8 +118,8 @@ export default function HomePage() {
               Browse the marketplace
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
-            <Button href="/signup" size="lg" variant="outline-inverse">
-              Open your shop free
+            <Button href={seller.href} size="lg" variant="outline-inverse">
+              {seller.label}
             </Button>
           </div>
           <p className="rise stagger-4 mt-6 text-sm text-fg-on-inverse-muted">
@@ -271,8 +275,8 @@ export default function HomePage() {
               <p className="on-ink mt-6 text-sm text-fg-on-inverse-muted">
                 No monthly fee, no listing fee, no charge for the days you don&apos;t sell.
               </p>
-              <Button href="/signup" variant="signal" size="lg" className="mt-7 w-full">
-                Open your shop free
+              <Button href={seller.href} variant="signal" size="lg" className="mt-7 w-full">
+                {seller.label}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             </div>
@@ -330,8 +334,8 @@ export default function HomePage() {
             <p className="on-ink mt-3 max-w-sm text-fg-on-inverse-muted">
               You already know something worth paying for. Put it up today and make your first sale.
             </p>
-            <Button href="/signup" variant="signal" size="lg" className="mt-7">
-              Open your shop free
+            <Button href={seller.href} variant="signal" size="lg" className="mt-7">
+              {seller.label}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </div>

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { ArrowRight, Check } from 'lucide-react'
+import { getSession } from '@/lib/auth'
+import { sellerCta } from '@/lib/seller-cta'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
 
@@ -44,7 +46,10 @@ const notes = [
   },
 ]
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const session = await getSession()
+  const seller = sellerCta(session, 'Open your shop')
+
   return (
     <MarketingShell>
       <section className="relative overflow-hidden border-b border-border-inverse bg-bg-inverse text-fg-on-inverse">
@@ -122,11 +127,13 @@ export default function PricingPage() {
                 No plan to choose and no card to enter. The fee only applies to money that has
                 already reached you.
               </p>
-              <Button href="/signup" size="lg" className="mt-7 w-full">
-                Open your shop
+              <Button href={seller.href} size="lg" className="mt-7 w-full">
+                {seller.label}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
-              <p className="mt-4 text-center text-xs text-fg-muted">Takes about ten minutes</p>
+              <p className="mt-4 text-center text-xs text-fg-muted">
+                {session?.user ? 'Your shop is already open' : 'Takes about ten minutes'}
+              </p>
             </div>
           </div>
         </div>

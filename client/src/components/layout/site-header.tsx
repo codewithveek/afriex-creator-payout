@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { signOutCreator } from '@/lib/queries/session'
+import { useCustomerAuth } from '@/components/providers/customer-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Logo } from './logo'
+import type { Session } from '@/lib/types'
 
 const links = [
   { href: '/discover', label: 'Browse' },
@@ -15,9 +18,26 @@ const links = [
   { href: '/customer/orders', label: 'Your orders' },
 ]
 
-export function SiteHeader() {
+interface Props {
+  /** The signed-in creator, resolved on the server so the header paints right. */
+  session?: Session | null
+  /** Server-side hint that a buyer session exists, since its token is client-only. */
+  buyerHint?: boolean
+}
+
+export function SiteHeader({ session = null, buyerHint = false }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
+  const { status: buyerStatus, signOut: signOutBuyer } = useCustomerAuth()
+
+  const creator = session?.user ?? null
+  // The buyer token lives in browser storage, so until it has been read the
+  // cookie hint stands in for it — otherwise the first paint would show "Log in"
+  // to someone who is already signed in.
+  const buyer = buyerStatus === 'authenticated' || (buyerStatus === 'loading' && buyerHint)
+  const signedIn = Boolean(creator) || buyer
 
   useEffect(() => {
     if (!open) return
@@ -27,6 +47,70 @@ export function SiteHeader() {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open])
+
+  async function handleSignOut() {
+    setOpen(false)
+    setSigningOut(true)
+    try {
+      if (buyer) signOutBuyer()
+      if (creator) {
+        await signOutCreator()
+        router.refresh()
+      }
+    } finally {
+      setSigningOut(false)
+    }
+  }
+
+  function accountActions(variant: 'desktop' | 'mobile') {
+    const fullWidth = variant === 'mobile'
+
+    if (signedIn) {
+      return (
+        <>
+          <Button
+            variant={fullWidth ? 'outline' : 'ghost'}
+            size={fullWidth ? 'md' : 'sm'}
+            loading={signingOut}
+            onClick={handleSignOut}
+            className={cn(fullWidth && 'w-full')}
+          >
+            Sign out
+          </Button>
+          <Button
+            href={creator ? '/dashboard' : '/customer/orders'}
+            size={fullWidth ? 'md' : 'sm'}
+            onClick={() => setOpen(false)}
+            className={cn(fullWidth && 'w-full')}
+          >
+            {creator ? 'Dashboard' : 'Your orders'}
+          </Button>
+        </>
+      )
+    }
+
+    return (
+      <>
+        <Button
+          href="/login"
+          variant={fullWidth ? 'outline' : 'ghost'}
+          size={fullWidth ? 'md' : 'sm'}
+          onClick={() => setOpen(false)}
+          className={cn(fullWidth && 'w-full')}
+        >
+          Log in
+        </Button>
+        <Button
+          href="/signup"
+          size={fullWidth ? 'md' : 'sm'}
+          onClick={() => setOpen(false)}
+          className={cn(fullWidth && 'w-full')}
+        >
+          Start selling
+        </Button>
+      </>
+    )
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg/85 backdrop-blur-md">
@@ -61,14 +145,7 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Button href="/login" variant="ghost" size="sm">
-            Log in
-          </Button>
-          <Button href="/signup" size="sm">
-            Start selling
-          </Button>
-        </div>
+        <div className="hidden items-center gap-2 md:flex">{accountActions('desktop')}</div>
 
         <button
           type="button"
@@ -95,12 +172,7 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-              <Button href="/login" variant="outline" className="w-full" onClick={() => setOpen(false)}>
-                Log in
-              </Button>
-              <Button href="/signup" className="w-full" onClick={() => setOpen(false)}>
-                Start selling
-              </Button>
+              {accountActions('mobile')}
             </div>
           </nav>
         </div>

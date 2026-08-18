@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { apiFetch } from '@/lib/api-client'
+import { getSession } from '@/lib/auth'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DiscoverClient } from './discover-client'
@@ -21,8 +22,12 @@ async function getProducts() {
 }
 
 async function DiscoverContent() {
-  const { data: products } = await getProducts()
-  return <DiscoverClient products={products} />
+  const [{ data: products }, session] = await Promise.all([getProducts(), getSession()])
+  const sellerCta = session?.user
+    ? { href: '/dashboard/products', label: 'Publish a product' }
+    : { href: '/signup', label: 'Open your shop free' }
+
+  return <DiscoverClient products={products} sellerCta={sellerCta} />
 }
 
 export default function DiscoverPage() {

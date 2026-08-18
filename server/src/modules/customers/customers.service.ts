@@ -67,6 +67,10 @@ export const customersService = {
     return { ...customer, token, linkedOrders };
   },
 
+  async logout(customerId: string): Promise<void> {
+    await customersRepository.clearSession(customerId);
+  },
+
   async validateSessionToken(token: string): Promise<DecryptedCustomer | null> {
     const customer = await customersRepository.findBySessionToken(token);
     if (!customer || !customer.sessionExpiresAt || customer.sessionExpiresAt < new Date()) {

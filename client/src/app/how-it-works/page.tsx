@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { ArrowRight } from 'lucide-react'
+import { getSession } from '@/lib/auth'
+import { sellerCta } from '@/lib/seller-cta'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Button } from '@/components/ui/button'
 
@@ -150,7 +152,11 @@ function Track({
   )
 }
 
-export default function HowItWorksPage() {
+export default async function HowItWorksPage() {
+  const session = await getSession()
+  const seller = sellerCta(session)
+  const sellerClosing = sellerCta(session, 'Start selling')
+
   return (
     <MarketingShell>
       <section className="border-b border-border bg-bg-muted">
@@ -179,8 +185,8 @@ export default function HowItWorksPage() {
             title="Publish once, get paid every time"
             lede="Set it up once and it keeps working, including on the days you don't open your laptop."
             steps={sellerFlow}
-            cta="Open your shop free"
-            ctaHref="/signup"
+            cta={seller.label}
+            ctaHref={seller.href}
           />
         </div>
       </section>
@@ -210,8 +216,8 @@ export default function HowItWorksPage() {
           <Button href="/discover" variant="outline" size="lg">
             Browse first
           </Button>
-          <Button href="/signup" size="lg">
-            Start selling
+          <Button href={sellerClosing.href} size="lg">
+            {sellerClosing.label}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Button>
         </div>

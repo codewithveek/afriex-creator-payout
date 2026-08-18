@@ -17,7 +17,7 @@ import {
   X,
   Store,
 } from 'lucide-react'
-import { api } from '@/lib/api-client'
+import { signOutCreator } from '@/lib/queries/session'
 import { Logo } from '@/components/layout/logo'
 
 const navItems = [
@@ -54,7 +54,7 @@ export function Sidebar({ role }: Props) {
   }, [mobileOpen])
 
   async function handleLogout() {
-    await api.post('/api/auth/sign-out')
+    await signOutCreator()
     router.push('/login')
     router.refresh()
   }

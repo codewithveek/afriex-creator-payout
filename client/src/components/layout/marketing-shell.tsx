@@ -1,14 +1,24 @@
+import { getSession } from '@/lib/auth'
+import { hasBuyerSessionHint } from '@/lib/cookies'
 import { SiteHeader } from './site-header'
 import { SiteFooter } from './site-footer'
 
-export function MarketingShell({ children }: { children: React.ReactNode }) {
+/**
+ * Server component: resolves the creator session once per request so the header
+ * and footer render the right account state in the very first HTML. Pages that
+ * need client hooks should stay server components and put the interactive part
+ * in a child (see `app/customer/orders`).
+ */
+export async function MarketingShell({ children }: { children: React.ReactNode }) {
+  const [session, buyerHint] = await Promise.all([getSession(), hasBuyerSessionHint()])
+
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      <SiteHeader session={session} buyerHint={buyerHint} />
       <main id="main-content" className="flex-1">
         {children}
       </main>
-      <SiteFooter />
+      <SiteFooter session={session} />
     </div>
   )
 }

@@ -15,6 +15,16 @@ export async function customersRoutes(fastify: FastifyInstance) {
     handler: customersController.login,
   });
 
+  fastify.get('/api/customers/me', {
+    preHandler: [customerAuth],
+    handler: customersController.me,
+  });
+
+  fastify.post('/api/customers/logout', {
+    preHandler: [customerAuth],
+    handler: customersController.logout,
+  });
+
   fastify.get('/api/customers/orders', {
     preHandler: [customerAuth],
     handler: customersController.myOrders,

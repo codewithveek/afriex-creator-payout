@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, Schibsted_Grotesk } from 'next/font/google'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { CustomerAuthProvider } from '@/components/providers/customer-auth-provider'
 import './globals.css'
 
 const body = Schibsted_Grotesk({
@@ -44,7 +45,9 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <CustomerAuthProvider>{children}</CustomerAuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

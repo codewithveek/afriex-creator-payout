@@ -1,35 +1,47 @@
 import Link from 'next/link'
+import type { Session } from '@/lib/types'
 import { Logo } from './logo'
 
-const columns = [
-  {
-    title: 'Buy',
-    links: [
-      { href: '/discover', label: 'Browse everything' },
-      { href: '/customer/orders', label: 'Your orders & downloads' },
-      { href: '/how-it-works', label: 'How buying works' },
-    ],
-  },
-  {
-    title: 'Sell',
-    links: [
-      { href: '/signup', label: 'Open your shop' },
-      { href: '/pricing', label: 'What it costs' },
-      { href: '/dashboard', label: 'Creator dashboard' },
-      { href: '/dashboard/withdrawals', label: 'Cash out' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { href: '/how-it-works', label: 'How it works' },
-      { href: '/terms', label: 'Terms of service' },
-      { href: '/privacy', label: 'Privacy policy' },
-    ],
-  },
-]
+const buyColumn = {
+  title: 'Buy',
+  links: [
+    { href: '/discover', label: 'Browse everything' },
+    { href: '/customer/orders', label: 'Your orders & downloads' },
+    { href: '/how-it-works', label: 'How buying works' },
+  ],
+}
 
-export function SiteFooter() {
+const companyColumn = {
+  title: 'Company',
+  links: [
+    { href: '/how-it-works', label: 'How it works' },
+    { href: '/terms', label: 'Terms of service' },
+    { href: '/privacy', label: 'Privacy policy' },
+  ],
+}
+
+/** Signed-in creators don't need "open a shop"; visitors can't use the dashboard. */
+function sellColumn(signedIn: boolean) {
+  return {
+    title: 'Sell',
+    links: signedIn
+      ? [
+          { href: '/dashboard', label: 'Your dashboard' },
+          { href: '/dashboard/products', label: 'Your products' },
+          { href: '/dashboard/withdrawals', label: 'Cash out' },
+          { href: '/pricing', label: 'What it costs' },
+        ]
+      : [
+          { href: '/signup', label: 'Open your shop' },
+          { href: '/pricing', label: 'What it costs' },
+          { href: '/login', label: 'Creator log in' },
+        ],
+  }
+}
+
+export function SiteFooter({ session = null }: { session?: Session | null }) {
+  const columns = [buyColumn, sellColumn(Boolean(session?.user)), companyColumn]
+
   return (
     <footer className="border-t border-border-inverse bg-bg-inverse text-fg-on-inverse">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">

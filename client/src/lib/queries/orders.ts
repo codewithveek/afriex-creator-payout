@@ -1,5 +1,5 @@
-import { api, apiFetch, ApiClientError } from '@/lib/api-client'
-import type { Order, Customer } from '@/lib/types'
+import { api, apiFetch } from '@/lib/api-client'
+import type { Order } from '@/lib/types'
 
 export interface OrderBySession {
   id: string
@@ -23,32 +23,15 @@ export async function fetchOrderBySession(sessionId: string) {
   return res.data
 }
 
+/**
+ * Buyer's own orders. A 401 means the token is stale — the caller clears it
+ * through the customer-auth store rather than reaching into storage here.
+ */
 export async function fetchCustomerOrders(token: string) {
-  try {
-    const res = await api.get<{ data: Order[] }>('/api/customers/orders', {
-      headers: { 'x-customer-token': token },
-    })
-    return res.data
-  } catch (err) {
-    if (err instanceof ApiClientError && err.status === 401 && typeof window !== 'undefined') {
-      sessionStorage.removeItem('customerToken')
-    }
-    throw err
-  }
-}
-
-export async function customerLogin(input: { email: string; password: string }) {
-  const res = await api.post<{ data: Customer }>('/api/customers/login', input)
+  const res = await api.get<{ data: Order[] }>('/api/customers/orders', {
+    headers: { 'x-customer-token': token },
+  })
   return res.data
-}
-
-export async function customerSignup(input: {
-  email: string
-  name: string
-  password: string
-}) {
-  await api.post('/api/customers/signup', input)
-  return customerLogin({ email: input.email, password: input.password })
 }
 
 export async function renewCustomerDownload(token: string, orderId: string) {
