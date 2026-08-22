@@ -6,21 +6,19 @@ import { ApiClientError } from '@/lib/api-client'
 import { formatMoney, cn } from '@/lib/utils'
 import { queryKeys } from '@/lib/queries/keys'
 import { fetchCollectors, createCheckoutSession } from '@/lib/queries/checkout'
-import { useCustomerAuth } from '@/components/providers/customer-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Product, PaymentCollector } from '@/lib/types'
 
 interface Props {
   product: Product
+  /** The signed-in account, if any — checkout stays open to guests either way. */
+  buyer?: { name: string; email: string } | null
 }
 
-export function BuyButton({ product }: Props) {
+export function BuyButton({ product, buyer = null }: Props) {
   const [open, setOpen] = useState(false)
   const [provider, setProvider] = useState<PaymentCollector['id'] | null>(null)
-  const { customer } = useCustomerAuth()
-  // Snapshot at open time so a late-resolving buyer session can't wipe what
-  // someone has already typed.
   const [prefill, setPrefill] = useState({ name: '', email: '' })
 
   const collectorsQuery = useQuery({
@@ -57,7 +55,7 @@ export function BuyButton({ product }: Props) {
   }
 
   function handleOpen() {
-    setPrefill({ name: customer?.name ?? '', email: customer?.email ?? '' })
+    setPrefill({ name: buyer?.name ?? '', email: buyer?.email ?? '' })
     setOpen(true)
   }
 
@@ -68,8 +66,8 @@ export function BuyButton({ product }: Props) {
           Buy now · {formatMoney(product.price, product.currency)}
         </Button>
         <p className="mt-3 text-center text-xs text-fg-muted">
-          {customer
-            ? `Buying as ${customer.email}. It lands in Your orders straight away.`
+          {buyer
+            ? `Buying as ${buyer.email}. It lands in Your orders straight away.`
             : 'No account needed. Your email is used for the receipt and the download.'}
         </p>
       </div>

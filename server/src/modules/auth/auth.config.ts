@@ -5,6 +5,8 @@ import { env } from '../../config/env';
 import { users, sessions, accounts, verifications } from '../../infra/database/schema';
 import { logger } from '../../config/logger';
 import { sendWelcomeEmail, sendVerificationEmail } from '../../infra/email/email.service';
+import { ordersService } from '../orders/orders.service';
+import { eq } from 'drizzle-orm';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -121,6 +123,10 @@ export const auth = betterAuth({
           if (user.name) {
             await sendWelcomeEmail({ id: user.id, email: user.email, name: user.name });
           }
+          // Anything they bought as a guest with this email is theirs now.
+          await ordersService.linkGuestOrders(user.email, user.id).catch((err) => {
+            logger.error({ err, userId: user.id }, 'Failed to claim guest orders on signup');
+          });
           logger.info({ userId: user.id, email: user.email }, 'User created, welcome email sent');
         },
       },
@@ -135,6 +141,17 @@ export const auth = betterAuth({
     session: {
       create: {
         after: async (session: { userId: string; id: string }) => {
+          // Guest purchases made between sign-ins land in the library too.
+          const [user] = await db
+            .select({ email: users.email })
+            .from(users)
+            .where(eq(users.id, session.userId))
+            .limit(1);
+          if (user) {
+            await ordersService.linkGuestOrders(user.email, session.userId).catch((err) => {
+              logger.error({ err, userId: session.userId }, 'Failed to claim guest orders on sign-in');
+            });
+          }
           logger.info({ userId: session.userId, sessionId: session.id }, 'Session created');
         },
       },

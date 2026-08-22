@@ -57,6 +57,13 @@
       "when": 1786841433877,
       "tag": "0007_graceful_true_believers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787061110124,
+      "tag": "0008_merge_buyer_accounts_into_users",
+      "breakpoints": true
     }
   ]
 }

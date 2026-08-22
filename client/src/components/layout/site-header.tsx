@@ -5,39 +5,32 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { signOutCreator } from '@/lib/queries/session'
-import { useCustomerAuth } from '@/components/providers/customer-auth-provider'
+import { signOut } from '@/lib/queries/session'
 import { Button } from '@/components/ui/button'
 import { Logo } from './logo'
 import type { Session } from '@/lib/types'
 
-const links = [
+const publicLinks = [
   { href: '/discover', label: 'Browse' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/customer/orders', label: 'Your orders' },
 ]
 
+const signedInLinks = [...publicLinks, { href: '/orders', label: 'Your orders' }]
+
 interface Props {
-  /** The signed-in creator, resolved on the server so the header paints right. */
+  /** The signed-in account, resolved on the server so the header paints right. */
   session?: Session | null
-  /** Server-side hint that a buyer session exists, since its token is client-only. */
-  buyerHint?: boolean
 }
 
-export function SiteHeader({ session = null, buyerHint = false }: Props) {
+export function SiteHeader({ session = null }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-  const { status: buyerStatus, signOut: signOutBuyer } = useCustomerAuth()
 
-  const creator = session?.user ?? null
-  // The buyer token lives in browser storage, so until it has been read the
-  // cookie hint stands in for it — otherwise the first paint would show "Log in"
-  // to someone who is already signed in.
-  const buyer = buyerStatus === 'authenticated' || (buyerStatus === 'loading' && buyerHint)
-  const signedIn = Boolean(creator) || buyer
+  const user = session?.user ?? null
+  const links = user ? signedInLinks : publicLinks
 
   useEffect(() => {
     if (!open) return
@@ -52,11 +45,8 @@ export function SiteHeader({ session = null, buyerHint = false }: Props) {
     setOpen(false)
     setSigningOut(true)
     try {
-      if (buyer) signOutBuyer()
-      if (creator) {
-        await signOutCreator()
-        router.refresh()
-      }
+      await signOut()
+      router.refresh()
     } finally {
       setSigningOut(false)
     }
@@ -64,13 +54,15 @@ export function SiteHeader({ session = null, buyerHint = false }: Props) {
 
   function accountActions(variant: 'desktop' | 'mobile') {
     const fullWidth = variant === 'mobile'
+    const size = fullWidth ? 'md' : 'sm'
+    const secondary = fullWidth ? 'outline' : 'ghost'
 
-    if (signedIn) {
+    if (user) {
       return (
         <>
           <Button
-            variant={fullWidth ? 'outline' : 'ghost'}
-            size={fullWidth ? 'md' : 'sm'}
+            variant={secondary}
+            size={size}
             loading={signingOut}
             onClick={handleSignOut}
             className={cn(fullWidth && 'w-full')}
@@ -78,12 +70,12 @@ export function SiteHeader({ session = null, buyerHint = false }: Props) {
             Sign out
           </Button>
           <Button
-            href={creator ? '/dashboard' : '/customer/orders'}
-            size={fullWidth ? 'md' : 'sm'}
+            href="/dashboard"
+            size={size}
             onClick={() => setOpen(false)}
             className={cn(fullWidth && 'w-full')}
           >
-            {creator ? 'Dashboard' : 'Your orders'}
+            Dashboard
           </Button>
         </>
       )
@@ -93,8 +85,8 @@ export function SiteHeader({ session = null, buyerHint = false }: Props) {
       <>
         <Button
           href="/login"
-          variant={fullWidth ? 'outline' : 'ghost'}
-          size={fullWidth ? 'md' : 'sm'}
+          variant={secondary}
+          size={size}
           onClick={() => setOpen(false)}
           className={cn(fullWidth && 'w-full')}
         >
@@ -102,7 +94,7 @@ export function SiteHeader({ session = null, buyerHint = false }: Props) {
         </Button>
         <Button
           href="/signup"
-          size={fullWidth ? 'md' : 'sm'}
+          size={size}
           onClick={() => setOpen(false)}
           className={cn(fullWidth && 'w-full')}
         >

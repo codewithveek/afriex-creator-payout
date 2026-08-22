@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, FileDown, Lock, RefreshCw, Zap } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
+import { getSession } from '@/lib/auth'
 import { formatMoney, formatFileSize } from '@/lib/utils'
 import { MarketingShell } from '@/components/layout/marketing-shell'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -50,10 +51,12 @@ const assurances = [
 
 async function ProductContent({ params }: Props) {
   const { id } = await params
-  const response = await getProduct(id)
+  const [response, session] = await Promise.all([getProduct(id), getSession()])
   if (!response) notFound()
 
   const product = response.data
+  // Signed in? Check out as yourself. Guests still buy with just an email.
+  const buyer = session?.user ? { name: session.user.name, email: session.user.email } : null
   const fileSize = formatFileSize(product.fileSize)
 
   return (
@@ -98,7 +101,7 @@ async function ProductContent({ params }: Props) {
             <p className="mt-1.5 text-sm text-fg-muted">Pay once, keep it. No subscription.</p>
 
             <div className="mt-6">
-              <BuyButton product={product} />
+              <BuyButton product={product} buyer={buyer} />
             </div>
 
             <ul className="mt-6 space-y-3.5 border-t border-border-light pt-5">

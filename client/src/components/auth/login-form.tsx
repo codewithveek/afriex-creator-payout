@@ -7,7 +7,7 @@ import { api, ApiClientError } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export function LoginForm() {
+export function LoginForm({ next = '/dashboard' }: { next?: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -23,7 +23,7 @@ export function LoginForm() {
 
     try {
       await api.post('/api/auth/sign-in/email', { email, password })
-      router.push('/dashboard')
+      router.push(next)
       router.refresh()
     } catch (err) {
       setError(
@@ -39,7 +39,9 @@ export function LoginForm() {
   return (
     <div>
       <h1 className="display-md text-fg">Welcome back</h1>
-      <p className="mt-2 text-fg-muted">Your shop, your sales, and your balance.</p>
+      <p className="mt-2 text-fg-muted">
+        One account for everything you&apos;ve bought and everything you sell.
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         {error && (
@@ -72,9 +74,9 @@ export function LoginForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-fg-muted">
-        No shop yet?{' '}
+        No account yet?{' '}
         <Link href="/signup" className="font-semibold text-accent underline-offset-4 hover:underline">
-          Open one free
+          Create one free
         </Link>
       </p>
     </div>

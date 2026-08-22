@@ -115,13 +115,6 @@ export interface Order {
   product?: Product
 }
 
-export interface Customer {
-  id: string
-  email: string
-  name: string
-  token?: string
-}
-
 export interface PaymentCollector {
   id: 'paystack' | 'flutterwave' | 'afriex-checkout' | 'stripe'
   name: string

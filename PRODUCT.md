@@ -6,10 +6,11 @@ product
 
 ## Users
 
-Three user types:
+One account, three roles. Signing up creates a single identity that can buy and
+sell — as on Gumroad or Etsy — rather than separate buyer and seller logins.
 
 - **Creators**: African creators who sell digital products and withdraw earnings via Afriex. Their primary context is the dashboard — checking balance, managing products, registering payout methods, requesting withdrawals. They need clarity and trust around their money.
-- **Buyers**: Browse the public store and purchase digital products via Stripe (guest checkout). Minimal interface needed.
+- **Buyers**: Browse the public store and buy digital products. No account is required to buy — guest checkout sends the download by email — but signing in collects every purchase in one library, including anything bought as a guest with the same email. A creator buying from another creator uses their own account.
 - **Admins**: Platform operators with read-only oversight. Monitor activity and trigger manual sweep payouts.
 
 ## Product Purpose

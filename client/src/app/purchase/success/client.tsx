@@ -47,7 +47,7 @@ export function PurchaseSuccessClient() {
 
   const loadError = !session
     ? email
-      ? 'Payment received. Open your orders with this email to pick up the download.'
+      ? 'Payment received. Sign in to Your orders to pick up the download.'
       : 'The payment reference is missing. Your receipt email has the download link.'
     : orderQuery.isError
       ? orderQuery.error instanceof ApiClientError
@@ -118,7 +118,7 @@ export function PurchaseSuccessClient() {
 
               <div className="mt-3 flex flex-col gap-2">
                 <Button
-                  href={`/customer/orders?email=${encodeURIComponent(order.customerEmail)}`}
+                  href="/orders"
                   variant={downloadHref ? 'outline' : 'primary'}
                   className="w-full"
                 >
@@ -143,12 +143,7 @@ export function PurchaseSuccessClient() {
                 'This usually takes a few seconds. Your receipt and download link are on their way to your inbox.'}
             </p>
             <div className="mt-8 flex flex-col gap-2">
-              <Button
-                href={
-                  email ? `/customer/orders?email=${encodeURIComponent(email)}` : '/customer/orders'
-                }
-                className="w-full"
-              >
+              <Button href="/orders" className="w-full">
                 Open your orders
               </Button>
               <Button href="/discover" variant="outline" className="w-full">

@@ -16,7 +16,6 @@ import { afriexWebhookRoutes } from './infra/afriex/afriex-webhook.router';
 import { productsRoutes } from './modules/products/products.router';
 import { ordersRoutes } from './modules/orders/orders.router';
 import { downloadRoutes } from './modules/orders/download.router';
-import { customersRoutes } from './modules/customers/customers.router';
 import { uploadRoutes } from './modules/uploads/uploads.router';
 import { gdprRoutes } from './modules/auth/gdpr.router';
 import { env } from './config/env';
@@ -56,11 +55,7 @@ export async function buildApp() {
   // Stricter limits on sensitive public endpoints
   app.addHook('onRoute', (routeOptions) => {
     const path = routeOptions.url ?? '';
-    if (
-      path.startsWith('/api/customers/login') ||
-      path.startsWith('/api/customers/signup') ||
-      path.startsWith('/api/checkout/sessions')
-    ) {
+    if (path.startsWith('/api/checkout/sessions')) {
       routeOptions.config = {
         ...routeOptions.config,
         rateLimit: { max: 20, timeWindow: '1 minute' },
@@ -113,7 +108,6 @@ export async function buildApp() {
   await app.register(productsRoutes);
   await app.register(ordersRoutes);
   await app.register(downloadRoutes);
-  await app.register(customersRoutes);
   await app.register(afriexWebhookRoutes);
   await app.register(uploadRoutes);
   await app.register(gdprRoutes);

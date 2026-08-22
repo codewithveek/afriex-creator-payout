@@ -24,23 +24,17 @@ export async function fetchOrderBySession(sessionId: string) {
 }
 
 /**
- * Buyer's own orders. A 401 means the token is stale — the caller clears it
- * through the customer-auth store rather than reaching into storage here.
+ * Everything the signed-in account has bought, guest purchases under the same
+ * email included. Server-side call: pass the request's cookie header.
  */
-export async function fetchCustomerOrders(token: string) {
-  const res = await api.get<{ data: Order[] }>('/api/customers/orders', {
-    headers: { 'x-customer-token': token },
-  })
+export async function fetchLibrary(cookie: string | null) {
+  const res = await apiFetch<{ data: Order[] }>('/api/library', { cookie })
   return res.data
 }
 
-export async function renewCustomerDownload(token: string, orderId: string) {
-  const res = await apiFetch<{ data: { downloadToken: string; expiresAt: string } }>(
-    `/api/customers/orders/${orderId}/renew-download`,
-    {
-      method: 'POST',
-      headers: { 'x-customer-token': token },
-    },
+export async function renewLibraryDownload(orderId: string) {
+  const res = await api.post<{ data: { downloadToken: string; expiresAt: string } }>(
+    `/api/library/${orderId}/renew-download`,
   )
   return res.data
 }

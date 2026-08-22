@@ -2,7 +2,7 @@ import { pgTable, uuid, varchar, text, numeric, timestamp, index } from 'drizzle
 import { relations } from 'drizzle-orm';
 import { orderStatusEnum, currencyEnum } from './enums';
 import { products } from './products';
-import { customers } from './customers';
+import { users } from './users';
 import { creators } from './creators';
 
 export const orders = pgTable(
@@ -15,7 +15,15 @@ export const orders = pgTable(
     creatorId: uuid('creator_id')
       .notNull()
       .references(() => creators.id, { onDelete: 'restrict' }),
-    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+    /**
+     * The buyer's account, once there is one. Null for a guest checkout, and
+     * still null after signup until the email links it back
+     * (ordersRepository.linkGuestOrdersByEmail).
+     *
+     * customerEmail/customerName below are what was typed at checkout, which
+     * is deliberately not the same thing as the account it lands under.
+     */
+    customerId: uuid('customer_id').references(() => users.id, { onDelete: 'set null' }),
 
     /** Encrypted buyer email (or legacy plaintext). */
     customerEmail: text('customer_email').notNull(),
@@ -56,9 +64,9 @@ export const ordersRelations = relations(orders, ({ one }) => ({
     fields: [orders.productId],
     references: [products.id],
   }),
-  customer: one(customers, {
+  customer: one(users, {
     fields: [orders.customerId],
-    references: [customers.id],
+    references: [users.id],
   }),
   creator: one(creators, {
     fields: [orders.creatorId],

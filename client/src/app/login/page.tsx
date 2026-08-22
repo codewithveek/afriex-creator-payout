@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
+import { safeNextPath } from '@/lib/next-path'
 import { LoginForm } from '@/components/auth/login-form'
 import { AuthShell } from '@/components/auth/auth-shell'
 
@@ -9,20 +10,27 @@ export const metadata: Metadata = {
   description: 'Check your sales, publish products, and withdraw your earnings.',
 }
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>
+}) {
+  const { next } = await searchParams
+  const destination = safeNextPath(next, '/dashboard')
+
   const session = await getSession()
-  if (session) redirect('/dashboard')
+  if (session) redirect(destination)
 
   return (
     <AuthShell
       pitch="Your shop kept selling while you were away."
       points={[
+        'Everything you’ve bought, ready to download again',
         'See what sold and what it earned',
-        'Publish a new product in minutes',
         'Move your balance to your own bank account',
       ]}
     >
-      <LoginForm />
+      <LoginForm next={destination} />
     </AuthShell>
   )
 }

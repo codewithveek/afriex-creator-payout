@@ -69,8 +69,7 @@ server/src/
 │   ├── auth/             better-auth config + signup hook
 │   ├── creators/         creator profile + balance
 │   ├── products/         product CRUD + public storefront feed
-│   ├── customers/        customer accounts, guest-order linking
-│   ├── orders/           checkout session creation, order lifecycle, downloads
+│   ├── orders/           checkout, order lifecycle, downloads, buyer library
 │   ├── uploads/          product file upload (Cloudflare R2)
 │   ├── sales/             payment webhook -> sale records
 │   ├── earnings/          sale -> fee breakdown -> balance credit

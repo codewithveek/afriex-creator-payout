@@ -6,7 +6,7 @@ const buyColumn = {
   title: 'Buy',
   links: [
     { href: '/discover', label: 'Browse everything' },
-    { href: '/customer/orders', label: 'Your orders & downloads' },
+    { href: '/orders', label: 'Your orders & downloads' },
     { href: '/how-it-works', label: 'How buying works' },
   ],
 }

@@ -24,6 +24,16 @@ function legacyEmailSha(email: string): string {
   return createHash('sha256').update(normalizeEmail(email)).digest('hex');
 }
 
+/** An order belongs to a buyer if it is linked to them or carries their email. */
+function buyerMatch(userId: string, email: string) {
+  const normalized = normalizeEmail(email);
+  return or(
+    eq(orders.customerId, userId),
+    eq(orders.customerEmailHash, blindIndex(normalized, 'email')),
+    eq(orders.customerEmailHash, legacyEmailSha(normalized)),
+  );
+}
+
 function decryptOrder(row: Order): DecryptedOrder {
   return {
     ...row,
@@ -88,17 +98,21 @@ export const ordersRepository = {
     return { rows: rows.map(decryptOrder), total };
   },
 
-  async findByCustomerEmail(
+  /**
+   * Everything one account has bought: orders already linked to it, plus any
+   * bought as a guest with that email. Matching on both means a purchase made
+   * before signing up, or after changing the account email, still shows up.
+   */
+  async findForBuyer(
+    userId: string,
     email: string,
     offset: number,
     limit: number,
   ): Promise<{ rows: DecryptedOrder[]; total: number }> {
-    const normalized = normalizeEmail(email);
-    const hash = blindIndex(normalized, 'email');
-    const legacy = legacyEmailSha(normalized);
+    const owned = buyerMatch(userId, email);
 
     const rows = await db.query.orders.findMany({
-      where: or(eq(orders.customerEmailHash, hash), eq(orders.customerEmailHash, legacy)),
+      where: owned,
       orderBy: (o, { desc }) => [desc(o.createdAt)],
       with: { product: true },
       offset,
@@ -108,35 +122,19 @@ export const ordersRepository = {
     const totalRows = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(orders)
-      .where(or(eq(orders.customerEmailHash, hash), eq(orders.customerEmailHash, legacy)));
+      .where(owned);
 
     return { rows: rows.map(decryptOrder), total: totalRows[0]?.count ?? 0 };
   },
 
-  async findByCustomerId(
-    customerId: string,
-    offset: number,
-    limit: number,
-  ): Promise<{ rows: DecryptedOrder[]; total: number }> {
-    const rows = await db.query.orders.findMany({
-      where: eq(orders.customerId, customerId),
-      orderBy: (o, { desc }) => [desc(o.createdAt)],
-      with: { product: true },
-      offset,
-      limit,
-    });
-    const total = await db.$count(orders, eq(orders.customerId, customerId));
-    return { rows: rows.map(decryptOrder), total };
-  },
-
-  async linkGuestOrdersByEmail(email: string, customerId: string): Promise<number> {
+  async linkGuestOrdersByEmail(email: string, userId: string): Promise<number> {
     const normalized = normalizeEmail(email);
     const hash = blindIndex(normalized, 'email');
     const legacy = legacyEmailSha(normalized);
 
     const result = await db
       .update(orders)
-      .set({ customerId, updatedAt: new Date() })
+      .set({ customerId: userId, updatedAt: new Date() })
       .where(
         and(
           or(eq(orders.customerEmailHash, hash), eq(orders.customerEmailHash, legacy)),

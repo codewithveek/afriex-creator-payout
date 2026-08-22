@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
+import { safeNextPath } from '@/lib/next-path'
 import { SignupForm } from '@/components/auth/signup-form'
 import { AuthShell } from '@/components/auth/auth-shell'
 
@@ -9,9 +10,16 @@ export const metadata: Metadata = {
   description: 'Sell your templates, presets, courses or study packs. Free to open, a flat 10% per sale.',
 }
 
-export default async function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>
+}) {
+  const { next } = await searchParams
+  const destination = safeNextPath(next, '/dashboard')
+
   const session = await getSession()
-  if (session) redirect('/dashboard')
+  if (session) redirect(destination)
 
   return (
     <AuthShell
@@ -22,7 +30,7 @@ export default async function SignupPage() {
         'Withdraw to your own bank, in your local currency',
       ]}
     >
-      <SignupForm />
+      <SignupForm next={destination} />
     </AuthShell>
   )
 }

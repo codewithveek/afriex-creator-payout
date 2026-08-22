@@ -5,7 +5,6 @@ import {
 } from '../../infra/payment/factory';
 import { ordersRepository, type DecryptedOrder } from './orders.repository';
 import { productsService } from '../products/products.service';
-import { customersRepository } from '../customers/customers.repository';
 import { NotFoundError, ValidationError } from '../../shared/errors';
 import { logger } from '../../config/logger';
 import { env } from '../../config/env';
@@ -21,6 +20,16 @@ import type { PaymentProviderName } from '../../infra/payment/types';
 import { computeDownloadExpiry } from '../../shared/utils/download-token';
 import { assertSafeAppRedirectUrl } from '../../shared/utils/safe-redirect';
 import { maskEmail, normalizeEmail } from '../../shared/utils/encryption';
+
+/** The account registered with this email, if the buyer has one. */
+async function findAccountIdByEmail(email: string): Promise<string | null> {
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, normalizeEmail(email)))
+    .limit(1);
+  return row?.id ?? null;
+}
 
 function issueDownloadToken(): { token: string; expiresAt: Date } {
   return {
@@ -52,7 +61,7 @@ export const ordersService = {
     const creator = await creatorsRepository.findById(product.creatorId);
 
     const email = normalizeEmail(input.customerEmail);
-    const existingCustomer = await customersRepository.findByEmail(email);
+    const buyerAccountId = await findAccountIdByEmail(email);
 
     const result = await provider.createCheckoutSession({
       amount: product.price,
@@ -69,14 +78,14 @@ export const ordersService = {
         customerName: input.customerName,
         productName: product.name,
         paymentProvider: providerName,
-        ...(existingCustomer ? { customerId: existingCustomer.id } : {}),
+        ...(buyerAccountId ? { customerId: buyerAccountId } : {}),
       },
     });
 
     await ordersRepository.create({
       productId: product.id,
       creatorId: product.creatorId,
-      customerId: existingCustomer?.id ?? null,
+      customerId: buyerAccountId,
       customerEmail: email,
       customerName: input.customerName,
       amount: product.price,
@@ -90,7 +99,7 @@ export const ordersService = {
         productId: product.id,
         customerEmail: maskEmail(email),
         provider: providerName,
-        customerId: existingCustomer?.id ?? null,
+        customerId: buyerAccountId,
       },
       'Checkout session created',
     );
@@ -118,9 +127,9 @@ export const ordersService = {
     await ordersRepository.markCompleted(order.id, token, expiresAt);
 
     if (!order.customerId) {
-      const customer = await customersRepository.findByEmail(order.customerEmailPlain);
-      if (customer) {
-        await ordersRepository.linkGuestOrdersByEmail(order.customerEmailPlain, customer.id);
+      const buyerAccountId = await findAccountIdByEmail(order.customerEmailPlain);
+      if (buyerAccountId) {
+        await ordersRepository.linkGuestOrdersByEmail(order.customerEmailPlain, buyerAccountId);
       }
     }
 
@@ -186,26 +195,22 @@ export const ordersService = {
     return ordersRepository.findByCreatorId(creatorId, offset, limit);
   },
 
-  async listForCustomer(email: string, offset: number, limit: number) {
-    return ordersRepository.findByCustomerEmail(email, offset, limit);
+  /**
+   * One account's purchases. Guest orders under the same email are adopted on
+   * the way through, so a buyer who checked out before signing up sees them.
+   */
+  async listForBuyer(userId: string, email: string, offset: number, limit: number) {
+    await ordersRepository.linkGuestOrdersByEmail(email, userId);
+    return ordersRepository.findForBuyer(userId, email, offset, limit);
   },
 
-  async listForCustomerAccount(
-    customerId: string,
-    email: string,
-    offset: number,
-    limit: number,
-  ) {
-    await ordersRepository.linkGuestOrdersByEmail(email, customerId);
-    return ordersRepository.findByCustomerId(customerId, offset, limit);
-  },
-
-  async linkGuestOrders(email: string, customerId: string): Promise<number> {
-    const linked = await ordersRepository.linkGuestOrdersByEmail(email, customerId);
+  /** Claims guest purchases for an account — called when one is created or signs in. */
+  async linkGuestOrders(email: string, userId: string): Promise<number> {
+    const linked = await ordersRepository.linkGuestOrdersByEmail(email, userId);
     if (linked > 0) {
       logger.info(
-        { email: maskEmail(email), customerId, linked },
-        'Linked guest orders to customer account',
+        { email: maskEmail(email), userId, linked },
+        'Linked guest orders to account',
       );
     }
     return linked;
@@ -226,10 +231,10 @@ export const ordersService = {
     return order;
   },
 
-  async renewDownloadForCustomer(
+  async renewDownloadForBuyer(
     orderId: string,
-    customerId: string,
-    customerEmail: string,
+    userId: string,
+    email: string,
   ): Promise<{ downloadToken: string; expiresAt: Date }> {
     const order = await ordersRepository.findById(orderId);
     if (!order || order.status !== 'COMPLETED') {
@@ -237,8 +242,8 @@ export const ordersService = {
     }
 
     const ownsOrder =
-      order.customerId === customerId ||
-      order.customerEmailPlain.toLowerCase() === customerEmail.toLowerCase();
+      order.customerId === userId ||
+      order.customerEmailPlain.toLowerCase() === email.toLowerCase();
     if (!ownsOrder) {
       throw new NotFoundError('Order not found');
     }

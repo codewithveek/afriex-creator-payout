@@ -7,6 +7,13 @@ import type { CreateCheckoutSessionInput } from './orders.schema';
 import { parsePagination, buildPaginationMeta } from '../../shared/pagination';
 import { NotFoundError } from '../../shared/errors';
 
+/** Buyers never see the creator's source file URL. */
+function sanitizeProduct(product: Record<string, unknown> | undefined) {
+  if (!product) return undefined;
+  const { fileUrl: _fileUrl, ...safe } = product;
+  return safe;
+}
+
 export const ordersController = {
   async createCheckoutSession(
     request: FastifyRequest<{ Body: CreateCheckoutSessionInput }>,
@@ -60,6 +67,63 @@ export const ordersController = {
     return reply.code(200).send({ data: payload });
   },
 
+  /** The signed-in account's purchases — its library. */
+  async listMyPurchases(request: FastifyRequest, reply: FastifyReply) {
+    const { id: userId, email } = request.user!;
+    const pag = parsePagination(request.query as Record<string, unknown>);
+    const { rows, total } = await ordersService.listForBuyer(
+      userId,
+      email,
+      (pag.page - 1) * pag.pageSize,
+      pag.pageSize,
+    );
+
+    const data = rows.map((row) => {
+      const expired =
+        row.downloadTokenExpiresAt != null && row.downloadTokenExpiresAt < new Date();
+      const rawToken =
+        row.status === 'COMPLETED' && !expired ? ordersService.getRawDownloadToken(row) : null;
+      const product = (row as { product?: Record<string, unknown> }).product;
+
+      return {
+        id: row.id,
+        productId: row.productId,
+        creatorId: row.creatorId,
+        customerId: row.customerId,
+        customerEmail: row.customerEmailPlain,
+        customerName: row.customerNamePlain,
+        amount: row.amount,
+        currency: row.currency,
+        status: row.status,
+        paymentSessionId: row.paymentSessionId,
+        downloadToken: rawToken,
+        downloadExpired: row.status === 'COMPLETED' && expired,
+        downloadTokenExpiresAt: row.downloadTokenExpiresAt,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        product: sanitizeProduct(product),
+      };
+    });
+
+    return reply.code(200).send({ data, meta: buildPaginationMeta(pag, total) });
+  },
+
+  async renewPurchaseDownload(
+    request: FastifyRequest<{ Params: { orderId: string } }>,
+    reply: FastifyReply,
+  ) {
+    const { id: userId, email } = request.user!;
+    const result = await ordersService.renewDownloadForBuyer(
+      request.params.orderId,
+      userId,
+      email,
+    );
+    return reply.code(200).send({
+      data: { downloadToken: result.downloadToken, expiresAt: result.expiresAt },
+    });
+  },
+
+  /** Orders placed *with* the signed-in creator — their sales. */
   async listMyOrders(request: FastifyRequest, reply: FastifyReply) {
     const creator = await creatorsService.getByUserId(request.user!.id);
     const pag = parsePagination(request.query as Record<string, unknown>);
